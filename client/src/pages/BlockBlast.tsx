@@ -146,8 +146,8 @@ export default function BlockBlast() {
                    selectedShape = SHAPES[Math.floor(Math.random() * 3)];
                }
           } 
-          // 3. Normal play: 40% chance for a single dot just to be really nice
-          else if (Math.random() < 0.4) {
+          // 3. Normal play: 1/8 chance (12.5%) for a single dot
+          else if (Math.random() < 0.125) {
               selectedShape = SHAPES[0]; // dot
           }
           // 4. Otherwise random
