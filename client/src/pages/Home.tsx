@@ -17,9 +17,9 @@ export default function Home() {
       <div className="flex flex-col items-center gap-1 md:gap-2 w-full h-full max-w-[100vw] overflow-hidden pt-2">
 
         {/* Game Selector */}
-        <div className="w-full z-20 px-4 flex flex-col items-center gap-4">
-            {/* Main Games Row */}
-            <div className="grid grid-cols-3 w-full gap-4 pb-0">
+        <div className="w-full z-20 px-4 flex flex-col items-center gap-4 shrink-0">
+            {/* Main Games Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 w-full gap-2 md:gap-4 pb-0">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -38,21 +38,13 @@ export default function Home() {
                     label="VAJ BLAST"
                     color="bg-green-500"
                 />
+                <GameTab 
+                    active={activeGame === 'tic-tac-toe'} 
+                    onClick={() => setActiveGame('tic-tac-toe')}
+                    label="TIC TAC TOE"
+                    color="bg-yellow-400"
+                />
             </div>
-
-            {/* Extra Game Button Below */}
-            <Button
-                onClick={() => setActiveGame('tic-tac-toe')}
-                className={`
-                    w-full h-auto min-h-[44px] py-2 px-2 font-display text-xs sm:text-sm md:text-lg uppercase transition-all whitespace-normal leading-none
-                    border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
-                    hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
-                    active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
-                    ${activeGame === 'tic-tac-toe' ? 'bg-yellow-400 text-black scale-[1.02] z-10' : 'bg-white text-black hover:bg-gray-100'}
-                `}
-            >
-                ang larong Tic Tac Toe sa papel
-            </Button>
         </div>
 
         {/* Game Container */}

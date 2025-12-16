@@ -133,8 +133,8 @@ export default function CoinFlip() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-start py-2">
-      <div className="w-full h-[35vh] md:h-[45vh] relative">
+    <div className="w-full h-full flex flex-col items-center justify-center py-2 min-h-0">
+      <div className="w-full flex-1 relative min-h-[40vh]">
         <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
