@@ -80,17 +80,17 @@ export default function QuietGame() {
                 setCapturingFail(true);
                 
                 // INTELLIGENT CROPPING:
-                // Keep only the last ~0.7 seconds of audio before the trigger (pre-roll)
-                // This captures the start of the sound/phrase without too much silence
-                // 0.7s / (2048 / 44100) ≈ 15 chunks
-                const PRE_ROLL_CHUNKS = 15; 
+                // Keep only the last ~0.3 seconds of audio before the trigger (pre-roll)
+                // Reduced from 0.7s to make it tighter
+                // 0.3s / (2048 / 44100) ≈ 6 chunks
+                const PRE_ROLL_CHUNKS = 6; 
                 if (audioChunksRef.current.length > PRE_ROLL_CHUNKS) {
                     audioChunksRef.current = audioChunksRef.current.slice(-PRE_ROLL_CHUNKS);
                 }
 
                 // Continue recording to capture the full "fail" sound (post-roll)
-                // e.g., ~2.0 seconds (approx 45 chunks) to catch the full scream/laugh
-                let remainingChunks = 45;
+                // Reduced from 45 chunks (~2.0s) to 15 chunks (~0.7s) for tighter crop
+                let remainingChunks = 15;
                 
                 // We hijack the process to continue recording then stop
                 const originalProcess = scriptProcessor.onaudioprocess;
