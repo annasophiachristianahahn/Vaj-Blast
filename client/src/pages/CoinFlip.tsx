@@ -13,33 +13,48 @@ function Coin({ flipping, result, onFlipEnd, onFlipStart }: { flipping: boolean,
   useFrame((state, delta) => {
     if (flipping) {
         mesh.current.rotation.x += 50 * delta; // Increased speed for rapid spin
-        mesh.current.rotation.y += 25 * delta;
+        mesh.current.rotation.y += 10 * delta; // Reduced Y spin for cleaner flip
     } else {
         // Landing animation
         if (result) {
-            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
-             // Simple interpolation to land
-            mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
+            // HEADS: Face up (towards camera Z) -> rotation.x = Math.PI / 2
+            // TAILS: Face down (away from camera Z) -> rotation.x = 3 * Math.PI / 2 (or -Math.PI/2)
+            const targetRotationX = result === 'HEADS' ? Math.PI / 2 : (Math.PI * 3 / 2);
             
+             // Normalize current rotation to 0..2PI range for smoother math
+            mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
+            if (mesh.current.rotation.x < 0) mesh.current.rotation.x += Math.PI * 2;
+
             // Snap to nearest face
             const currentX = mesh.current.rotation.x;
-            const diff = targetRotationX - currentX;
+            let diff = targetRotationX - currentX;
+            
+            // Find shortest path
+            if (diff > Math.PI) diff -= Math.PI * 2;
+            if (diff < -Math.PI) diff += Math.PI * 2;
             
             if (Math.abs(diff) > 0.1) {
                 mesh.current.rotation.x += diff * 10 * delta; // Faster landing snap
             } else {
                 mesh.current.rotation.x = targetRotationX;
             }
-             mesh.current.rotation.y *= 0.90; // Slow down spin faster
+            
+            // Dampen Y rotation to 0 so it's straight
+            mesh.current.rotation.y = mesh.current.rotation.y % (Math.PI * 2);
+            if (Math.abs(mesh.current.rotation.y) > 0.01) {
+                 mesh.current.rotation.y -= mesh.current.rotation.y * 5 * delta;
+            } else {
+                mesh.current.rotation.y = 0;
+            }
         }
     }
   });
 
   return (
-    <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 10 : 1} floatIntensity={flipping ? 5 : 1}>
+    <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <mesh 
             ref={mesh} 
-            rotation={[0, 0, 0]}
+            rotation={[Math.PI / 2, 0, 0]} // Initial: Heads facing camera
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
