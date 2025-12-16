@@ -85,6 +85,8 @@ export default function BlockBlast() {
   
   // Grid Ref for drag calculations
   const gridRef = useRef<HTMLDivElement>(null);
+  // Refs for shape elements to get their bounding rects during drag
+  const shapeRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialize shapes on mount
   useEffect(() => {
@@ -179,48 +181,28 @@ export default function BlockBlast() {
   };
 
   // Shared logic to determine placement position
-  const getPlacementPosition = (pointerX: number, pointerY: number, shape: any) => {
-      if (!gridRef.current) return null;
+  const getPlacementPosition = (shapeIndex: number, shape: any) => {
+      if (!gridRef.current || !shapeRefs.current[shapeIndex]) return null;
 
       const gridRect = gridRef.current.getBoundingClientRect();
+      const shapeRect = shapeRefs.current[shapeIndex]!.getBoundingClientRect();
 
-      // Relaxed bounds check - allow dragging slightly outside as long as center is close
-      // Actually, we should just calculate relative pos and see if it maps to valid grid coords
-      
       const cellWidth = gridRect.width / GRID_SIZE;
       const cellHeight = gridRect.height / GRID_SIZE;
       
-      // Calculate relative position of pointer
-      const relativeX = pointerX - gridRect.left;
-      const relativeY = pointerY - gridRect.top;
+      // Calculate relative position of the shape's top-left corner
+      // We use the shape's actual DOM position, which is accurate regardless of where user grabbed it
+      const relativeX = shapeRect.left - gridRect.left;
+      const relativeY = shapeRect.top - gridRect.top;
       
-      // Calculate the floating point grid coordinates of the pointer
+      // Calculate the floating point grid coordinates of the top-left corner
       const floatC = relativeX / cellWidth;
       const floatR = relativeY / cellHeight;
 
-      // Determine dimensions of shape
-      const shapeWidth = Math.max(...shape.points.map((p: number[]) => p[0])) + 1;
-      const shapeHeight = Math.max(...shape.points.map((p: number[]) => p[1])) + 1;
-
-      // We assume the user grabs the shape roughly in the center
-      // So we want the center of the shape to align with the center of the target cell(s)
-      // The shape's top-left in grid coords would be: pointer_grid_coords - (shape_size / 2)
-      
-      // Calculate floating point top-left coordinate of the shape
-      const shapeTopLeftFloatC = floatC - (shapeWidth / 2); // e.g. if pointer is at 3.5, and width is 3, top-left is 2.0
-      const shapeTopLeftFloatR = floatR - (shapeHeight / 2);
-
       // Round to nearest integer to find the "ideal" snap target
-      // We add 0.5 to offset the fact that we want to snap when the *center* of the block is over the *center* of the cell
-      // Actually, `Math.round` does exactly what we want for aligning centers to nearest integer grid lines if we consider the block centers.
-      // But here we are dealing with top-left index.
-      
-      // Let's stick to the simplest intuitive model:
-      // The "center" of the shape should land on the "center" of a cell (or group of cells).
-      // If shape is 3 wide, center is at index 1.5. If pointer is at 4.5, top-left should be at 3.
-      
-      const idealC = Math.round(shapeTopLeftFloatC);
-      const idealR = Math.round(shapeTopLeftFloatR);
+      // This works perfectly because if visual shape aligns with grid, relativeX will be a multiple of cellWidth
+      const idealC = Math.round(floatC);
+      const idealR = Math.round(floatR);
       
       // Check if this ideal spot is valid
       if (canPlaceShape(idealR, idealC, shape, grid)) {
@@ -243,16 +225,16 @@ export default function BlockBlast() {
 
       // Sort by distance to the "true" floating position
       neighbors.sort((a, b) => {
-          const distA = Math.hypot(a.c - shapeTopLeftFloatC, a.r - shapeTopLeftFloatR);
-          const distB = Math.hypot(b.c - shapeTopLeftFloatC, b.r - shapeTopLeftFloatR);
+          const distA = Math.hypot(a.c - floatC, a.r - floatR);
+          const distB = Math.hypot(b.c - floatC, b.r - floatR);
           return distA - distB;
       });
 
       // Find first valid placement within a reasonable "snap radius"
-      // If the user is too far off (e.g. > 1 cell away), don't snap to a neighbor
+      // If the user is too far off (e.g. > 0.6 cells away), don't snap to a neighbor
       for (const p of neighbors) {
-          const dist = Math.hypot(p.c - shapeTopLeftFloatC, p.r - shapeTopLeftFloatR);
-          if (dist > 0.7) continue; // Threshold: if closest valid spot is > 0.7 cells away, don't snap
+          const dist = Math.hypot(p.c - floatC, p.r - floatR);
+          if (dist > 0.6) continue; // Tighter threshold for better precision
 
           if (canPlaceShape(p.r, p.c, shape, grid)) {
               return { r: p.r, c: p.c };
@@ -267,7 +249,7 @@ export default function BlockBlast() {
       const shape = currentShapes[shapeIndex];
       if (!shape) return;
 
-      const placement = getPlacementPosition(info.point.x, info.point.y, shape);
+      const placement = getPlacementPosition(shapeIndex, shape);
       if (placement) {
           setHoverPlacement({ ...placement, shapeIndex });
       } else {
@@ -282,7 +264,7 @@ export default function BlockBlast() {
     const shape = currentShapes[shapeIndex];
     if (!shape) return;
 
-    const placement = getPlacementPosition(info.point.x, info.point.y, shape);
+    const placement = getPlacementPosition(shapeIndex, shape);
     
     if (placement) {
         placeShape(placement.r, placement.c, shape, shapeIndex);
@@ -506,6 +488,7 @@ export default function BlockBlast() {
                 shape ? (
                     <motion.div
                         key={i}
+                        ref={el => shapeRefs.current[i] = el}
                         drag
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
