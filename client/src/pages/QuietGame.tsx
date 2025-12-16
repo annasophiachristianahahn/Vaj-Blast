@@ -10,9 +10,14 @@ export default function QuietGame() {
   const [volume, setVolume] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const animationFrameRef = useRef<number>(null!);
+  const audioChunksRef = useRef<Float32Array[]>([]);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
   
-  const THRESHOLD = 30; // Volume threshold (0-100 roughly)
+  // Use RMS threshold (0.0 to 1.0)
+  // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
+  const THRESHOLD_RMS = 0.15; 
+  const MAX_BUFFER_CHUNKS = 100; // Approx 4-5 seconds at 2048 buffer size / 44.1kHz
 
   const startGame = async () => {
     try {
@@ -22,32 +27,50 @@ export default function QuietGame() {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         audioContextRef.current = audioContext;
         
-        const analyser = audioContext.createAnalyser();
+        // Reset recording buffer
+        audioChunksRef.current = [];
+        
         const microphone = audioContext.createMediaStreamSource(stream);
+        sourceNodeRef.current = microphone;
+
+        // Use ScriptProcessor for both analysis and recording
         const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+        processorRef.current = scriptProcessor;
         
-        analyser.smoothingTimeConstant = 0.8;
-        analyser.fftSize = 1024;
-        
-        microphone.connect(analyser);
-        analyser.connect(scriptProcessor);
-        scriptProcessor.connect(audioContext.destination);
-        
-        scriptProcessor.onaudioprocess = () => {
-            const array = new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteFrequencyData(array);
-            let values = 0;
-            const length = array.length;
-            for (let i = 0; i < length; i++) {
-                values += array[i];
-            }
-            const average = values / length;
-            setVolume(average);
+        scriptProcessor.onaudioprocess = (event) => {
+            const inputBuffer = event.inputBuffer;
+            const inputData = inputBuffer.getChannelData(0);
             
-            if (average > THRESHOLD) {
-                endGame();
+            // 1. Calculate Volume (RMS)
+            let sum = 0;
+            for (let i = 0; i < inputData.length; i++) {
+                sum += inputData[i] * inputData[i];
+            }
+            const rms = Math.sqrt(sum / inputData.length);
+            
+            // Map RMS (0-0.5 typical) to 0-100 for visualizer
+            // Multiplier 400 makes 0.25 RMS -> 100
+            setVolume(Math.min(rms * 400, 100));
+            
+            // 2. Record Audio
+            // Make a copy of the data
+            const chunk = new Float32Array(inputData);
+            audioChunksRef.current.push(chunk);
+            
+            // Keep buffer size limited
+            if (audioChunksRef.current.length > MAX_BUFFER_CHUNKS) {
+                audioChunksRef.current.shift();
+            }
+            
+            // 3. Check Threshold
+            if (rms > THRESHOLD_RMS) {
+                // Capture the fail!
+                endGameAndPlayRecording();
             }
         };
+        
+        microphone.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
         
         setPlaying(true);
         setGameOver(false);
@@ -59,19 +82,58 @@ export default function QuietGame() {
     }
   };
 
-  const endGame = () => {
+  const endGameAndPlayRecording = () => {
+    if (!audioContextRef.current) return;
+    
+    // Stop capturing
+    if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current.onaudioprocess = null;
+    }
+    if (sourceNodeRef.current) {
+        sourceNodeRef.current.disconnect();
+    }
+    
     setPlaying(false);
     setGameOver(true);
+    
+    playCapturedAudio();
     cleanup();
+  };
+  
+  const playCapturedAudio = () => {
+      if (!audioContextRef.current || audioChunksRef.current.length === 0) return;
+      
+      const ctx = audioContextRef.current;
+      
+      // Calculate total length
+      const totalLength = audioChunksRef.current.reduce((acc, chunk) => acc + chunk.length, 0);
+      
+      // Create buffer
+      const audioBuffer = ctx.createBuffer(1, totalLength, ctx.sampleRate);
+      const channelData = audioBuffer.getChannelData(0);
+      
+      // Flatten chunks
+      let offset = 0;
+      for (const chunk of audioChunksRef.current) {
+          channelData.set(chunk, offset);
+          offset += chunk.length;
+      }
+      
+      // Play it
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      source.start();
   };
 
   const cleanup = () => {
     if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
     }
-    if (audioContextRef.current) {
-        audioContextRef.current.close();
-    }
+    // Don't close context immediately if we want to play back sound!
+    // But we need to close it eventually if user navigates away or restarts.
+    // For now, we keep it open for playback.
   };
 
   useEffect(() => {
@@ -85,7 +147,12 @@ export default function QuietGame() {
   }, [playing]);
 
   useEffect(() => {
-      return () => cleanup();
+      return () => {
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+        }
+        cleanup();
+      };
   }, []);
 
   return (
@@ -99,13 +166,17 @@ export default function QuietGame() {
             {/* Volume Indicator */}
             <motion.div 
                 className="absolute inset-0 bg-red-600 rounded-full opacity-50"
-                animate={{ scale: playing ? Math.min(volume / THRESHOLD, 1.5) : 0 }}
+                // Threshold visual ref is roughly 60 (0.15 * 400)
+                animate={{ scale: playing ? Math.min(volume / 60, 1.5) : 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
             
             <div className="z-10 text-6xl font-mono font-bold drop-shadow-lg">
                 {gameOver ? (
-                    <span className="text-red-500 animate-pulse">FAIL</span>
+                    <div className="flex flex-col items-center">
+                        <span className="text-red-500 animate-pulse">FAIL</span>
+                        <span className="text-xs text-white/50 mt-2 font-sans animate-none tracking-widest">REPLAYING SOUND...</span>
+                    </div>
                 ) : (
                     (score / 10).toFixed(1) + "s"
                 )}
