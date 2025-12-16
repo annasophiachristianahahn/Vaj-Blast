@@ -385,7 +385,7 @@ export default function BlockBlast() {
   });
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none relative">
+    <div className="flex flex-col items-center justify-between h-full w-full max-w-lg mx-auto select-none touch-none relative px-2 pb-2">
         {/* Custom Game Over Overlay */}
         <AnimatePresence>
             {gameOver && (
@@ -420,73 +420,70 @@ export default function BlockBlast() {
             )}
         </AnimatePresence>
 
-        <div className="flex justify-between w-full items-center px-2 mb-2">
-            <div className="text-xs font-mono opacity-70">ROUND {round}</div>
-            <div className="font-mono text-lg">SCORE: {score}</div>
-        </div>
-
-        {/* Grid */}
-        <div 
-            ref={gridRef}
-            className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
-            style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
-        >
-            {grid.map((row, r) => 
-                row.map((cell, c) => {
-                    const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
-                    
-                    // Check if this cell is part of the ghost preview
-                    let isGhost = false;
-                    if (hoverPlacement && !cell) {
-                        const shape = currentShapes[hoverPlacement.shapeIndex];
-                        if (shape) {
-                            isGhost = shape.points.some(([dx, dy]: number[]) => 
-                                hoverPlacement.r + dy === r && hoverPlacement.c + dx === c
-                            );
+        {/* Grid Area - Maximize Size */}
+        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2">
+            <div 
+                ref={gridRef}
+                className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl w-full aspect-square max-h-full relative z-0"
+                style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+            >
+                {grid.map((row, r) => 
+                    row.map((cell, c) => {
+                        const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
+                        
+                        // Check if this cell is part of the ghost preview
+                        let isGhost = false;
+                        if (hoverPlacement && !cell) {
+                            const shape = currentShapes[hoverPlacement.shapeIndex];
+                            if (shape) {
+                                isGhost = shape.points.some(([dx, dy]: number[]) => 
+                                    hoverPlacement.r + dy === r && hoverPlacement.c + dx === c
+                                );
+                            }
                         }
-                    }
 
-                    return (
-                        <motion.div
-                            key={`${r}-${c}`}
-                            animate={shakeGrid && cell ? getRandomShake() : { x: 0, y: 0, rotate: 0 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" }}
-                            className={`w-full h-full rounded-sm border transition-colors relative 
-                                ${cell ? 'bg-white border-white/5' : 
-                                  isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
-                                  'bg-white/5 border-white/10'}`}
-                            style={{
-                                backgroundImage: cell ? `url(${cell})` : 'none',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundRepeat: 'no-repeat'
-                            }}
-                        >
-                            {/* Explosion Animation Overlay */}
-                            <AnimatePresence>
-                                {isClearing && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
-                                        animate={{ 
-                                            opacity: [0, 1, 1, 0.8, 0], 
-                                            scale: [0.5, 1.5, 2.5, 3, 3.5],
-                                            rotate: [0, 45, 90, 180, 270],
-                                            backgroundColor: ["#fff", "#ff0000", "#ffff00", "#ff4500", "#fff"]
-                                        }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.25, ease: "easeOut" }}
-                                        className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
-                                    />
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
-                    );
-                })
-            )}
+                        return (
+                            <motion.div
+                                key={`${r}-${c}`}
+                                animate={shakeGrid && cell ? getRandomShake() : { x: 0, y: 0, rotate: 0 }}
+                                transition={{ duration: 0.25, ease: "easeInOut" }}
+                                className={`w-full h-full rounded-sm border transition-colors relative 
+                                    ${cell ? 'bg-white border-white/5' : 
+                                      isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
+                                      'bg-white/5 border-white/10'}`}
+                                style={{
+                                    backgroundImage: cell ? `url(${cell})` : 'none',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                            >
+                                {/* Explosion Animation Overlay */}
+                                <AnimatePresence>
+                                    {isClearing && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+                                            animate={{ 
+                                                opacity: [0, 1, 1, 0.8, 0], 
+                                                scale: [0.5, 1.5, 2.5, 3, 3.5],
+                                                rotate: [0, 45, 90, 180, 270],
+                                                backgroundColor: ["#fff", "#ff0000", "#ffff00", "#ff4500", "#fff"]
+                                            }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.25, ease: "easeOut" }}
+                                            className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
+                                        />
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        );
+                    })
+                )}
+            </div>
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 min-h-[120px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible mb-4">
+        <div className="flex gap-4 h-[120px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-2">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
@@ -527,13 +524,22 @@ export default function BlockBlast() {
             ))}
         </div>
 
-        <div className="text-xs opacity-50 text-center">
-            Drag shapes onto the grid. Clear lines to explode blocks!
+        {/* Footer Info & Controls */}
+        <div className="flex justify-between w-full items-center px-4 py-2 shrink-0 border-t border-white/10 bg-black/20 rounded-lg">
+            <div className="flex flex-col items-start">
+                <div className="text-[10px] font-mono opacity-50 leading-none mb-1">ROUND</div>
+                <div className="text-xl font-bold font-mono text-white/90 leading-none">{round}</div>
+            </div>
+            
+            <Button onClick={resetGame} variant="ghost" size="sm" className="h-8 text-xs opacity-50 hover:opacity-100 hover:bg-white/10 text-red-400 hover:text-red-300">
+                RESET
+            </Button>
+
+            <div className="flex flex-col items-end">
+                <div className="text-[10px] font-mono opacity-50 leading-none mb-1">SCORE</div>
+                <div className="text-xl font-bold font-mono text-yellow-400 leading-none">{score}</div>
+            </div>
         </div>
-        
-        <Button onClick={resetGame} variant="outline" className="border-white/20 text-white hover:bg-white/10">
-            RESET GAME
-        </Button>
       </div>
   );
 }
