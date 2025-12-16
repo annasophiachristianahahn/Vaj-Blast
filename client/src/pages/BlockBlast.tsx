@@ -489,7 +489,7 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 min-h-[140px] items-center justify-center w-full relative z-10 px-2">
+        <div className="flex gap-2 min-h-[100px] items-center justify-center w-full relative z-10 px-2 overflow-visible">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
@@ -499,14 +499,15 @@ export default function BlockBlast() {
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.0, zIndex: 100, opacity: 0.5 }}
-                        className={`p-2 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
+                        whileDrag={{ scale: 1.5, zIndex: 100, opacity: 0.8 }} // Scale up to match grid size (0.6 * 1.5 ≈ 0.9) - slightly smaller than grid is usually easier to see under finger
+                        className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
                             className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
+                                // Use 60% of cell size for selector to fit all shapes
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.6}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.6}px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
@@ -525,7 +526,7 @@ export default function BlockBlast() {
                             ))}
                         </div>
                     </motion.div>
-                ) : <div key={i} className="w-16 h-16" />
+                ) : <div key={i} className="w-12 h-12" />
             ))}
         </div>
 

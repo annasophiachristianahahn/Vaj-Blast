@@ -44,7 +44,7 @@ export default function Home() {
             <Button
                 onClick={() => setActiveGame('tic-tac-toe')}
                 className={`
-                    h-10 md:h-12 px-6 font-display text-sm md:text-lg uppercase transition-all whitespace-nowrap
+                    h-auto min-h-[40px] py-2 px-6 font-display text-sm md:text-lg uppercase transition-all whitespace-normal text-center leading-tight
                     border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
                     hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
                     active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
