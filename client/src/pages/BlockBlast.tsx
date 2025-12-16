@@ -12,13 +12,48 @@ import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
 const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
 const GRID_SIZE = 8;
 
-// Define shapes (tetromino-ish)
+// Define shapes
 const SHAPES = [
+    // 1. Single & Small Blocks
     { points: [[0,0]], id: 'dot' },
-    { points: [[0,0], [1,0]], id: 'line2' },
-    { points: [[0,0], [1,0], [2,0]], id: 'line3' },
-    { points: [[0,0], [0,1], [1,0], [1,1]], id: 'square' },
-    { points: [[0,0], [1,0], [0,1]], id: 'L-small' },
+    { points: [[0,0], [1,0]], id: '1x2' },
+    { points: [[0,0], [0,1]], id: '2x1' },
+    { points: [[0,0], [1,0], [0,1], [1,1]], id: 'square-2x2' },
+
+    // 2. Straight Lines
+    { points: [[0,0], [1,0], [2,0]], id: '1x3' },
+    { points: [[0,0], [0,1], [0,2]], id: '3x1' },
+    { points: [[0,0], [1,0], [2,0], [3,0]], id: '1x4' },
+    { points: [[0,0], [0,1], [0,2], [0,3]], id: '4x1' },
+    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: '1x5' },
+    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: '5x1' },
+
+    // 3. L-Shapes (Small & Large)
+    { points: [[0,0], [0,1], [1,1]], id: 'L-small-1' },
+    { points: [[0,0], [1,0], [0,1]], id: 'L-small-2' },
+    { points: [[0,0], [1,0], [1,1]], id: 'L-small-3' },
+    { points: [[1,0], [1,1], [0,1]], id: 'L-small-4' },
+    { points: [[0,0], [0,1], [0,2], [1,2], [2,2]], id: 'L-large-1' }, // 3x3 L
+    { points: [[2,0], [2,1], [2,2], [1,2], [0,2]], id: 'L-large-2' },
+    { points: [[0,0], [1,0], [2,0], [0,1], [0,2]], id: 'L-large-3' },
+    { points: [[0,0], [1,0], [2,0], [2,1], [2,2]], id: 'L-large-4' },
+
+    // 4. T-Shapes
+    { points: [[0,0], [1,0], [2,0], [1,1]], id: 'T-down' },
+    { points: [[1,0], [1,1], [1,2], [0,1]], id: 'T-left' },
+    { points: [[0,1], [1,1], [2,1], [1,0]], id: 'T-up' },
+    { points: [[0,0], [0,1], [0,2], [1,1]], id: 'T-right' },
+
+    // 5. Zig-Zag / S Shapes
+    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-horiz' },
+    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-horiz' },
+    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-vert' },
+    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-vert' },
+
+    // 6. Large / Chunky Shapes
+    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3' },
+    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus' },
+    { points: [[0,0], [0,1], [1,1], [1,2], [2,2]], id: 'stairs' },
 ];
 
 export default function BlockBlast() {
@@ -26,16 +61,32 @@ export default function BlockBlast() {
     Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))
   );
   const [selectedShape, setSelectedShape] = useState<number | null>(null);
-  const [currentShapes, setCurrentShapes] = useState(() => generateShapes());
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  
+  // Round management
+  const [round, setRound] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Helper to get image for current round
+  const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
+  
+  // Shapes state needs to depend on round image
+  const [currentShapes, setCurrentShapes] = useState<{points: number[][], id: string, img: string}[]>([]);
 
-  function generateShapes() {
-      return [
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img: IMAGES[Math.floor(Math.random() * IMAGES.length)] },
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img: IMAGES[Math.floor(Math.random() * IMAGES.length)] },
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img: IMAGES[Math.floor(Math.random() * IMAGES.length)] },
+  // Initialize shapes on mount
+  useEffect(() => {
+      generateNewShapes(currentImageIndex);
+  }, []);
+
+  function generateNewShapes(imgIndex: number) {
+      const img = getRoundImage(imgIndex);
+      const newShapes = [
+          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
+          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
+          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
       ];
+      setCurrentShapes(newShapes);
   }
 
   const handleGridClick = (r: number, c: number) => {
@@ -57,20 +108,33 @@ export default function BlockBlast() {
               newGrid[r + dy][c + dx] = shape.img;
           });
           
-          setGrid(newGrid);
-          
           // Remove used shape
           const newShapes = [...currentShapes];
           newShapes[selectedShape] = null as any; // Mark as used
           setCurrentShapes(newShapes);
           setSelectedShape(null);
           
-          // Check for lines
-          checkLines(newGrid);
+          // Check for lines FIRST
+          const gridAfterLines = checkLines(newGrid);
           
-          // Check refill
+          // Check for empty board (Round Clear)
+          const isBoardEmpty = gridAfterLines.every(row => row.every(cell => cell === null));
+          if (isBoardEmpty && score > 0) { // Ensure it's not just the start of game
+              setRound(r => r + 1);
+              setCurrentImageIndex(i => i + 1);
+              // Use NEXT image for next round immediately? Or just for new shapes?
+              // Let's swap immediately for visual feedback? 
+              // Actually, user said "graduate to the next round", so new shapes should use new image.
+              // Existing blocks are gone anyway.
+          }
+
+          setGrid(gridAfterLines);
+
+          // Check refill shapes if all used
           if (newShapes.every(s => !s)) {
-              setCurrentShapes(generateShapes());
+              // If we just cleared board, we use next image index, otherwise current
+              const nextImgIndex = isBoardEmpty && score > 0 ? currentImageIndex + 1 : currentImageIndex;
+              generateNewShapes(nextImgIndex);
           }
       }
   };
@@ -80,9 +144,9 @@ export default function BlockBlast() {
       const rowsToClear = currentGrid.map((row, r) => row.every(cell => cell !== null) ? r : -1).filter(r => r !== -1);
       const colsToClear = Array(GRID_SIZE).fill(0).map((_, c) => currentGrid.every(row => row[c] !== null) ? c : -1).filter(c => c !== -1);
       
+      const newGrid = currentGrid.map(row => [...row]);
+
       if (rowsToClear.length > 0 || colsToClear.length > 0) {
-          const newGrid = currentGrid.map(row => [...row]);
-          
           rowsToClear.forEach(r => {
               for(let c=0; c<GRID_SIZE; c++) newGrid[r][c] = null;
           });
@@ -90,14 +154,17 @@ export default function BlockBlast() {
               for(let r=0; r<GRID_SIZE; r++) newGrid[r][c] = null;
           });
           
-          setGrid(newGrid);
           setScore(s => s + (rowsToClear.length + colsToClear.length) * 100);
       }
+      
+      return newGrid;
   };
 
   const resetGame = () => {
       setGrid(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
-      setCurrentShapes(generateShapes());
+      setRound(1);
+      setCurrentImageIndex(0);
+      generateNewShapes(0);
       setScore(0);
       setGameOver(false);
   };
@@ -105,7 +172,10 @@ export default function BlockBlast() {
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto">
         <div className="flex justify-between w-full items-center px-2">
-            <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
+            <div>
+                <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
+                <div className="text-xs font-mono opacity-70">ROUND {round}</div>
+            </div>
             <div className="font-mono text-lg">SCORE: {score}</div>
         </div>
 
@@ -146,14 +216,14 @@ export default function BlockBlast() {
                         <div 
                             className="grid gap-1"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 24px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 24px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 20px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 20px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-6 h-6 bg-white rounded-[2px]"
+                                    className="w-5 h-5 bg-white rounded-[2px]"
                                     style={{ 
                                         gridColumnStart: p[0] + 1,
                                         gridRowStart: p[1] + 1,
@@ -171,7 +241,7 @@ export default function BlockBlast() {
         </div>
 
         <div className="text-xs opacity-50 text-center">
-            Select a shape below, then click on the grid to place it.
+            Select a shape below, then click on the grid to place it. Clear the board to advance!
         </div>
         
         <Button onClick={resetGame} variant="outline" className="border-white/20 text-white hover:bg-white/10">
