@@ -17,9 +17,9 @@ export default function Home() {
       <div className="flex flex-col items-center gap-1 md:gap-2 w-full h-full max-w-[100vw] overflow-hidden pt-2">
 
         {/* Game Selector */}
-        <div className="w-full z-20 px-4 flex flex-col items-center gap-0">
-            {/* Main Games Row - Force all items to fit without scrolling on larger screens, scroll on very small */}
-            <div className="grid grid-cols-3 w-full gap-0 pb-0">
+        <div className="w-full z-20 px-4 flex flex-col items-center gap-4">
+            {/* Main Games Row */}
+            <div className="grid grid-cols-3 w-full gap-4 pb-0">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -48,7 +48,6 @@ export default function Home() {
                     border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
                     hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
                     active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
-                    -mt-8
                     ${activeGame === 'tic-tac-toe' ? 'bg-yellow-400 text-black scale-[1.02] z-10' : 'bg-white text-black hover:bg-gray-100'}
                 `}
             >
