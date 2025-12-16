@@ -49,19 +49,19 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
             
-            mesh.current.rotation.x += diffX * 12 * delta; // Increased landing speed
+            mesh.current.rotation.x += diffX * 25 * delta; // Much faster landing speed (was 12)
 
             // Y Axis dampening (return to 0)
             let diffY = 0 - mesh.current.rotation.y;
             if (diffY > Math.PI) diffY -= Math.PI * 2;
             if (diffY < -Math.PI) diffY += Math.PI * 2;
-            mesh.current.rotation.y += diffY * 12 * delta;
+            mesh.current.rotation.y += diffY * 25 * delta;
 
             // Z Axis dampening (return to 0)
             let diffZ = 0 - mesh.current.rotation.z;
             if (diffZ > Math.PI) diffZ -= Math.PI * 2;
             if (diffZ < -Math.PI) diffZ += Math.PI * 2;
-            mesh.current.rotation.z += diffZ * 12 * delta;
+            mesh.current.rotation.z += diffZ * 25 * delta;
         }
     }
   });
@@ -129,7 +129,7 @@ export default function CoinFlip() {
         console.log("Coin Flip Result:", outcome); // Debug log
         setResult(outcome);
         setFlipping(false);
-    }, 700); // 0.7 seconds duration
+    }, 500); // Reduced to 0.5s to allow for faster perceived action including landing
   };
 
   return (
