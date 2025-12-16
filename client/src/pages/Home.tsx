@@ -21,7 +21,7 @@ export default function Home() {
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
-                    label="VAJ FLIP"
+                    label="COIN FLIP"
                     color="bg-red-500"
                 />
                 <GameTab 
