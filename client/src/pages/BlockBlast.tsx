@@ -421,11 +421,15 @@ export default function BlockBlast() {
         </AnimatePresence>
 
         {/* Grid Area - Maximize Size */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2">
+        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4">
             <div 
                 ref={gridRef}
-                className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl w-full aspect-square max-h-full relative z-0"
-                style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+                className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl aspect-square max-w-full max-h-full relative z-0"
+                style={{ 
+                    gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                    width: 'min(100%, 100vh - 250px)' // Ensure it fits in available height accounting for other UI
+                }}
             >
                 {grid.map((row, r) => 
                     row.map((cell, c) => {
@@ -483,25 +487,26 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 h-[120px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-2">
+        <div className="flex gap-4 h-[100px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-2">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
                         key={i}
-                        ref={el => shapeRefs.current[i] = el}
+                        ref={el => { shapeRefs.current[i] = el; }}
                         drag
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.1, zIndex: 100, opacity: 0.9 }} 
+                        whileDrag={{ scale: 1.6, zIndex: 100, opacity: 0.9 }} 
+                        whileHover={{ scale: 1.05 }}
                         className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
                             className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                // Use 100% of cell size for selector to match grid exactly
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
+                                // Use 40% of cell size for selector to make them smaller
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.4}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.4}px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
