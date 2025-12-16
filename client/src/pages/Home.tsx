@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import CoinFlip from "./CoinFlip";
 import QuietGame from "./QuietGame";
 import BlockBlast from "./BlockBlast";
+import TicTacToe from "./TicTacToe";
 import { Button } from "@/components/ui/button";
 
-type GameType = 'coin-flip' | 'quiet-game' | 'block-blast';
+type GameType = 'coin-flip' | 'quiet-game' | 'block-blast' | 'tic-tac-toe';
 
 export default function Home() {
   const [activeGame, setActiveGame] = useState<GameType>('coin-flip');
@@ -16,8 +17,9 @@ export default function Home() {
       <div className="flex flex-col items-center gap-2 md:gap-4 w-full h-full max-w-[100vw] overflow-hidden pt-4">
 
         {/* Game Selector */}
-        <div className="w-full z-20 px-4">
-            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-2 scrollbar-hide snap-x snap-mandatory">
+        <div className="w-full z-20 px-4 flex flex-col items-center gap-4">
+            {/* Main Games Row */}
+            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-2 scrollbar-hide snap-x snap-mandatory w-full max-w-full">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -37,6 +39,20 @@ export default function Home() {
                     color="bg-green-500"
                 />
             </div>
+
+            {/* Extra Game Button Below */}
+            <Button
+                onClick={() => setActiveGame('tic-tac-toe')}
+                className={`
+                    h-10 md:h-12 px-6 font-display text-sm md:text-lg uppercase transition-all whitespace-nowrap
+                    border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
+                    hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
+                    active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
+                    ${activeGame === 'tic-tac-toe' ? 'bg-yellow-400 text-black scale-105' : 'bg-white text-black hover:bg-gray-100'}
+                `}
+            >
+                ang larong Tic Tac Toe sa papel
+            </Button>
         </div>
 
         {/* Game Container */}
@@ -53,6 +69,7 @@ export default function Home() {
                     {activeGame === 'coin-flip' && <CoinFlip />}
                     {activeGame === 'quiet-game' && <QuietGame />}
                     {activeGame === 'block-blast' && <BlockBlast />}
+                    {activeGame === 'tic-tac-toe' && <TicTacToe />}
                 </motion.div>
             </AnimatePresence>
         </div>
