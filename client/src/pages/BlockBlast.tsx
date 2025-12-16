@@ -87,11 +87,19 @@ export default function BlockBlast() {
 
   function generateNewShapes(imgIndex: number) {
       const img = getRoundImage(imgIndex);
-      const newShapes = [
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
-          { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
-      ];
+      const newShapes = [];
+      
+      for (let i = 0; i < 3; i++) {
+          // ~1/7 chance for a single dot (approx 14%)
+          // There are ~29 shapes. 
+          // If we want 1/7 chance, we force 'dot' if rand < 1/7
+          // Otherwise pick from full pool (which also contains dot, slightly increasing chance further but negligible)
+          if (Math.random() < (1/7)) {
+              newShapes.push({ ...SHAPES[0], img }); // SHAPES[0] is 'dot'
+          } else {
+              newShapes.push({ ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img });
+          }
+      }
       setCurrentShapes(newShapes);
 
       // Check for game over immediately after generating new shapes
