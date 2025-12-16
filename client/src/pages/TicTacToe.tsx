@@ -3,32 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Shuffle } from "lucide-react";
 
-// Import generated assets (will be replaced with actual paths after generation)
-// For now assuming the paths, but I will need to update them or pass them in props if I can't know them yet.
-// I will use placeholders and update imports after I see the generation result or just use the tool output paths.
-// Since I'm writing this file in parallel, I'll use placeholders for now and then edit.
-// Wait, I can't edit in parallel easily.
-// I'll assume the standard path structure or use the generated image paths if I knew them.
-// Since I don't, I will rely on the fact that I can edit this file later or use a generic import that I fix.
-// Actually, I can just use the tool output in the next turn to fix the imports.
-// But to be faster, I'll use standard names and hope `generate_image_tool` returns what I expect or I'll just use the `edit` tool after.
-
-// Actually, I'll write the component to accept image URLs as props or just use local state if I can't import yet.
-// No, I need to import them.
-// I will write the file with placeholders and then `edit` it in the next turn once I have the paths.
-// OR, better, I will wait for images? No, "Maximize parallel tool calls".
-// I will write the file assuming the images are available via a passed prop or I'll just hardcode some temporary placeholders and fix it in the next turn.
-// Actually, I'll just create the component structure.
+// Import generated assets
+import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
+import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
 
 export default function TicTacToe() {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
   const [winner, setWinner] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
-
-// Import generated assets
-import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
-import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
 
   const checkWinner = (squares: (string | null)[]) => {
     const lines = [
