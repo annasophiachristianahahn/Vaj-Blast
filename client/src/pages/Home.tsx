@@ -13,17 +13,7 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center gap-2 md:gap-4 w-full h-full max-w-[100vw] overflow-hidden">
-        <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", bounce: 0.5 }}
-            className="text-center px-4 pt-2"
-        >
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-display text-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] stroke-black tracking-tighter transform -rotate-2">
-            VAJUNNIE
-            </h1>
-        </motion.div>
+      <div className="flex flex-col items-center gap-2 md:gap-4 w-full h-full max-w-[100vw] overflow-hidden pt-4">
 
         {/* Game Selector */}
         <div className="w-full z-20 px-4">
