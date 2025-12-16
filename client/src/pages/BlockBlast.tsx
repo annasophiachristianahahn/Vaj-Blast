@@ -131,10 +131,10 @@ export default function BlockBlast() {
               const bigShapes = SHAPES.filter(s => s.points.length >= 4);
               selectedShape = bigShapes[Math.floor(Math.random() * bigShapes.length)];
           }
-          // SCENARIO B: Helpful "Smart" Move (High chance if board has gaps)
-          // If we have identified shapes that will clear lines, give them!
-          else if (helpfulShapes.length > 0 && rand < 0.6) {
-             // 60% chance to give a perfect piece that clears a line
+          // SCENARIO B: Helpful "Smart" Move (Hard Mode)
+          // Only occasionally throw a bone to clear lines
+          else if (helpfulShapes.length > 0 && rand < 0.15) {
+             // 15% chance (was 30%) to give a perfect piece
              selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
           }
           // SCENARIO C: Crisis Management
@@ -155,8 +155,8 @@ export default function BlockBlast() {
                   selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
                   
                   // "Mercy" Mechanic: If we picked a big shape but board is super tight, maybe downgrade to smaller one?
-                  // But keep the 1/8 rarity for the single dot unless it's the ONLY move.
-                  if (playableShapes.length < 5 && rand < 0.125) {
+                  // Extremely rare "Savior" dot (1/20 chance)
+                  if (playableShapes.length < 5 && rand < 0.05) {
                       selectedShape = SHAPES[0]; // The Dot (Savior)
                   }
               } else {
@@ -164,15 +164,29 @@ export default function BlockBlast() {
                   selectedShape = SHAPES[Math.floor(Math.random() * 3)];
               }
           }
-          // SCENARIO D: Pure Random (Wildcard)
+          // SCENARIO D: Evil Random (Weighted towards harder shapes)
           else {
-               // Standard distribution
-               selectedShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+               const randType = Math.random();
                
-               // Enforce the rarity of the single dot (index 0)
-               if (selectedShape.id === 'dot' && Math.random() > 0.125) {
-                   // Reroll if we hit the dot but didn't win the 1/8 lottery
-                   // Pick something medium sized instead
+               // 60% chance for Hard/Complex shapes (4+ blocks, Z/S shapes)
+               if (randType < 0.6) {
+                   const hardShapes = SHAPES.filter(s => s.points.length >= 4 || s.id.includes('Z') || s.id.includes('S'));
+                   selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
+               }
+               // 30% chance for Medium shapes (3 blocks)
+               else if (randType < 0.9) {
+                   const medShapes = SHAPES.filter(s => s.points.length === 3);
+                   selectedShape = medShapes[Math.floor(Math.random() * medShapes.length)];
+               }
+               // 10% chance for Small/Easy shapes (<= 2 blocks)
+               else {
+                   const easyShapes = SHAPES.filter(s => s.points.length <= 2);
+                   selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
+               }
+
+               // DOUBLE CHECK: Enforce extreme rarity of the single dot
+               // If we somehow picked a dot, 95% chance to RE-ROLL
+               if (selectedShape.id === 'dot' && Math.random() > 0.05) {
                    const mediumShapes = SHAPES.filter(s => s.points.length >= 3);
                    selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
                }
