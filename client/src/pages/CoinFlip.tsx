@@ -6,14 +6,14 @@ import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
-function Coin({ flipping, result, onFlipEnd }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipEnd: () => void }) {
+function Coin({ flipping, result, onFlipEnd, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipEnd: () => void, onFlipStart: () => void }) {
   const mesh = useRef<Mesh>(null!);
   const [rotationSpeed, setRotationSpeed] = useState(0);
   
   useFrame((state, delta) => {
     if (flipping) {
-        mesh.current.rotation.x += 20 * delta;
-        mesh.current.rotation.y += 10 * delta;
+        mesh.current.rotation.x += 50 * delta; // Increased speed for rapid spin
+        mesh.current.rotation.y += 25 * delta;
     } else {
         // Landing animation
         if (result) {
@@ -26,18 +26,27 @@ function Coin({ flipping, result, onFlipEnd }: { flipping: boolean, result: 'HEA
             const diff = targetRotationX - currentX;
             
             if (Math.abs(diff) > 0.1) {
-                mesh.current.rotation.x += diff * 5 * delta;
+                mesh.current.rotation.x += diff * 10 * delta; // Faster landing snap
             } else {
                 mesh.current.rotation.x = targetRotationX;
             }
-             mesh.current.rotation.y *= 0.95; // Slow down spin
+             mesh.current.rotation.y *= 0.90; // Slow down spin faster
         }
     }
   });
 
   return (
-    <Float speed={flipping ? 10 : 2} rotationIntensity={flipping ? 5 : 1} floatIntensity={flipping ? 5 : 1}>
-        <mesh ref={mesh} rotation={[0, 0, 0]}>
+    <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 10 : 1} floatIntensity={flipping ? 5 : 1}>
+        <mesh 
+            ref={mesh} 
+            rotation={[0, 0, 0]}
+            onClick={(e) => {
+                e.stopPropagation();
+                onFlipStart();
+            }}
+            onPointerOver={() => document.body.style.cursor = 'pointer'}
+            onPointerOut={() => document.body.style.cursor = 'default'}
+        >
         <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
         <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
         
@@ -72,11 +81,12 @@ export default function CoinFlip() {
     setFlipping(true);
     setResult(null);
     
+    // Play a faster spin animation
     setTimeout(() => {
         const outcome = Math.random() > 0.5 ? 'HEADS' : 'TAILS';
         setResult(outcome);
         setFlipping(false);
-    }, 2000);
+    }, 1500); // Slightly shorter for snappier feel
   };
 
   return (
@@ -87,12 +97,12 @@ export default function CoinFlip() {
           <pointLight position={[10, 10, 10]} intensity={1} />
           <spotLight position={[-10, -10, -10]} intensity={0.5} />
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          <Coin flipping={flipping} result={result} onFlipEnd={() => {}} />
+          <Coin flipping={flipping} result={result} onFlipEnd={() => {}} onFlipStart={flipCoin} />
           <Environment preset="city" />
         </Canvas>
       </div>
       
-      <div className="flex flex-col items-center gap-4 mt-4 relative z-10">
+      <div className="flex flex-col items-center gap-4 mt-4 relative z-10 min-h-[100px]">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
@@ -103,13 +113,9 @@ export default function CoinFlip() {
             </motion.div>
         )}
         
-        <Button 
-            onClick={flipCoin} 
-            disabled={flipping}
-            className="text-2xl h-16 px-12 bg-primary hover:bg-primary/80 border-4 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all rounded-xl font-display uppercase"
-        >
-            {flipping ? "FLIPPING..." : "FLIP COIN"}
-        </Button>
+        <div className="text-sm opacity-50 font-mono animate-pulse mt-2">
+            TAP COIN TO FLIP
+        </div>
       </div>
     </div>
   );

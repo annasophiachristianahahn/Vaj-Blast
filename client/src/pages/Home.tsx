@@ -29,7 +29,7 @@ export default function Home() {
         </motion.div>
 
         {/* Game Selector */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-4 w-full max-w-lg z-20">
+        <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 w-full max-w-lg z-20 px-4 pb-2 scrollbar-hide -mx-4 md:mx-0">
             <GameTab 
                 active={activeGame === 'coin-flip'} 
                 onClick={() => setActiveGame('coin-flip')}
@@ -77,10 +77,10 @@ function GameTab({ active, onClick, label, color }: { active: boolean, onClick: 
         <Button
             onClick={onClick}
             className={`
-                relative h-12 px-4 md:px-6 font-display text-lg md:text-xl uppercase transition-all
-                border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]
-                hover:-translate-y-1 hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
-                active:translate-y-0 active:shadow-[2px_2px_0_rgba(0,0,0,1)]
+                relative h-10 md:h-12 px-3 md:px-6 font-display text-sm md:text-xl uppercase transition-all whitespace-nowrap shrink-0
+                border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] md:shadow-[4px_4px_0_rgba(0,0,0,1)]
+                hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
+                active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
                 ${active ? `${color} text-white scale-105 z-10` : 'bg-white text-black hover:bg-gray-100'}
             `}
         >
