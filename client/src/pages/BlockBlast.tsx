@@ -87,6 +87,11 @@ export default function BlockBlast() {
   const gridRef = useRef<HTMLDivElement>(null);
   // Refs for shape elements to get their bounding rects during drag
   const shapeRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Ref to track the last valid placement during drag
+  // This prevents issues where dragEnd calculates a different position than the last drag event
+  // (e.g. due to element snapping back or sub-pixel differences)
+  const lastValidPlacementRef = useRef<{r: number, c: number, shapeIndex: number} | null>(null);
 
   // Initialize shapes on mount
   useEffect(() => {
@@ -356,9 +361,12 @@ export default function BlockBlast() {
 
       const placement = getPlacementPosition(shapeIndex, shape);
       if (placement) {
-          setHoverPlacement({ ...placement, shapeIndex });
+          const newPlacement = { ...placement, shapeIndex };
+          setHoverPlacement(newPlacement);
+          lastValidPlacementRef.current = newPlacement;
       } else {
           setHoverPlacement(null);
+          lastValidPlacementRef.current = null;
       }
   };
 
@@ -369,9 +377,15 @@ export default function BlockBlast() {
     const shape = currentShapes[shapeIndex];
     if (!shape) return;
 
-    const placement = getPlacementPosition(shapeIndex, shape);
+    // Use the last valid placement found during drag
+    // This is much more reliable than recalculating on dragEnd where the element might have shifted
+    const placement = lastValidPlacementRef.current;
     
-    if (placement) {
+    // Clear the ref for next time
+    lastValidPlacementRef.current = null;
+
+    // Verify the placement belongs to this shape (sanity check)
+    if (placement && placement.shapeIndex === shapeIndex) {
         placeShape(placement.r, placement.c, shape, shapeIndex);
     }
   };
