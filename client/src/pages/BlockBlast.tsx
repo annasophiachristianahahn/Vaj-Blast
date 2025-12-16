@@ -493,7 +493,7 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 h-[180px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-4">
+        <div className="flex gap-4 h-[100px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-4">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
@@ -503,16 +503,16 @@ export default function BlockBlast() {
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.1, zIndex: 100, opacity: 0.9 }} 
+                        whileDrag={{ scale: 1.5, zIndex: 100, opacity: 0.9 }} 
                         whileHover={{ scale: 1.05 }}
                         className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
                             className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                // Use 120% of cell size for selector - make them nice and big
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 1.2}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 1.2}px)`
+                                // Use 65% of cell size for selector to make them visible but not huge
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.65}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.65}px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
