@@ -137,10 +137,24 @@ export default function BlockBlast() {
     const c = rawC - Math.floor((shapeWidth - 1) / 2);
     const r = rawR - Math.floor((shapeHeight - 1) / 2);
     
-    // Check validity
-    if (canPlaceShape(r, c, shape)) {
-        placeShape(r, c, shape, shapeIndex);
+    // Priority Search: Center -> Adjacent -> Diagonal
+    const offsets = [
+        [0, 0], // Center (Priority 1)
+        [0, 1], [0, -1], [1, 0], [-1, 0], // Adjacent (Priority 2)
+        [1, 1], [1, -1], [-1, 1], [-1, -1] // Diagonals (Priority 3)
+    ];
+
+    for (const [dr, dc] of offsets) {
+        const testR = r + dr;
+        const testC = c + dc;
+        
+        if (canPlaceShape(testR, testC, shape)) {
+            placeShape(testR, testC, shape, shapeIndex);
+            return; // Placed successfully, exit
+        }
     }
+    
+    // If we get here, no valid placement found in neighborhood
   };
 
   const canPlaceShape = (r: number, c: number, shape: any) => {
