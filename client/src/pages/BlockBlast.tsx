@@ -428,13 +428,13 @@ export default function BlockBlast() {
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                    width: 'min(100%, 100vh - 180px)' // Increased height availability by removing footer space
+                    width: 'min(100%, 100vh - 160px)'
                 }}
             >
                 {/* Score Overlay */}
-                <div className="absolute -top-12 right-0 z-20 flex flex-col items-end pointer-events-none">
-                    <div className="text-sm font-mono text-white/60">SCORE</div>
-                    <div className="text-3xl font-display text-yellow-400 drop-shadow-md tracking-wider">{score}</div>
+                <div className="absolute top-2 right-2 z-20 flex flex-col items-end pointer-events-none mix-blend-difference">
+                    <div className="text-[10px] font-mono text-white/80 leading-none mb-1">SCORE</div>
+                    <div className="text-xl font-display text-yellow-400 tracking-wider leading-none">{score}</div>
                 </div>
 
                 {grid.map((row, r) => 

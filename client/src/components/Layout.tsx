@@ -25,10 +25,6 @@ export function Layout({ children }: { children: ReactNode }) {
         <main className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center w-full">
             {children}
         </main>
-
-        <footer className="shrink-0 p-4 text-center text-xs opacity-60 font-mono">
-            10 Strawberry Street ent
-        </footer>
       </div>
     </div>
   );
