@@ -123,6 +123,8 @@ export default function BlockBlast() {
                         style={{
                             backgroundImage: cell ? `url(${cell})` : 'none',
                             backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundRepeat: 'no-repeat'
                         }}
                         initial={false}
                         animate={{ scale: cell ? 1 : 1, opacity: 1 }}
@@ -132,37 +134,39 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector */}
-        <div className="flex gap-2 h-20 items-center justify-center w-full">
+        <div className="flex gap-4 h-32 items-center justify-center w-full">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
                         key={i}
                         onClick={() => setSelectedShape(i)}
-                        className={`p-1.5 rounded-lg cursor-pointer transition-all ${selectedShape === i ? 'bg-primary ring-2 ring-white scale-110' : 'bg-black/40 hover:bg-black/60'}`}
+                        className={`p-3 rounded-lg cursor-pointer transition-all ${selectedShape === i ? 'bg-primary ring-2 ring-white scale-110' : 'bg-black/40 hover:bg-black/60'}`}
                         whileTap={{ scale: 0.9 }}
                     >
                         <div 
-                            className="grid gap-0.5"
+                            className="grid gap-1"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 8px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 8px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 24px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 24px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-2 h-2 bg-white rounded-[1px]"
+                                    className="w-6 h-6 bg-white rounded-[2px]"
                                     style={{ 
                                         gridColumnStart: p[0] + 1,
                                         gridRowStart: p[1] + 1,
                                         backgroundImage: `url(${shape.img})`,
-                                        backgroundSize: 'cover'
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        backgroundRepeat: 'no-repeat'
                                     }}
                                 />
                             ))}
                         </div>
                     </motion.div>
-                ) : <div key={i} className="w-12 h-12" />
+                ) : <div key={i} className="w-16 h-16" />
             ))}
         </div>
 
