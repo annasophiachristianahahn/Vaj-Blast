@@ -2,6 +2,7 @@ import { Layout } from "@/components/Layout";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 // Import generated assets
 import catImg from "@assets/generated_images/pixel_art_crying_cat_meme.png";
@@ -11,7 +12,6 @@ import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
 
 const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
 const GRID_SIZE = 8;
-const CELL_SIZE = 40; // Approximate cell size for drag calculation
 
 // Define shapes
 const SHAPES = [
@@ -70,6 +70,7 @@ export default function BlockBlast() {
   
   // Animation state
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
+  const [shakeGrid, setShakeGrid] = useState(false);
   
   // Helper to get image for current round
   const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
@@ -93,7 +94,35 @@ export default function BlockBlast() {
           { ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img },
       ];
       setCurrentShapes(newShapes);
+
+      // Check for game over immediately after generating new shapes
+      // We need to wait for state update or pass newShapes directly
+      // Since state update is async, we pass it directly
+      checkGameOver(grid, newShapes);
   }
+
+  // Check if ANY available shape can fit ANYWHERE on the grid
+  const checkGameOver = (currentGrid: (string | null)[][], shapes: any[]) => {
+      // Filter out null shapes (already placed)
+      const availableShapes = shapes.filter(s => s !== null);
+      
+      if (availableShapes.length === 0) return; // Should not happen usually as we refill
+
+      // For each available shape
+      for (const shape of availableShapes) {
+          // Try every position on the grid
+          for (let r = 0; r < GRID_SIZE; r++) {
+              for (let c = 0; c < GRID_SIZE; c++) {
+                  if (canPlaceShape(r, c, shape, currentGrid)) {
+                      return; // Found a valid move! Game continues.
+                  }
+              }
+          }
+      }
+
+      // If we get here, NO moves are possible
+      setGameOver(true);
+  };
 
   const handleDragEnd = (event: any, info: any, shapeIndex: number) => {
     if (!gridRef.current || gameOver) return;
@@ -105,110 +134,99 @@ export default function BlockBlast() {
     const pointerX = info.point.x;
     const pointerY = info.point.y;
 
-    // Check if drop is within grid bounds
     if (
         pointerX < gridRect.left || 
         pointerX > gridRect.right || 
         pointerY < gridRect.top || 
         pointerY > gridRect.bottom
     ) {
-        return; // Dropped outside
+        return; 
     }
 
-    // Calculate approximate cell based on pointer position relative to grid
     const cellWidth = gridRect.width / GRID_SIZE;
     const cellHeight = gridRect.height / GRID_SIZE;
     
-    // Relative position in grid
     const relativeX = pointerX - gridRect.left;
     const relativeY = pointerY - gridRect.top;
     
-    // Calculate raw grid coordinates from pointer
     const rawC = Math.floor(relativeX / cellWidth);
     const rawR = Math.floor(relativeY / cellHeight);
 
-    // Calculate shape dimensions
     const shapeWidth = Math.max(...shape.points.map(p => p[0])) + 1;
     const shapeHeight = Math.max(...shape.points.map(p => p[1])) + 1;
 
-    // Center-based drop logic:
-    // We assume the user grabbed the "center" of the shape.
-    // So we shift the drop coordinates by half the shape's size to align the shape's center with the pointer's cell.
     const c = rawC - Math.floor((shapeWidth - 1) / 2);
     const r = rawR - Math.floor((shapeHeight - 1) / 2);
     
-    // Priority Search: Center -> Adjacent -> Diagonal
     const offsets = [
-        [0, 0], // Center (Priority 1)
-        [0, 1], [0, -1], [1, 0], [-1, 0], // Adjacent (Priority 2)
-        [1, 1], [1, -1], [-1, 1], [-1, -1] // Diagonals (Priority 3)
+        [0, 0], 
+        [0, 1], [0, -1], [1, 0], [-1, 0], 
+        [1, 1], [1, -1], [-1, 1], [-1, -1] 
     ];
 
     for (const [dr, dc] of offsets) {
         const testR = r + dr;
         const testC = c + dc;
         
-        if (canPlaceShape(testR, testC, shape)) {
+        if (canPlaceShape(testR, testC, shape, grid)) {
             placeShape(testR, testC, shape, shapeIndex);
-            return; // Placed successfully, exit
+            return; 
         }
     }
-    
-    // If we get here, no valid placement found in neighborhood
   };
 
-  const canPlaceShape = (r: number, c: number, shape: any) => {
+  const canPlaceShape = (r: number, c: number, shape: any, currentGrid: (string | null)[][]) => {
       return shape.points.every(([dx, dy]: number[]) => {
           const nr = r + dy;
           const nc = c + dx;
-          return nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !grid[nr][nc];
+          return nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !currentGrid[nr][nc];
       });
   };
 
   const placeShape = (r: number, c: number, shape: any, shapeIndex: number) => {
-      // 1. Place shape VISUALLY first
       const newGrid = grid.map(row => [...row]);
       shape.points.forEach(([dx, dy]: number[]) => {
           newGrid[r + dy][c + dx] = shape.img;
       });
       setGrid(newGrid);
 
-      // Remove shape from selector
       const newShapes = [...currentShapes];
       newShapes[shapeIndex] = null as any; 
       setCurrentShapes(newShapes);
 
-      // 2. Check for lines (Logic)
       const linesToClear = findLinesToClear(newGrid);
 
       if (linesToClear.length > 0) {
-          // 3. Trigger Animation
           setClearingCells(linesToClear);
+          setShakeGrid(true); // Trigger grid shake
           
-          // 4. Update Grid Data AFTER animation
           setTimeout(() => {
+              setShakeGrid(false); // Stop shake
               const finalGrid = clearLinesFromGrid(newGrid, linesToClear);
               setGrid(finalGrid);
               setClearingCells([]);
-              setScore(s => s + linesToClear.length * 10); // Score per block cleared
+              setScore(s => s + linesToClear.length * 10);
               
-              // Check Round Clear
               const isBoardEmpty = finalGrid.every(row => row.every(cell => cell === null));
               if (isBoardEmpty && score > 0) {
                   setRound(r => r + 1);
                   setCurrentImageIndex(i => i + 1);
               }
               
-              // Refill shapes if needed
               if (newShapes.every(s => !s)) {
                   const nextImgIndex = isBoardEmpty && score > 0 ? currentImageIndex + 1 : currentImageIndex;
                   generateNewShapes(nextImgIndex);
+              } else {
+                  // Check game over with remaining shapes and NEW grid state
+                  checkGameOver(finalGrid, newShapes);
               }
-          }, 500); // 500ms animation duration
+          }, 600); // Slightly longer for animation
       } else {
-          // No lines, just refill check
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
+          } else {
+              // Check game over with remaining shapes and NEW grid state
+              checkGameOver(newGrid, newShapes);
           }
       }
   };
@@ -226,7 +244,6 @@ export default function BlockBlast() {
           for(let r=0; r<GRID_SIZE; r++) cellsToClear.push({r, c});
       });
       
-      // Deduplicate
       return cellsToClear.filter((v, i, a) => a.findIndex(t => t.r === v.r && t.c === v.c) === i);
   };
 
@@ -250,6 +267,25 @@ export default function BlockBlast() {
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none">
+        {/* Game Over Dialog */}
+        <Dialog open={gameOver} onOpenChange={setGameOver}>
+            <DialogContent className="bg-black/90 border-red-500/50 text-white sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle className="text-3xl font-display text-center text-red-500 animate-pulse">GAME OVER</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-4 py-4">
+                    <img src={skullImg} alt="Game Over" className="w-24 h-24 animate-bounce" />
+                    <p className="text-xl font-mono">FINAL SCORE: {score}</p>
+                    <p className="text-sm opacity-70">The blockchain has crashed!</p>
+                </div>
+                <DialogFooter>
+                    <Button onClick={resetGame} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg">
+                        RESTART MINTING
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
         <div className="flex justify-between w-full items-center px-2">
             <div>
                 <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
@@ -259,8 +295,14 @@ export default function BlockBlast() {
         </div>
 
         {/* Grid */}
-        <div 
+        <motion.div 
             ref={gridRef}
+            animate={shakeGrid ? { 
+                x: [0, -5, 5, -5, 5, 0],
+                y: [0, -5, 5, -5, 5, 0],
+                rotate: [0, -1, 1, -1, 1, 0]
+            } : {}}
+            transition={{ duration: 0.4 }}
             className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
         >
@@ -282,11 +324,16 @@ export default function BlockBlast() {
                             <AnimatePresence>
                                 {isClearing && (
                                     <motion.div 
-                                        initial={{ opacity: 0, scale: 1 }}
-                                        animate={{ opacity: [0, 1, 0], scale: [1, 1.5, 2] }}
+                                        initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+                                        animate={{ 
+                                            opacity: [0, 1, 1, 0], 
+                                            scale: [0.5, 1.5, 2.5, 3],
+                                            rotate: [0, 45, 90, 180],
+                                            backgroundColor: ["#fff", "#ff0000", "#ffff00", "#fff"]
+                                        }}
                                         exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.4 }}
-                                        className="absolute inset-0 bg-white z-10 rounded-full"
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
                                     />
                                 )}
                             </AnimatePresence>
@@ -294,7 +341,7 @@ export default function BlockBlast() {
                     );
                 })
             )}
-        </div>
+        </motion.div>
 
         {/* Shape Selector - Draggable */}
         <div className="flex gap-4 h-32 items-center justify-center w-full relative z-10">
