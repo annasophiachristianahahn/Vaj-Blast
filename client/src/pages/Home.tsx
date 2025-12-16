@@ -36,7 +36,7 @@ export default function Home() {
                 delay={0.2}
             />
             <GameCard 
-                title="BLOCK BLAST" 
+                title="VAJ BLAST" 
                 desc="Meme puzzle madness" 
                 href="/block-blast" 
                 color="bg-green-500"

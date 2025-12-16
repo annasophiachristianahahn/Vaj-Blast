@@ -106,7 +106,7 @@ export default function BlockBlast() {
     <Layout>
       <div className="flex flex-col items-center gap-4 w-full max-w-md">
         <div className="flex justify-between w-full items-center">
-            <h1 className="text-3xl font-display text-primary">BLOCK BLAST</h1>
+            <h1 className="text-3xl font-display text-primary">VAJ BLAST</h1>
             <div className="font-mono text-xl">SCORE: {score}</div>
         </div>
 
