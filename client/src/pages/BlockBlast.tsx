@@ -468,7 +468,7 @@ export default function BlockBlast() {
                             transition={{ duration: 0.25, ease: "easeInOut" }}
                             className={`w-full h-full rounded-sm border transition-colors relative 
                                 ${cell ? 'bg-white border-white/5' : 
-                                  isGhost ? 'bg-white/30 border-white/30 animate-pulse' : 
+                                  isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
                                   'bg-white/5 border-white/10'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
@@ -510,7 +510,7 @@ export default function BlockBlast() {
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.0, zIndex: 100 }}
+                        whileDrag={{ scale: 1.0, zIndex: 100, opacity: 0.5 }}
                         className={`p-2 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
