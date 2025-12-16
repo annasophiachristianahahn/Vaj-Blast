@@ -2,7 +2,6 @@ import { Layout } from "@/components/Layout";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 // Import generated assets
 import catImg from "@assets/generated_images/pixel_art_crying_cat_meme.png";
@@ -266,25 +265,40 @@ export default function BlockBlast() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none">
-        {/* Game Over Dialog */}
-        <Dialog open={gameOver} onOpenChange={setGameOver}>
-            <DialogContent className="bg-black/90 border-red-500/50 text-white sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle className="text-3xl font-display text-center text-red-500 animate-pulse">GAME OVER</DialogTitle>
-                </DialogHeader>
-                <div className="flex flex-col items-center gap-4 py-4">
-                    <img src={skullImg} alt="Game Over" className="w-24 h-24 animate-bounce" />
-                    <p className="text-xl font-mono">FINAL SCORE: {score}</p>
-                    <p className="text-sm opacity-70">The blockchain has crashed!</p>
-                </div>
-                <DialogFooter>
-                    <Button onClick={resetGame} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg">
-                        RESTART MINTING
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none relative">
+        {/* Custom Game Over Overlay */}
+        <AnimatePresence>
+            {gameOver && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm rounded-xl"
+                >
+                    <motion.div 
+                        initial={{ scale: 0.8, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.8, y: 20 }}
+                        className="bg-black border-2 border-red-500/50 p-6 rounded-lg shadow-2xl flex flex-col items-center gap-4 text-white w-full max-w-sm"
+                    >
+                        <h2 className="text-4xl font-display text-red-500 animate-pulse text-center">GAME OVER</h2>
+                        <img src={skullImg} alt="Game Over" className="w-24 h-24 animate-bounce" />
+                        <div className="text-center">
+                            <p className="text-2xl font-mono">FINAL SCORE</p>
+                            <p className="text-4xl font-bold text-yellow-400">{score}</p>
+                        </div>
+                        <p className="text-sm opacity-60 text-center font-mono">The blockchain has crashed!</p>
+                        
+                        <Button 
+                            onClick={resetGame} 
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg h-12 mt-2"
+                        >
+                            RESTART MINTING
+                        </Button>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
 
         <div className="flex justify-between w-full items-center px-2">
             <div>
