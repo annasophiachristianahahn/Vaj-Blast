@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 // Import generated assets
@@ -11,6 +11,7 @@ import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
 
 const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
 const GRID_SIZE = 8;
+const CELL_SIZE = 40; // Approximate cell size for drag calculation
 
 // Define shapes
 const SHAPES = [
@@ -60,7 +61,6 @@ export default function BlockBlast() {
   const [grid, setGrid] = useState<(string | null)[][]>(
     Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))
   );
-  const [selectedShape, setSelectedShape] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   
@@ -68,11 +68,17 @@ export default function BlockBlast() {
   const [round, setRound] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
+  // Animation state
+  const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
+  
   // Helper to get image for current round
   const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
   
   // Shapes state needs to depend on round image
   const [currentShapes, setCurrentShapes] = useState<{points: number[][], id: string, img: string}[]>([]);
+  
+  // Grid Ref for drag calculations
+  const gridRef = useRef<HTMLDivElement>(null);
 
   // Initialize shapes on mount
   useEffect(() => {
@@ -89,74 +95,139 @@ export default function BlockBlast() {
       setCurrentShapes(newShapes);
   }
 
-  const handleGridClick = (r: number, c: number) => {
-      if (selectedShape === null || gameOver) return;
-      
-      const shape = currentShapes[selectedShape];
-      if (!shape) return;
+  const handleDragEnd = (event: any, info: any, shapeIndex: number) => {
+    if (!gridRef.current || gameOver) return;
 
-      // Check if placeable
-      const canPlace = shape.points.every(([dx, dy]) => {
+    const shape = currentShapes[shapeIndex];
+    if (!shape) return;
+
+    const gridRect = gridRef.current.getBoundingClientRect();
+    const pointerX = info.point.x;
+    const pointerY = info.point.y;
+
+    // Check if drop is within grid bounds
+    if (
+        pointerX < gridRect.left || 
+        pointerX > gridRect.right || 
+        pointerY < gridRect.top || 
+        pointerY > gridRect.bottom
+    ) {
+        return; // Dropped outside
+    }
+
+    // Calculate approximate cell
+    // We offset by half cell size to target center of finger/pointer
+    const relativeX = pointerX - gridRect.left;
+    const relativeY = pointerY - gridRect.top;
+    
+    // We need to account for the shape's own offset (dragging from center/top-left)
+    // A simple approximation is to assume user drags by "top-left" block of shape or center
+    // Let's assume the drop point corresponds to the top-left block (0,0) of the shape
+    // But framer motion drag logic is relative to element.
+    // Better strategy: The drop point is the center of the dragged element. 
+    // We should map that to the grid. 
+    
+    // Actually, simpler approach for "drag":
+    // Calculate cell based on pointer position relative to grid
+    const cellWidth = gridRect.width / GRID_SIZE;
+    const cellHeight = gridRect.height / GRID_SIZE;
+    
+    const c = Math.floor(relativeX / cellWidth);
+    const r = Math.floor(relativeY / cellHeight);
+
+    // IMPORTANT: The `r` and `c` calculated here are where the pointer is.
+    // We should treat this as the position of the shape's (0,0) block, OR shift based on where user grabbed.
+    // For simplicity in this iteration: assume pointer is at (0,0) of shape (top-left).
+    // A slight offset might be needed for UX (finger covers block).
+    // Let's adjust r/c by -1 or similar if needed, but start with direct mapping.
+    
+    // Actually, to make it intuitive, let's offset by -1,-1 so the piece is centered under finger?
+    // Let's stick to direct mapping first (0,0 of shape goes to r,c).
+    
+    // Check validity
+    if (canPlaceShape(r, c, shape)) {
+        placeShape(r, c, shape, shapeIndex);
+    }
+  };
+
+  const canPlaceShape = (r: number, c: number, shape: any) => {
+      return shape.points.every(([dx, dy]: number[]) => {
           const nr = r + dy;
           const nc = c + dx;
           return nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !grid[nr][nc];
       });
+  };
 
-      if (canPlace) {
-          const newGrid = grid.map(row => [...row]);
-          shape.points.forEach(([dx, dy]) => {
-              newGrid[r + dy][c + dx] = shape.img;
-          });
-          
-          // Remove used shape
-          const newShapes = [...currentShapes];
-          newShapes[selectedShape] = null as any; // Mark as used
-          setCurrentShapes(newShapes);
-          setSelectedShape(null);
-          
-          // Check for lines FIRST
-          const gridAfterLines = checkLines(newGrid);
-          
-          // Check for empty board (Round Clear)
-          const isBoardEmpty = gridAfterLines.every(row => row.every(cell => cell === null));
-          if (isBoardEmpty && score > 0) { // Ensure it's not just the start of game
-              setRound(r => r + 1);
-              setCurrentImageIndex(i => i + 1);
-              // Use NEXT image for next round immediately? Or just for new shapes?
-              // Let's swap immediately for visual feedback? 
-              // Actually, user said "graduate to the next round", so new shapes should use new image.
-              // Existing blocks are gone anyway.
-          }
+  const placeShape = (r: number, c: number, shape: any, shapeIndex: number) => {
+      // 1. Place shape VISUALLY first
+      const newGrid = grid.map(row => [...row]);
+      shape.points.forEach(([dx, dy]: number[]) => {
+          newGrid[r + dy][c + dx] = shape.img;
+      });
+      setGrid(newGrid);
 
-          setGrid(gridAfterLines);
+      // Remove shape from selector
+      const newShapes = [...currentShapes];
+      newShapes[shapeIndex] = null as any; 
+      setCurrentShapes(newShapes);
 
-          // Check refill shapes if all used
+      // 2. Check for lines (Logic)
+      const linesToClear = findLinesToClear(newGrid);
+
+      if (linesToClear.length > 0) {
+          // 3. Trigger Animation
+          setClearingCells(linesToClear);
+          
+          // 4. Update Grid Data AFTER animation
+          setTimeout(() => {
+              const finalGrid = clearLinesFromGrid(newGrid, linesToClear);
+              setGrid(finalGrid);
+              setClearingCells([]);
+              setScore(s => s + linesToClear.length * 10); // Score per block cleared
+              
+              // Check Round Clear
+              const isBoardEmpty = finalGrid.every(row => row.every(cell => cell === null));
+              if (isBoardEmpty && score > 0) {
+                  setRound(r => r + 1);
+                  setCurrentImageIndex(i => i + 1);
+              }
+              
+              // Refill shapes if needed
+              if (newShapes.every(s => !s)) {
+                  const nextImgIndex = isBoardEmpty && score > 0 ? currentImageIndex + 1 : currentImageIndex;
+                  generateNewShapes(nextImgIndex);
+              }
+          }, 500); // 500ms animation duration
+      } else {
+          // No lines, just refill check
           if (newShapes.every(s => !s)) {
-              // If we just cleared board, we use next image index, otherwise current
-              const nextImgIndex = isBoardEmpty && score > 0 ? currentImageIndex + 1 : currentImageIndex;
-              generateNewShapes(nextImgIndex);
+              generateNewShapes(currentImageIndex);
           }
       }
   };
 
-  const checkLines = (currentGrid: (string | null)[][]) => {
-      let linesCleared = 0;
+  const findLinesToClear = (currentGrid: (string | null)[][]) => {
       const rowsToClear = currentGrid.map((row, r) => row.every(cell => cell !== null) ? r : -1).filter(r => r !== -1);
       const colsToClear = Array(GRID_SIZE).fill(0).map((_, c) => currentGrid.every(row => row[c] !== null) ? c : -1).filter(c => c !== -1);
       
-      const newGrid = currentGrid.map(row => [...row]);
-
-      if (rowsToClear.length > 0 || colsToClear.length > 0) {
-          rowsToClear.forEach(r => {
-              for(let c=0; c<GRID_SIZE; c++) newGrid[r][c] = null;
-          });
-          colsToClear.forEach(c => {
-              for(let r=0; r<GRID_SIZE; r++) newGrid[r][c] = null;
-          });
-          
-          setScore(s => s + (rowsToClear.length + colsToClear.length) * 100);
-      }
+      const cellsToClear: {r: number, c: number}[] = [];
       
+      rowsToClear.forEach(r => {
+          for(let c=0; c<GRID_SIZE; c++) cellsToClear.push({r, c});
+      });
+      colsToClear.forEach(c => {
+          for(let r=0; r<GRID_SIZE; r++) cellsToClear.push({r, c});
+      });
+      
+      // Deduplicate
+      return cellsToClear.filter((v, i, a) => a.findIndex(t => t.r === v.r && t.c === v.c) === i);
+  };
+
+  const clearLinesFromGrid = (currentGrid: (string | null)[][], cellsToClear: {r: number, c: number}[]) => {
+      const newGrid = currentGrid.map(row => [...row]);
+      cellsToClear.forEach(({r, c}) => {
+          newGrid[r][c] = null;
+      });
       return newGrid;
   };
 
@@ -167,10 +238,11 @@ export default function BlockBlast() {
       generateNewShapes(0);
       setScore(0);
       setGameOver(false);
+      setClearingCells([]);
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto">
+    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none">
         <div className="flex justify-between w-full items-center px-2">
             <div>
                 <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
@@ -181,49 +253,65 @@ export default function BlockBlast() {
 
         {/* Grid */}
         <div 
-            className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px]"
+            ref={gridRef}
+            className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
         >
             {grid.map((row, r) => 
-                row.map((cell, c) => (
-                    <motion.div
-                        key={`${r}-${c}`}
-                        onClick={() => handleGridClick(r, c)}
-                        className={`w-full h-full rounded-sm border border-white/5 cursor-pointer hover:bg-white/10 transition-colors ${cell ? 'bg-white' : 'bg-transparent'}`}
-                        style={{
-                            backgroundImage: cell ? `url(${cell})` : 'none',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat'
-                        }}
-                        initial={false}
-                        animate={{ scale: cell ? 1 : 1, opacity: 1 }}
-                    />
-                ))
+                row.map((cell, c) => {
+                    const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
+                    return (
+                        <div
+                            key={`${r}-${c}`}
+                            className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
+                            style={{
+                                backgroundImage: cell ? `url(${cell})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat'
+                            }}
+                        >
+                            {/* Explosion Animation Overlay */}
+                            <AnimatePresence>
+                                {isClearing && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, scale: 1 }}
+                                        animate={{ opacity: [0, 1, 0], scale: [1, 1.5, 2] }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="absolute inset-0 bg-white z-10 rounded-full"
+                                    />
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    );
+                })
             )}
         </div>
 
-        {/* Shape Selector */}
-        <div className="flex gap-4 h-32 items-center justify-center w-full">
+        {/* Shape Selector - Draggable */}
+        <div className="flex gap-4 h-32 items-center justify-center w-full relative z-10">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
                         key={i}
-                        onClick={() => setSelectedShape(i)}
-                        className={`p-3 rounded-lg cursor-pointer transition-all ${selectedShape === i ? 'bg-primary ring-2 ring-white scale-110' : 'bg-black/40 hover:bg-black/60'}`}
-                        whileTap={{ scale: 0.9 }}
+                        drag
+                        dragSnapToOrigin
+                        onDragEnd={(e, info) => handleDragEnd(e, info, i)}
+                        whileDrag={{ scale: 1.1, zIndex: 100 }}
+                        className={`p-3 rounded-lg cursor-grab active:cursor-grabbing transition-colors bg-black/40 hover:bg-black/60`}
                     >
                         <div 
-                            className="grid gap-1"
+                            className="grid gap-1 pointer-events-none"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 20px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 20px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 24px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 24px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-5 h-5 bg-white rounded-[2px]"
+                                    className="w-6 h-6 bg-white rounded-[2px]"
                                     style={{ 
                                         gridColumnStart: p[0] + 1,
                                         gridRowStart: p[1] + 1,
@@ -241,7 +329,7 @@ export default function BlockBlast() {
         </div>
 
         <div className="text-xs opacity-50 text-center">
-            Select a shape below, then click on the grid to place it. Clear the board to advance!
+            Drag shapes onto the grid. Clear lines to explode blocks!
         </div>
         
         <Button onClick={resetGame} variant="outline" className="border-white/20 text-white hover:bg-white/10">
