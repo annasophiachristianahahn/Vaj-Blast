@@ -115,34 +115,27 @@ export default function BlockBlast() {
         return; // Dropped outside
     }
 
-    // Calculate approximate cell
-    // We offset by half cell size to target center of finger/pointer
-    const relativeX = pointerX - gridRect.left;
-    const relativeY = pointerY - gridRect.top;
-    
-    // We need to account for the shape's own offset (dragging from center/top-left)
-    // A simple approximation is to assume user drags by "top-left" block of shape or center
-    // Let's assume the drop point corresponds to the top-left block (0,0) of the shape
-    // But framer motion drag logic is relative to element.
-    // Better strategy: The drop point is the center of the dragged element. 
-    // We should map that to the grid. 
-    
-    // Actually, simpler approach for "drag":
-    // Calculate cell based on pointer position relative to grid
+    // Calculate approximate cell based on pointer position relative to grid
     const cellWidth = gridRect.width / GRID_SIZE;
     const cellHeight = gridRect.height / GRID_SIZE;
     
-    const c = Math.floor(relativeX / cellWidth);
-    const r = Math.floor(relativeY / cellHeight);
-
-    // IMPORTANT: The `r` and `c` calculated here are where the pointer is.
-    // We should treat this as the position of the shape's (0,0) block, OR shift based on where user grabbed.
-    // For simplicity in this iteration: assume pointer is at (0,0) of shape (top-left).
-    // A slight offset might be needed for UX (finger covers block).
-    // Let's adjust r/c by -1 or similar if needed, but start with direct mapping.
+    // Relative position in grid
+    const relativeX = pointerX - gridRect.left;
+    const relativeY = pointerY - gridRect.top;
     
-    // Actually, to make it intuitive, let's offset by -1,-1 so the piece is centered under finger?
-    // Let's stick to direct mapping first (0,0 of shape goes to r,c).
+    // Calculate raw grid coordinates from pointer
+    const rawC = Math.floor(relativeX / cellWidth);
+    const rawR = Math.floor(relativeY / cellHeight);
+
+    // Calculate shape dimensions
+    const shapeWidth = Math.max(...shape.points.map(p => p[0])) + 1;
+    const shapeHeight = Math.max(...shape.points.map(p => p[1])) + 1;
+
+    // Center-based drop logic:
+    // We assume the user grabbed the "center" of the shape.
+    // So we shift the drop coordinates by half the shape's size to align the shape's center with the pointer's cell.
+    const c = rawC - Math.floor((shapeWidth - 1) / 2);
+    const r = rawR - Math.floor((shapeHeight - 1) / 2);
     
     // Check validity
     if (canPlaceShape(r, c, shape)) {
