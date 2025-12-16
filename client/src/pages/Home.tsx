@@ -13,53 +13,55 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center gap-8 w-full h-full">
+      <div className="flex flex-col items-center gap-4 md:gap-8 w-full h-full max-w-[100vw] overflow-hidden">
         <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", bounce: 0.5 }}
-            className="text-center"
+            className="text-center px-4 pt-4"
         >
-            <h1 className="text-6xl md:text-8xl font-display text-primary drop-shadow-[4px_4px_0_rgba(0,0,0,1)] stroke-black tracking-tighter transform -rotate-2">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-display text-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] stroke-black tracking-tighter transform -rotate-2">
             VAJUNNIE
             </h1>
-            <p className="text-xl font-bold bg-black/50 px-4 py-1 rounded-full mt-2 border border-primary/50 text-primary-foreground backdrop-blur-sm">
+            <p className="text-sm md:text-xl font-bold bg-black/50 px-4 py-1 rounded-full mt-2 border border-primary/50 text-primary-foreground backdrop-blur-sm inline-block">
             THE CHAOS APP
             </p>
         </motion.div>
 
         {/* Game Selector */}
-        <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 w-full max-w-lg z-20 px-4 pb-2 scrollbar-hide -mx-4 md:mx-0">
-            <GameTab 
-                active={activeGame === 'coin-flip'} 
-                onClick={() => setActiveGame('coin-flip')}
-                label="COIN FLIP"
-                color="bg-red-500"
-            />
-            <GameTab 
-                active={activeGame === 'quiet-game'} 
-                onClick={() => setActiveGame('quiet-game')}
-                label="QUIET GAME"
-                color="bg-purple-500"
-            />
-            <GameTab 
-                active={activeGame === 'block-blast'} 
-                onClick={() => setActiveGame('block-blast')}
-                label="VAJ BLAST"
-                color="bg-green-500"
-            />
+        <div className="w-full z-20 px-4">
+            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+                <GameTab 
+                    active={activeGame === 'coin-flip'} 
+                    onClick={() => setActiveGame('coin-flip')}
+                    label="COIN FLIP"
+                    color="bg-red-500"
+                />
+                <GameTab 
+                    active={activeGame === 'quiet-game'} 
+                    onClick={() => setActiveGame('quiet-game')}
+                    label="QUIET GAME"
+                    color="bg-purple-500"
+                />
+                <GameTab 
+                    active={activeGame === 'block-blast'} 
+                    onClick={() => setActiveGame('block-blast')}
+                    label="VAJ BLAST"
+                    color="bg-green-500"
+                />
+            </div>
         </div>
 
         {/* Game Container */}
-        <div className="w-full flex-1 min-h-[500px] relative">
+        <div className="w-full flex-1 min-h-0 relative flex flex-col">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={activeGame}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="w-full h-full"
+                    className="w-full h-full flex-1"
                 >
                     {activeGame === 'coin-flip' && <CoinFlip />}
                     {activeGame === 'quiet-game' && <QuietGame />}

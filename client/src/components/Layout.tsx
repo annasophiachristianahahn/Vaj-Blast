@@ -5,7 +5,7 @@ import { Home } from "lucide-react";
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden text-white font-sans selection:bg-primary selection:text-white">
+    <div className="relative h-[100dvh] w-full overflow-hidden text-white font-sans selection:bg-primary selection:text-white">
       {/* Background Video */}
       <div className="fixed inset-0 z-0">
         <video
@@ -21,8 +21,8 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <nav className="p-4 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
+      <div className="relative z-10 flex flex-col h-full">
+        <nav className="shrink-0 p-4 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
             <Link href="/">
                 <div className="text-2xl font-display text-primary tracking-wider hover:scale-105 transition-transform cursor-pointer drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]">
                     $VAJ
@@ -35,11 +35,11 @@ export function Layout({ children }: { children: ReactNode }) {
             </Link>
         </nav>
         
-        <main className="flex-1 p-4 flex flex-col items-center justify-center max-w-md mx-auto w-full">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center w-full">
             {children}
         </main>
 
-        <footer className="p-4 text-center text-xs opacity-60 font-mono">
+        <footer className="shrink-0 p-4 text-center text-xs opacity-60 font-mono">
             10 Strawberry Street ent
         </footer>
       </div>

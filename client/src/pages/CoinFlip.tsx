@@ -90,8 +90,8 @@ export default function CoinFlip() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      <div className="h-[50vh] w-full relative">
+    <div className="w-full h-full flex flex-col items-center justify-start py-4">
+      <div className="w-full h-[40vh] md:h-[50vh] relative">
         <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
@@ -102,18 +102,18 @@ export default function CoinFlip() {
         </Canvas>
       </div>
       
-      <div className="flex flex-col items-center gap-4 mt-4 relative z-10 min-h-[100px]">
+      <div className="flex flex-col items-center gap-4 mt-4 relative z-10 min-h-[80px]">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
-                className="text-6xl font-display text-primary drop-shadow-[4px_4px_0_rgba(0,0,0,1)]"
+                className="text-4xl md:text-6xl font-display text-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)]"
             >
                 {result}!
             </motion.div>
         )}
         
-        <div className="text-sm opacity-50 font-mono animate-pulse mt-2">
+        <div className="text-xs md:text-sm opacity-50 font-mono animate-pulse mt-2">
             TAP COIN TO FLIP
         </div>
       </div>
