@@ -136,10 +136,10 @@ export default function BlockBlast() {
               const bigShapes = SHAPES.filter(s => s.points.length >= 4);
               selectedShape = bigShapes[Math.floor(Math.random() * bigShapes.length)];
           }
-          // SCENARIO B: Helpful "Smart" Move (Hard Mode)
-          // Only occasionally throw a bone to clear lines
-          else if (helpfulShapes.length > 0 && rand < 0.15) {
-             // 15% chance (was 30%) to give a perfect piece
+          // SCENARIO B: Helpful "Smart" Move (Balanced Mode)
+          // Occasionally throw a bone to clear lines
+          else if (helpfulShapes.length > 0 && rand < 0.25) {
+             // 25% chance (was 15%, previously 30%) to give a perfect piece
              selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
           }
           // SCENARIO C: Crisis Management
@@ -160,8 +160,8 @@ export default function BlockBlast() {
                   selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
                   
                   // "Mercy" Mechanic: If we picked a big shape but board is super tight, maybe downgrade to smaller one?
-                  // Extremely rare "Savior" dot (1/20 chance)
-                  if (playableShapes.length < 5 && rand < 0.05) {
+                  // Rare "Savior" dot (1/10 chance - was 1/20)
+                  if (playableShapes.length < 5 && rand < 0.1) {
                       selectedShape = SHAPES[0]; // The Dot (Savior)
                   }
               } else {
@@ -173,25 +173,25 @@ export default function BlockBlast() {
           else {
                const randType = Math.random();
                
-               // 60% chance for Hard/Complex shapes (4+ blocks, Z/S shapes)
-               if (randType < 0.6) {
+               // 50% chance for Hard/Complex shapes (was 60%)
+               if (randType < 0.5) {
                    const hardShapes = SHAPES.filter(s => s.points.length >= 4 || s.id.includes('Z') || s.id.includes('S'));
                    selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
                }
-               // 30% chance for Medium shapes (3 blocks)
-               else if (randType < 0.9) {
+               // 35% chance for Medium shapes (was 30%)
+               else if (randType < 0.85) {
                    const medShapes = SHAPES.filter(s => s.points.length === 3);
                    selectedShape = medShapes[Math.floor(Math.random() * medShapes.length)];
                }
-               // 10% chance for Small/Easy shapes (<= 2 blocks)
+               // 15% chance for Small/Easy shapes (was 10%)
                else {
                    const easyShapes = SHAPES.filter(s => s.points.length <= 2);
                    selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
                }
 
                // DOUBLE CHECK: Enforce extreme rarity of the single dot
-               // If we somehow picked a dot, 95% chance to RE-ROLL
-               if (selectedShape.id === 'dot' && Math.random() > 0.05) {
+               // If we somehow picked a dot, 90% chance to RE-ROLL (was 95%)
+               if (selectedShape.id === 'dot' && Math.random() > 0.1) {
                    const mediumShapes = SHAPES.filter(s => s.points.length >= 3);
                    selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
                }
