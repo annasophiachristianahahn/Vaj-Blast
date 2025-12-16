@@ -6,6 +6,7 @@ import { Shuffle } from "lucide-react";
 // Import generated assets
 import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
 import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
+import paperTexture from "@assets/generated_images/realistic_white_notebook_paper_texture.png";
 
 export default function TicTacToe() {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
@@ -66,38 +67,51 @@ export default function TicTacToe() {
         <p className="font-mono text-sm opacity-70">Sa Papel Edition</p>
       </div>
 
-      <div className="relative bg-white/10 p-4 rounded-xl backdrop-blur-sm border-4 border-white/20 shadow-2xl">
+      <div 
+        className="relative p-8 rounded-sm shadow-2xl rotate-1 transform transition-transform hover:rotate-0 duration-300"
+        style={{
+            backgroundImage: `url(${paperTexture})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: '10px 10px 20px rgba(0,0,0,0.5)'
+        }}
+      >
         {/* Paper texture overlay could go here */}
         
-        <div className="grid grid-cols-3 gap-2 md:gap-4">
+        <div className="grid grid-cols-3 gap-0">
           {board.map((cell, index) => (
             <motion.button
               key={index}
               onClick={() => handleClick(index)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className={`
-                w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-lg border-2 border-dashed border-white/30
+                w-20 h-20 md:w-24 md:h-24 
                 flex items-center justify-center text-4xl relative overflow-hidden
-                ${winningLine?.includes(index) ? "bg-green-500/20 border-green-400 border-solid" : ""}
+                border-black/20
+                ${index < 6 ? 'border-b-4' : ''}
+                ${index % 3 !== 2 ? 'border-r-4' : ''}
+                ${winningLine?.includes(index) ? "bg-green-500/10" : ""}
               `}
             >
                 <AnimatePresence>
                     {cell === "X" && (
                         <motion.img 
                             src={player1Image} 
-                            initial={{ scale: 0, rotate: -45 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className="w-full h-full object-cover p-1"
+                            initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            transition={{ type: "spring", bounce: 0.5 }}
+                            className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
                             alt="Player 1"
                         />
                     )}
                     {cell === "O" && (
                         <motion.img 
                             src={player2Image} 
-                            initial={{ scale: 0, rotate: 45 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className="w-full h-full object-cover p-1"
+                            initial={{ scale: 0, rotate: 45, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            transition={{ type: "spring", bounce: 0.5 }}
+                            className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
                             alt="Player 2"
                         />
                     )}
