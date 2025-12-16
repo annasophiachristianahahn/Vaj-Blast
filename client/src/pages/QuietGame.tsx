@@ -89,23 +89,23 @@ export default function QuietGame() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-sm mt-8">
+    <div className="flex-1 flex flex-col items-center justify-center gap-8 w-full max-w-sm mx-auto p-4 min-h-[60vh]">
         <div className="text-center">
-            <h1 className="text-4xl font-display text-primary mb-2">SHHHH!</h1>
-            <p className="opacity-80">Don't make a sound. Survive.</p>
+            <h1 className="text-4xl font-display text-primary mb-2 drop-shadow-md">SHHHH!</h1>
+            <p className="opacity-80 text-lg">Don't make a sound. Survive.</p>
         </div>
 
-        <div className="relative w-full aspect-square bg-black/40 rounded-full border-4 border-white/20 flex items-center justify-center overflow-hidden backdrop-blur-md">
+        <div className="relative w-full aspect-square bg-black/40 rounded-full border-4 border-white/20 flex items-center justify-center overflow-hidden backdrop-blur-md shadow-2xl">
             {/* Volume Indicator */}
             <motion.div 
-                className="absolute inset-0 bg-red-500 rounded-full opacity-50"
+                className="absolute inset-0 bg-red-600 rounded-full opacity-50"
                 animate={{ scale: playing ? Math.min(volume / THRESHOLD, 1.5) : 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
             
-            <div className="z-10 text-6xl font-mono font-bold">
+            <div className="z-10 text-6xl font-mono font-bold drop-shadow-lg">
                 {gameOver ? (
-                    <span className="text-red-500">FAIL</span>
+                    <span className="text-red-500 animate-pulse">FAIL</span>
                 ) : (
                     (score / 10).toFixed(1) + "s"
                 )}
@@ -115,14 +115,14 @@ export default function QuietGame() {
         {!playing && (
             <Button 
                 onClick={startGame}
-                className="w-full text-xl h-14 bg-primary hover:bg-primary/80 font-display"
+                className="w-full text-xl h-16 bg-green-600 hover:bg-green-500 text-white font-display tracking-wider shadow-lg border-2 border-green-400/50"
             >
                 {gameOver ? "TRY AGAIN" : "START QUIET GAME"}
             </Button>
         )}
 
         {playing && (
-            <div className="text-sm text-red-400 font-bold animate-pulse">
+            <div className="text-xl text-red-400 font-bold animate-pulse tracking-widest">
                 LISTENING...
             </div>
         )}
