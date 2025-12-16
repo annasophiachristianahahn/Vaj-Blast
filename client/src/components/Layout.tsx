@@ -22,15 +22,15 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col h-full">
-        <nav className="shrink-0 p-4 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
+        <nav className="shrink-0 px-4 py-2 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
             <Link href="/">
-                <div className="text-2xl font-display text-primary tracking-wider hover:scale-105 transition-transform cursor-pointer drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]">
+                <div className="text-xl font-display text-primary tracking-wider hover:scale-105 transition-transform cursor-pointer drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]">
                     $VAJ
                 </div>
             </Link>
             <Link href="/">
-                <div className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer">
-                    <Home className="w-6 h-6" />
+                <div className="p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer">
+                    <Home className="w-5 h-5" />
                 </div>
             </Link>
         </nav>

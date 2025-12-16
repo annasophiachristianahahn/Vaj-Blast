@@ -13,24 +13,21 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center gap-4 md:gap-8 w-full h-full max-w-[100vw] overflow-hidden">
+      <div className="flex flex-col items-center gap-2 md:gap-4 w-full h-full max-w-[100vw] overflow-hidden">
         <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", bounce: 0.5 }}
-            className="text-center px-4 pt-4"
+            className="text-center px-4 pt-2"
         >
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-display text-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] stroke-black tracking-tighter transform -rotate-2">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-display text-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] stroke-black tracking-tighter transform -rotate-2">
             VAJUNNIE
             </h1>
-            <p className="text-sm md:text-xl font-bold bg-black/50 px-4 py-1 rounded-full mt-2 border border-primary/50 text-primary-foreground backdrop-blur-sm inline-block">
-            THE CHAOS APP
-            </p>
         </motion.div>
 
         {/* Game Selector */}
         <div className="w-full z-20 px-4">
-            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-2 scrollbar-hide snap-x snap-mandatory">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}

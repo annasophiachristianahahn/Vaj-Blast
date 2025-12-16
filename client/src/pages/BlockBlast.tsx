@@ -103,15 +103,15 @@ export default function BlockBlast() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-md mt-4">
-        <div className="flex justify-between w-full items-center">
-            <h1 className="text-3xl font-display text-primary">VAJ BLAST</h1>
-            <div className="font-mono text-xl">SCORE: {score}</div>
+    <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto">
+        <div className="flex justify-between w-full items-center px-2">
+            <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
+            <div className="font-mono text-lg">SCORE: {score}</div>
         </div>
 
         {/* Grid */}
         <div 
-            className="grid gap-1 bg-black/50 p-2 rounded-xl border-4 border-white/20 shadow-2xl"
+            className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px]"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
         >
             {grid.map((row, r) => 
@@ -119,7 +119,7 @@ export default function BlockBlast() {
                     <motion.div
                         key={`${r}-${c}`}
                         onClick={() => handleGridClick(r, c)}
-                        className={`w-8 h-8 md:w-10 md:h-10 rounded-sm border border-white/5 cursor-pointer hover:bg-white/10 transition-colors ${cell ? 'bg-white' : 'bg-transparent'}`}
+                        className={`w-full h-full rounded-sm border border-white/5 cursor-pointer hover:bg-white/10 transition-colors ${cell ? 'bg-white' : 'bg-transparent'}`}
                         style={{
                             backgroundImage: cell ? `url(${cell})` : 'none',
                             backgroundSize: 'cover',
@@ -132,26 +132,26 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector */}
-        <div className="flex gap-4 h-24 items-center justify-center w-full">
+        <div className="flex gap-2 h-20 items-center justify-center w-full">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
                         key={i}
                         onClick={() => setSelectedShape(i)}
-                        className={`p-2 rounded-lg cursor-pointer transition-all ${selectedShape === i ? 'bg-primary ring-2 ring-white scale-110' : 'bg-black/40 hover:bg-black/60'}`}
+                        className={`p-1.5 rounded-lg cursor-pointer transition-all ${selectedShape === i ? 'bg-primary ring-2 ring-white scale-110' : 'bg-black/40 hover:bg-black/60'}`}
                         whileTap={{ scale: 0.9 }}
                     >
                         <div 
                             className="grid gap-0.5"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 10px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 10px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 8px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 8px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-2.5 h-2.5 bg-white rounded-[1px]"
+                                    className="w-2 h-2 bg-white rounded-[1px]"
                                     style={{ 
                                         gridColumnStart: p[0] + 1,
                                         gridRowStart: p[1] + 1,
@@ -162,7 +162,7 @@ export default function BlockBlast() {
                             ))}
                         </div>
                     </motion.div>
-                ) : <div key={i} className="w-16 h-16" />
+                ) : <div key={i} className="w-12 h-12" />
             ))}
         </div>
 
