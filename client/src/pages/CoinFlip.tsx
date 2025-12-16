@@ -13,7 +13,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
   
   useEffect(() => {
       if (flipping) {
-          setSpinSpeed(40 + Math.random() * 20); // Random speed between 40 and 60
+          setSpinSpeed(60 + Math.random() * 30); // Faster speed for shorter duration
       }
   }, [flipping]);
 
@@ -49,19 +49,19 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
             
-            mesh.current.rotation.x += diffX * 8 * delta;
+            mesh.current.rotation.x += diffX * 12 * delta; // Increased landing speed
 
             // Y Axis dampening (return to 0)
             let diffY = 0 - mesh.current.rotation.y;
             if (diffY > Math.PI) diffY -= Math.PI * 2;
             if (diffY < -Math.PI) diffY += Math.PI * 2;
-            mesh.current.rotation.y += diffY * 8 * delta;
+            mesh.current.rotation.y += diffY * 12 * delta;
 
             // Z Axis dampening (return to 0)
             let diffZ = 0 - mesh.current.rotation.z;
             if (diffZ > Math.PI) diffZ -= Math.PI * 2;
             if (diffZ < -Math.PI) diffZ += Math.PI * 2;
-            mesh.current.rotation.z += diffZ * 8 * delta;
+            mesh.current.rotation.z += diffZ * 12 * delta;
         }
     }
   });
@@ -129,7 +129,7 @@ export default function CoinFlip() {
         console.log("Coin Flip Result:", outcome); // Debug log
         setResult(outcome);
         setFlipping(false);
-    }, 1500); 
+    }, 700); // 0.7 seconds duration
   };
 
   return (
