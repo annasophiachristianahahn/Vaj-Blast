@@ -107,14 +107,49 @@ export default function BlockBlast() {
       const img = getRoundImage(imgIndex);
       const newShapes = [];
       
-      for (let i = 0; i < 3; i++) {
-          // ~1/7 chance for a single dot (approx 14%)
-          if (Math.random() < (1/7)) {
-              newShapes.push({ ...SHAPES[0], img }); // SHAPES[0] is 'dot'
-          } else {
-              newShapes.push({ ...SHAPES[Math.floor(Math.random() * SHAPES.length)], img });
+      // Try to be helpful!
+      // 1. Analyze grid for small holes (1x1 gaps)
+      // 2. Analyze grid for "almost complete" lines
+      // 3. Ensure at least one shape is playable if possible
+
+      const playableShapes = SHAPES.filter(s => {
+          // Check if this shape can be placed ANYWHERE
+          for (let r = 0; r < GRID_SIZE; r++) {
+              for (let c = 0; c < GRID_SIZE; c++) {
+                  if (canPlaceShape(r, c, s, grid)) return true;
+              }
           }
+          return false;
+      });
+
+      // If board is very full (few playable shapes), prioritize small shapes
+      const isTightBoard = playableShapes.length < SHAPES.length / 2;
+
+      for (let i = 0; i < 3; i++) {
+          let selectedShape;
+
+          // 20% chance to be "helpful" and pick a playable shape if board is tight
+          // Or if it's the last slot and we haven't picked anything safe yet (simple heuristic)
+          if ((isTightBoard && Math.random() < 0.4) || (i === 2 && newShapes.length > 0 && Math.random() < 0.2)) {
+               // Pick from playable shapes if any exist
+               if (playableShapes.length > 0) {
+                   selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
+               } else {
+                   selectedShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+               }
+          } 
+          // 15% chance for a single dot (helpful for cleaning)
+          else if (Math.random() < 0.15) {
+              selectedShape = SHAPES[0]; // dot
+          }
+          // Otherwise random
+          else {
+              selectedShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+          }
+
+          newShapes.push({ ...selectedShape, img });
       }
+      
       setCurrentShapes(newShapes);
       // We need to wait for state update or pass newShapes directly
       checkGameOver(grid, newShapes);
