@@ -424,7 +424,7 @@ export default function BlockBlast() {
         <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
             <div 
                 ref={gridRef}
-                className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl aspect-square max-w-full max-h-full relative z-0"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl aspect-square max-w-full max-h-full relative z-0 backdrop-blur-md"
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
@@ -460,7 +460,7 @@ export default function BlockBlast() {
                                 className={`w-full h-full rounded-sm border transition-colors relative 
                                     ${cell ? 'bg-white border-white/5' : 
                                       isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
-                                      'bg-white/5 border-white/10'}`}
+                                      'bg-white/10 border-white/20'}`}
                                 style={{
                                     backgroundImage: cell ? `url(${cell})` : 'none',
                                     backgroundSize: 'cover',
