@@ -345,7 +345,7 @@ export default function BlockBlast() {
                     return (
                         <motion.div
                             key={`${r}-${c}`}
-                            animate={shakeGrid && cell ? getRandomShake() : {}}
+                            animate={shakeGrid && cell ? getRandomShake() : { x: 0, y: 0, rotate: 0 }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
