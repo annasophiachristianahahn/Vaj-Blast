@@ -421,16 +421,22 @@ export default function BlockBlast() {
         </AnimatePresence>
 
         {/* Grid Area - Maximize Size */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4">
+        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
             <div 
                 ref={gridRef}
                 className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl aspect-square max-w-full max-h-full relative z-0"
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                    width: 'min(100%, 100vh - 250px)' // Ensure it fits in available height accounting for other UI
+                    width: 'min(100%, 100vh - 180px)' // Increased height availability by removing footer space
                 }}
             >
+                {/* Score Overlay */}
+                <div className="absolute -top-12 right-0 z-20 flex flex-col items-end pointer-events-none">
+                    <div className="text-sm font-mono text-white/60">SCORE</div>
+                    <div className="text-3xl font-display text-yellow-400 drop-shadow-md tracking-wider">{score}</div>
+                </div>
+
                 {grid.map((row, r) => 
                     row.map((cell, c) => {
                         const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
@@ -487,7 +493,7 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 h-[100px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-2">
+        <div className="flex gap-4 h-[100px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-4">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
