@@ -1,51 +1,67 @@
 import { Layout } from "@/components/Layout";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef, useState } from "react";
-import { Mesh, Vector3 } from "three";
+import { useRef, useState, useEffect } from "react";
+import { Mesh, Vector3, MathUtils } from "three";
 import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
-function Coin({ flipping, result, onFlipEnd, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipEnd: () => void, onFlipStart: () => void }) {
+function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
   const mesh = useRef<Mesh>(null!);
-  const [rotationSpeed, setRotationSpeed] = useState(0);
+  // Randomize spin speed slightly for every flip so it doesn't look identical
+  const [spinSpeed, setSpinSpeed] = useState(50);
   
+  useEffect(() => {
+      if (flipping) {
+          setSpinSpeed(40 + Math.random() * 20); // Random speed between 40 and 60
+      }
+  }, [flipping]);
+
   useFrame((state, delta) => {
+    if (!mesh.current) return;
+
     if (flipping) {
-        mesh.current.rotation.x += 50 * delta; // Increased speed for rapid spin
-        mesh.current.rotation.y += 10 * delta; // Reduced Y spin for cleaner flip
+        mesh.current.rotation.x += spinSpeed * delta;
+        mesh.current.rotation.y += 10 * delta;
+        mesh.current.rotation.z += 5 * delta; // Add Z rotation for chaotic tumble
     } else {
         // Landing animation
         if (result) {
-            // HEADS: Face up (towards camera Z) -> rotation.x = Math.PI / 2
-            // TAILS: Face down (away from camera Z) -> rotation.x = 3 * Math.PI / 2 (or -Math.PI/2)
+            // Target rotations
+            // HEADS: Face up (towards camera Z). X=PI/2.
+            // TAILS: Face down (away from camera Z). X=3PI/2.
             const targetRotationX = result === 'HEADS' ? Math.PI / 2 : (Math.PI * 3 / 2);
             
-             // Normalize current rotation to 0..2PI range for smoother math
+            // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
             if (mesh.current.rotation.x < 0) mesh.current.rotation.x += Math.PI * 2;
-
-            // Snap to nearest face
-            const currentX = mesh.current.rotation.x;
-            let diff = targetRotationX - currentX;
             
-            // Find shortest path
-            if (diff > Math.PI) diff -= Math.PI * 2;
-            if (diff < -Math.PI) diff += Math.PI * 2;
-            
-            if (Math.abs(diff) > 0.1) {
-                mesh.current.rotation.x += diff * 10 * delta; // Faster landing snap
-            } else {
-                mesh.current.rotation.x = targetRotationX;
-            }
-            
-            // Dampen Y rotation to 0 so it's straight
+            // Normalize Y and Z to 0
             mesh.current.rotation.y = mesh.current.rotation.y % (Math.PI * 2);
-            if (Math.abs(mesh.current.rotation.y) > 0.01) {
-                 mesh.current.rotation.y -= mesh.current.rotation.y * 5 * delta;
-            } else {
-                mesh.current.rotation.y = 0;
-            }
+            mesh.current.rotation.z = mesh.current.rotation.z % (Math.PI * 2);
+
+            // Smoothly interpolate to target
+            // We use lerp-like behavior for smoothness
+            
+            // X Axis Snap
+            let diffX = targetRotationX - mesh.current.rotation.x;
+            // Shortest path logic
+            if (diffX > Math.PI) diffX -= Math.PI * 2;
+            if (diffX < -Math.PI) diffX += Math.PI * 2;
+            
+            mesh.current.rotation.x += diffX * 8 * delta;
+
+            // Y Axis dampening (return to 0)
+            let diffY = 0 - mesh.current.rotation.y;
+            if (diffY > Math.PI) diffY -= Math.PI * 2;
+            if (diffY < -Math.PI) diffY += Math.PI * 2;
+            mesh.current.rotation.y += diffY * 8 * delta;
+
+            // Z Axis dampening (return to 0)
+            let diffZ = 0 - mesh.current.rotation.z;
+            if (diffZ > Math.PI) diffZ -= Math.PI * 2;
+            if (diffZ < -Math.PI) diffZ += Math.PI * 2;
+            mesh.current.rotation.z += diffZ * 8 * delta;
         }
     }
   });
@@ -63,25 +79,36 @@ function Coin({ flipping, result, onFlipEnd, onFlipStart }: { flipping: boolean,
             onPointerOut={() => document.body.style.cursor = 'default'}
         >
         <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
-        <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#FFD700" metalness={0.6} roughness={0.3} />
         
-        {/* Heads Text */}
+        {/* Heads Text - Front Face */}
         <group position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <Center>
                 <Text fontSize={1} color="#B8860B" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff">
                     $VAJ
                 </Text>
             </Center>
+            {/* Add a ring/marker to distinguish heads visually if text is blurry */}
+            <mesh position={[0, 0, -0.01]}>
+                <ringGeometry args={[2.3, 2.4, 32]} />
+                <meshBasicMaterial color="#B8860B" />
+            </mesh>
         </group>
 
-        {/* Tails Text */}
+        {/* Tails Text - Back Face */}
         <group position={[0, -0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <Center>
-                <Text fontSize={0.8} color="#B8860B" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff">
+                <Text fontSize={0.8} color="#FFF" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff">
                     TAILS
                 </Text>
             </Center>
+             <mesh position={[0, 0, -0.01]}>
+                <ringGeometry args={[2.3, 2.4, 32]} />
+                <meshBasicMaterial color="#FFF" />
+            </mesh>
         </group>
+        
+        {/* Edge texture detail (optional, just gold for now) */}
         </mesh>
     </Float>
   );
@@ -99,9 +126,10 @@ export default function CoinFlip() {
     // Play a faster spin animation
     setTimeout(() => {
         const outcome = Math.random() > 0.5 ? 'HEADS' : 'TAILS';
+        console.log("Coin Flip Result:", outcome); // Debug log
         setResult(outcome);
         setFlipping(false);
-    }, 1500); // Slightly shorter for snappier feel
+    }, 1500); 
   };
 
   return (
@@ -112,7 +140,7 @@ export default function CoinFlip() {
           <pointLight position={[10, 10, 10]} intensity={1} />
           <spotLight position={[-10, -10, -10]} intensity={0.5} />
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          <Coin flipping={flipping} result={result} onFlipEnd={() => {}} onFlipStart={flipCoin} />
+          <Coin flipping={flipping} result={result} onFlipStart={flipCoin} />
           <Environment preset="city" />
         </Canvas>
       </div>
