@@ -534,23 +534,6 @@ export default function BlockBlast() {
                 ) : <div key={i} className="w-12 h-12" />
             ))}
         </div>
-
-        {/* Footer Info & Controls */}
-        <div className="flex justify-between w-full items-center px-4 py-2 shrink-0 border-t border-white/10 bg-black/20 rounded-lg">
-            <div className="flex flex-col items-start">
-                <div className="text-[10px] font-mono opacity-50 leading-none mb-1">ROUND</div>
-                <div className="text-xl font-bold font-mono text-white/90 leading-none">{round}</div>
-            </div>
-            
-            <Button onClick={resetGame} variant="ghost" size="sm" className="h-8 text-xs opacity-50 hover:opacity-100 hover:bg-white/10 text-red-400 hover:text-red-300">
-                RESET
-            </Button>
-
-            <div className="flex flex-col items-end">
-                <div className="text-[10px] font-mono opacity-50 leading-none mb-1">SCORE</div>
-                <div className="text-xl font-bold font-mono text-yellow-400 leading-none">{score}</div>
-            </div>
-        </div>
       </div>
   );
 }
