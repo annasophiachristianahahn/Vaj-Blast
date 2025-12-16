@@ -420,11 +420,8 @@ export default function BlockBlast() {
             )}
         </AnimatePresence>
 
-        <div className="flex justify-between w-full items-center px-2">
-            <div>
-                <h1 className="text-2xl font-display text-primary">VAJ BLAST</h1>
-                <div className="text-xs font-mono opacity-70">ROUND {round}</div>
-            </div>
+        <div className="flex justify-between w-full items-center px-2 mb-2">
+            <div className="text-xs font-mono opacity-70">ROUND {round}</div>
             <div className="font-mono text-lg">SCORE: {score}</div>
         </div>
 
@@ -489,7 +486,7 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-2 min-h-[100px] items-center justify-center w-full relative z-10 px-2 overflow-visible">
+        <div className="flex gap-4 min-h-[120px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible mb-4">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
@@ -499,15 +496,15 @@ export default function BlockBlast() {
                         dragSnapToOrigin
                         onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.5, zIndex: 100, opacity: 0.8 }} // Scale up to match grid size (0.6 * 1.5 ≈ 0.9) - slightly smaller than grid is usually easier to see under finger
+                        whileDrag={{ scale: 1.1, zIndex: 100, opacity: 0.9 }} 
                         className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
                             className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                // Use 60% of cell size for selector to fit all shapes
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.6}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.6}px)`
+                                // Use 100% of cell size for selector to match grid exactly
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (

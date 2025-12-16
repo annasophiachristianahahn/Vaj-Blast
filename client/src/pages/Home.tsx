@@ -18,8 +18,8 @@ export default function Home() {
 
         {/* Game Selector */}
         <div className="w-full z-20 px-4 flex flex-col items-center gap-4">
-            {/* Main Games Row */}
-            <div className="flex flex-nowrap overflow-x-auto justify-start md:justify-center gap-2 md:gap-4 pb-2 scrollbar-hide snap-x snap-mandatory w-full max-w-full">
+            {/* Main Games Row - Force all items to fit without scrolling on larger screens, scroll on very small */}
+            <div className="flex flex-nowrap w-full justify-between gap-2 overflow-x-auto md:overflow-visible pb-1">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -44,11 +44,11 @@ export default function Home() {
             <Button
                 onClick={() => setActiveGame('tic-tac-toe')}
                 className={`
-                    h-auto min-h-[40px] py-2 px-6 font-display text-sm md:text-lg uppercase transition-all whitespace-normal text-center leading-tight
+                    w-full h-auto min-h-[40px] py-3 px-2 font-display text-[9px] sm:text-xs md:text-lg uppercase transition-all whitespace-nowrap overflow-hidden text-ellipsis
                     border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
                     hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
                     active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
-                    ${activeGame === 'tic-tac-toe' ? 'bg-yellow-400 text-black scale-105' : 'bg-white text-black hover:bg-gray-100'}
+                    ${activeGame === 'tic-tac-toe' ? 'bg-yellow-400 text-black scale-[1.02]' : 'bg-white text-black hover:bg-gray-100'}
                 `}
             >
                 ang larong Tic Tac Toe sa papel
@@ -83,11 +83,11 @@ function GameTab({ active, onClick, label, color }: { active: boolean, onClick: 
         <Button
             onClick={onClick}
             className={`
-                relative h-10 md:h-12 px-3 md:px-6 font-display text-sm md:text-xl uppercase transition-all whitespace-nowrap shrink-0
+                relative h-10 md:h-12 px-2 md:px-6 font-display text-[10px] sm:text-xs md:text-xl uppercase transition-all whitespace-nowrap flex-1
                 border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] md:shadow-[4px_4px_0_rgba(0,0,0,1)]
                 hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
                 active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
-                ${active ? `${color} text-white scale-105 z-10` : 'bg-white text-black hover:bg-gray-100'}
+                ${active ? `${color} text-white scale-[1.02] z-10` : 'bg-white text-black hover:bg-gray-100'}
             `}
         >
             {label}
