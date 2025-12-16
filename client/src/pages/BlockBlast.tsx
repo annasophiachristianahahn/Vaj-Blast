@@ -109,59 +109,144 @@ export default function BlockBlast() {
       const img = getRoundImage(imgIndex);
       const newShapes = [];
       
-      // Try to be helpful!
-      const playableShapes = SHAPES.filter(s => {
-          // Check if this shape can be placed ANYWHERE
-          for (let r = 0; r < GRID_SIZE; r++) {
-              for (let c = 0; c < GRID_SIZE; c++) {
-                  if (canPlaceShape(r, c, s, grid)) return true;
-              }
-          }
-          return false;
-      });
-
-      // If board is very full (few playable shapes), prioritize small shapes
-      const isTightBoard = playableShapes.length < SHAPES.length * 0.7;
+      // GAME DIRECTOR AI LOGIC
+      // 1. Analyze the board for "almost complete" lines
+      const helpfulShapes = findHelpfulShapes(grid);
       
-      // Calculate board fullness
+      // 2. Check board fullness
       let filledCells = 0;
       grid.forEach(row => row.forEach(cell => { if(cell) filledCells++; }));
-      const isVeryFull = filledCells > (GRID_SIZE * GRID_SIZE * 0.5); // Lower threshold for "full" (50%)
+      const fullness = filledCells / (GRID_SIZE * GRID_SIZE);
+      const isVeryFull = fullness > 0.6;
+      const isEmpty = fullness < 0.1;
 
+      // 3. Select 3 shapes with "Playful" logic
       for (let i = 0; i < 3; i++) {
           let selectedShape;
+          const rand = Math.random();
 
-          // ULTRA EASY MODE LOGIC:
-          // 1. If board is getting full (>50%), 50% chance for a single dot (the ultimate savior)
-          if (isVeryFull && Math.random() < 0.5) {
-              selectedShape = SHAPES[0]; // dot
+          // SCENARIO A: Empty Board (Start of game or after clear)
+          // Give fun, big chunky shapes to build fast
+          if (isEmpty) {
+              const bigShapes = SHAPES.filter(s => s.points.length >= 4);
+              selectedShape = bigShapes[Math.floor(Math.random() * bigShapes.length)];
           }
-          // 2. If board is tight (few moves left), ALWAYS pick a shape that fits if possible
-          else if (isTightBoard) {
-               if (playableShapes.length > 0) {
-                   // 100% chance to pick a playable shape
-                   selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
-               } else {
-                   // Fallback: Pick the smallest shapes (dot, 1x2, 2x1)
-                   selectedShape = SHAPES[Math.floor(Math.random() * 3)];
-               }
-          } 
-          // 3. Normal play: 1/8 chance (12.5%) for a single dot
-          else if (Math.random() < 0.125) {
-              selectedShape = SHAPES[0]; // dot
+          // SCENARIO B: Helpful "Smart" Move (High chance if board has gaps)
+          // If we have identified shapes that will clear lines, give them!
+          else if (helpfulShapes.length > 0 && rand < 0.6) {
+             // 60% chance to give a perfect piece that clears a line
+             selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
           }
-          // 4. Otherwise random
+          // SCENARIO C: Crisis Management
+          // If board is full, try to give small playable pieces
+          else if (isVeryFull) {
+              // Get all shapes that can actually fit right now
+              const playableShapes = SHAPES.filter(s => {
+                  for (let r = 0; r < GRID_SIZE; r++) {
+                      for (let c = 0; c < GRID_SIZE; c++) {
+                          if (canPlaceShape(r, c, s, grid)) return true;
+                      }
+                  }
+                  return false;
+              });
+
+              if (playableShapes.length > 0) {
+                  // Pick a random playable one
+                  selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
+                  
+                  // "Mercy" Mechanic: If we picked a big shape but board is super tight, maybe downgrade to smaller one?
+                  // But keep the 1/8 rarity for the single dot unless it's the ONLY move.
+                  if (playableShapes.length < 5 && rand < 0.125) {
+                      selectedShape = SHAPES[0]; // The Dot (Savior)
+                  }
+              } else {
+                  // If literally nothing fits (Game Over incoming), just give random small ones so user sees they lost
+                  selectedShape = SHAPES[Math.floor(Math.random() * 3)];
+              }
+          }
+          // SCENARIO D: Pure Random (Wildcard)
           else {
-              selectedShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+               // Standard distribution
+               selectedShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+               
+               // Enforce the rarity of the single dot (index 0)
+               if (selectedShape.id === 'dot' && Math.random() > 0.125) {
+                   // Reroll if we hit the dot but didn't win the 1/8 lottery
+                   // Pick something medium sized instead
+                   const mediumShapes = SHAPES.filter(s => s.points.length >= 3);
+                   selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
+               }
           }
 
           newShapes.push({ ...selectedShape, img });
       }
       
       setCurrentShapes(newShapes);
-      // We need to wait for state update or pass newShapes directly
       checkGameOver(grid, newShapes);
   }
+
+  // AI Helper: Find shapes that would perfectly fill gaps to clear lines
+  const findHelpfulShapes = (currentGrid: (string | null)[][]) => {
+      const helpful: any[] = [];
+      
+      // Check Rows
+      for (let r = 0; r < GRID_SIZE; r++) {
+          const emptyIndices = [];
+          for (let c = 0; c < GRID_SIZE; c++) {
+              if (currentGrid[r][c] === null) emptyIndices.push(c);
+          }
+          
+          // If row has 1-3 empty spots, it's a candidate for clearing
+          if (emptyIndices.length > 0 && emptyIndices.length <= 3) {
+              // Find contiguous gaps
+              // e.g. empty at 2,3 -> needs a 1x2 horizontal
+              // This is a simplified check: just looks for shapes that match the gap pattern
+              
+              // 1. Single hole? Suggest dot
+              if (emptyIndices.length === 1) {
+                  helpful.push(SHAPES.find(s => s.id === 'dot'));
+              }
+              // 2. Two holes?
+              else if (emptyIndices.length === 2) {
+                  const dist = emptyIndices[1] - emptyIndices[0];
+                  if (dist === 1) helpful.push(SHAPES.find(s => s.id === '1x2')); // Horizontal 2
+                  else helpful.push(SHAPES.find(s => s.id === 'dot')); // Two dots (we can suggest one)
+              }
+               // 3. Three holes?
+              else if (emptyIndices.length === 3) {
+                  const d1 = emptyIndices[1] - emptyIndices[0];
+                  const d2 = emptyIndices[2] - emptyIndices[1];
+                  if (d1 === 1 && d2 === 1) helpful.push(SHAPES.find(s => s.id === '1x3'));
+              }
+          }
+      }
+
+      // Check Cols
+      for (let c = 0; c < GRID_SIZE; c++) {
+          const emptyIndices = [];
+          for (let r = 0; r < GRID_SIZE; r++) {
+              if (currentGrid[r][c] === null) emptyIndices.push(r);
+          }
+          
+          if (emptyIndices.length > 0 && emptyIndices.length <= 3) {
+               if (emptyIndices.length === 1) {
+                  helpful.push(SHAPES.find(s => s.id === 'dot'));
+              }
+              else if (emptyIndices.length === 2) {
+                  const dist = emptyIndices[1] - emptyIndices[0];
+                  if (dist === 1) helpful.push(SHAPES.find(s => s.id === '2x1')); // Vertical 2
+              }
+               else if (emptyIndices.length === 3) {
+                  const d1 = emptyIndices[1] - emptyIndices[0];
+                  const d2 = emptyIndices[2] - emptyIndices[1];
+                  if (d1 === 1 && d2 === 1) helpful.push(SHAPES.find(s => s.id === '3x1'));
+              }
+          }
+      }
+      
+      // Filter out undefined and duplicates
+      return Array.from(new Set(helpful.filter(s => s)));
+  };
 
   // Check if ANY available shape can fit ANYWHERE on the grid
   const checkGameOver = (currentGrid: (string | null)[][], shapes: any[]) => {
