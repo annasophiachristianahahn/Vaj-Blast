@@ -13,13 +13,22 @@ export default function QuietGame() {
   const audioChunksRef = useRef<Float32Array[]>([]);
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
   
   // Use RMS threshold (0.0 to 1.0)
   // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
   const THRESHOLD_RMS = 0.15; 
-  const MAX_BUFFER_CHUNKS = 100; // Approx 4-5 seconds at 2048 buffer size / 44.1kHz
+  // Store more chunks for better context (e.g. 5 seconds buffer)
+  const MAX_BUFFER_CHUNKS = 200; 
 
   const startGame = async () => {
+    // Stop any existing playback
+    if (playbackSourceRef.current) {
+        playbackSourceRef.current.stop();
+        playbackSourceRef.current.disconnect();
+        playbackSourceRef.current = null;
+    }
+
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
@@ -36,6 +45,8 @@ export default function QuietGame() {
         // Use ScriptProcessor for both analysis and recording
         const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
         processorRef.current = scriptProcessor;
+        
+        let triggered = false;
         
         scriptProcessor.onaudioprocess = (event) => {
             const inputBuffer = event.inputBuffer;
@@ -57,15 +68,37 @@ export default function QuietGame() {
             const chunk = new Float32Array(inputData);
             audioChunksRef.current.push(chunk);
             
-            // Keep buffer size limited
+            // Keep buffer size limited but generous enough for context
             if (audioChunksRef.current.length > MAX_BUFFER_CHUNKS) {
                 audioChunksRef.current.shift();
             }
             
             // 3. Check Threshold
-            if (rms > THRESHOLD_RMS) {
-                // Capture the fail!
-                endGameAndPlayRecording();
+            if (!triggered && rms > THRESHOLD_RMS) {
+                triggered = true;
+                // Continue recording for a moment to capture the full sound
+                // e.g., 1.5 seconds (approx 30 chunks at 2048 samples/44.1kHz)
+                let remainingChunks = 30;
+                
+                // We hijack the process to continue recording then stop
+                const originalProcess = scriptProcessor.onaudioprocess;
+                
+                scriptProcessor.onaudioprocess = (evt) => {
+                    // Still capture data
+                    const currentInput = evt.inputBuffer.getChannelData(0);
+                    const currentChunk = new Float32Array(currentInput);
+                    audioChunksRef.current.push(currentChunk);
+                    
+                    // Maintain max size (though unlikely to overflow in 1.5s)
+                    if (audioChunksRef.current.length > MAX_BUFFER_CHUNKS) {
+                        audioChunksRef.current.shift();
+                    }
+
+                    remainingChunks--;
+                    if (remainingChunks <= 0) {
+                        endGameAndPlayRecording();
+                    }
+                };
             }
         };
         
@@ -97,11 +130,11 @@ export default function QuietGame() {
     setPlaying(false);
     setGameOver(true);
     
-    playCapturedAudio();
+    playCapturedAudioLoop();
     cleanup();
   };
   
-  const playCapturedAudio = () => {
+  const playCapturedAudioLoop = () => {
       if (!audioContextRef.current || audioChunksRef.current.length === 0) return;
       
       const ctx = audioContextRef.current;
@@ -120,11 +153,14 @@ export default function QuietGame() {
           offset += chunk.length;
       }
       
-      // Play it
+      // Play it in a loop
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
+      source.loop = true; // Loop the captured sound!
       source.connect(ctx.destination);
       source.start();
+      
+      playbackSourceRef.current = source;
   };
 
   const cleanup = () => {
@@ -148,6 +184,9 @@ export default function QuietGame() {
 
   useEffect(() => {
       return () => {
+        if (playbackSourceRef.current) {
+            playbackSourceRef.current.stop();
+        }
         if (audioContextRef.current) {
             audioContextRef.current.close();
         }
@@ -175,7 +214,7 @@ export default function QuietGame() {
                 {gameOver ? (
                     <div className="flex flex-col items-center">
                         <span className="text-red-500 animate-pulse">FAIL</span>
-                        <span className="text-xs text-white/50 mt-2 font-sans animate-none tracking-widest">REPLAYING SOUND...</span>
+                        <span className="text-xs text-white/50 mt-2 font-sans animate-none tracking-widest text-center">PLAYING BACK<br/>SOUND LOOP...</span>
                     </div>
                 ) : (
                     (score / 10).toFixed(1) + "s"
