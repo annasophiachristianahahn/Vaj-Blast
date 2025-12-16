@@ -219,7 +219,7 @@ export default function BlockBlast() {
                   // Check game over with remaining shapes and NEW grid state
                   checkGameOver(finalGrid, newShapes);
               }
-          }, 600); // Slightly longer for animation
+          }, 1000); // Extended animation duration to 1s
       } else {
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
@@ -321,11 +321,11 @@ export default function BlockBlast() {
                         <motion.div
                             key={`${r}-${c}`}
                             animate={shakeGrid && cell ? { 
-                                x: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
-                                y: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
-                                rotate: [0, Math.random() * 6 - 3, Math.random() * 6 - 3, 0]
+                                x: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
+                                y: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
+                                rotate: [0, Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5, 0]
                             } : {}}
-                            transition={{ duration: 0.3 }}
+                            transition={{ duration: 1.0 }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
@@ -340,13 +340,13 @@ export default function BlockBlast() {
                                     <motion.div 
                                         initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
                                         animate={{ 
-                                            opacity: [0, 1, 1, 0], 
-                                            scale: [0.5, 1.5, 2.5, 3],
-                                            rotate: [0, 45, 90, 180],
-                                            backgroundColor: ["#fff", "#ff0000", "#ffff00", "#fff"]
+                                            opacity: [0, 1, 1, 0.8, 0], 
+                                            scale: [0.5, 1.5, 2.5, 3, 3.5],
+                                            rotate: [0, 45, 90, 180, 270],
+                                            backgroundColor: ["#fff", "#ff0000", "#ffff00", "#ff4500", "#fff"]
                                         }}
                                         exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        transition={{ duration: 1.0, ease: "easeOut" }}
                                         className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
                                     />
                                 )}
