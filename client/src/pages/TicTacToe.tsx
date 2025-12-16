@@ -71,7 +71,7 @@ export default function TicTacToe() {
       >
         {/* Paper texture overlay could go here */}
         
-        <div className="grid grid-cols-3 gap-0 w-full h-full">
+        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full h-full">
           {board.map((cell, index) => (
             <motion.button
               key={index}
