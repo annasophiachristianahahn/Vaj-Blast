@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 export default function QuietGame() {
   const [playing, setPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [capturingFail, setCapturingFail] = useState(false);
   const [score, setScore] = useState(0);
   const [volume, setVolume] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -76,9 +77,20 @@ export default function QuietGame() {
             // 3. Check Threshold
             if (!triggered && rms > THRESHOLD_RMS) {
                 triggered = true;
-                // Continue recording for a moment to capture the full sound
-                // e.g., 1.5 seconds (approx 30 chunks at 2048 samples/44.1kHz)
-                let remainingChunks = 30;
+                setCapturingFail(true);
+                
+                // INTELLIGENT CROPPING:
+                // Keep only the last ~0.7 seconds of audio before the trigger (pre-roll)
+                // This captures the start of the sound/phrase without too much silence
+                // 0.7s / (2048 / 44100) ≈ 15 chunks
+                const PRE_ROLL_CHUNKS = 15; 
+                if (audioChunksRef.current.length > PRE_ROLL_CHUNKS) {
+                    audioChunksRef.current = audioChunksRef.current.slice(-PRE_ROLL_CHUNKS);
+                }
+
+                // Continue recording to capture the full "fail" sound (post-roll)
+                // e.g., ~2.0 seconds (approx 45 chunks) to catch the full scream/laugh
+                let remainingChunks = 45;
                 
                 // We hijack the process to continue recording then stop
                 const originalProcess = scriptProcessor.onaudioprocess;
@@ -89,11 +101,8 @@ export default function QuietGame() {
                     const currentChunk = new Float32Array(currentInput);
                     audioChunksRef.current.push(currentChunk);
                     
-                    // Maintain max size (though unlikely to overflow in 1.5s)
-                    if (audioChunksRef.current.length > MAX_BUFFER_CHUNKS) {
-                        audioChunksRef.current.shift();
-                    }
-
+                    // No need to shift here as we want to keep the specific clip we are building
+                    
                     remainingChunks--;
                     if (remainingChunks <= 0) {
                         endGameAndPlayRecording();
@@ -107,6 +116,7 @@ export default function QuietGame() {
         
         setPlaying(true);
         setGameOver(false);
+        setCapturingFail(false);
         setScore(0);
         
     } catch (err) {
@@ -129,6 +139,7 @@ export default function QuietGame() {
     
     setPlaying(false);
     setGameOver(true);
+    setCapturingFail(false);
     
     playCapturedAudioLoop();
     cleanup();
@@ -232,8 +243,8 @@ export default function QuietGame() {
         )}
 
         {playing && (
-            <div className="text-xl text-red-400 font-bold animate-pulse tracking-widest">
-                LISTENING...
+            <div className={`text-xl font-bold animate-pulse tracking-widest ${capturingFail ? 'text-yellow-400' : 'text-red-400'}`}>
+                {capturingFail ? "CAPTURING FAIL..." : "LISTENING..."}
             </div>
         )}
       </div>
