@@ -227,7 +227,7 @@ export default function BlockBlast() {
                   // Check game over with remaining shapes and NEW grid state
                   checkGameOver(finalGrid, newShapes);
               }
-          }, 500); // 0.5s duration
+          }, 250); // 0.25s duration
       } else {
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
@@ -346,7 +346,7 @@ export default function BlockBlast() {
                         <motion.div
                             key={`${r}-${c}`}
                             animate={shakeGrid && cell ? getRandomShake() : {}}
-                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
@@ -367,7 +367,7 @@ export default function BlockBlast() {
                                             backgroundColor: ["#fff", "#ff0000", "#ffff00", "#ff4500", "#fff"]
                                         }}
                                         exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        transition={{ duration: 0.25, ease: "easeOut" }}
                                         className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
                                     />
                                 )}
