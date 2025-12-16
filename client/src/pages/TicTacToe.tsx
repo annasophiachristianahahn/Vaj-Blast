@@ -6,7 +6,7 @@ import { Shuffle } from "lucide-react";
 // Import generated assets
 import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
 import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
-import paperTexture from "@assets/generated_images/subtly_tea_stained_paper_texture.png";
+import paperTexture from "@assets/generated_images/crumpled_lined_paper_with_tea_stains.png";
 
 export default function TicTacToe() {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
