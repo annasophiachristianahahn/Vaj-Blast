@@ -309,14 +309,8 @@ export default function BlockBlast() {
         </div>
 
         {/* Grid */}
-        <motion.div 
+        <div 
             ref={gridRef}
-            animate={shakeGrid ? { 
-                x: [0, -5, 5, -5, 5, 0],
-                y: [0, -5, 5, -5, 5, 0],
-                rotate: [0, -1, 1, -1, 1, 0]
-            } : {}}
-            transition={{ duration: 0.4 }}
             className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
         >
@@ -324,8 +318,14 @@ export default function BlockBlast() {
                 row.map((cell, c) => {
                     const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
                     return (
-                        <div
+                        <motion.div
                             key={`${r}-${c}`}
+                            animate={shakeGrid && cell ? { 
+                                x: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
+                                y: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
+                                rotate: [0, Math.random() * 6 - 3, Math.random() * 6 - 3, 0]
+                            } : {}}
+                            transition={{ duration: 0.3 }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
@@ -351,11 +351,11 @@ export default function BlockBlast() {
                                     />
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     );
                 })
             )}
-        </motion.div>
+        </div>
 
         {/* Shape Selector - Draggable */}
         <div className="flex gap-4 h-32 items-center justify-center w-full relative z-10">
