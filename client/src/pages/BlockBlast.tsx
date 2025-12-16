@@ -71,6 +71,12 @@ export default function BlockBlast() {
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
   const [shakeGrid, setShakeGrid] = useState(false);
   
+  // Placement preview state
+  const [hoverPlacement, setHoverPlacement] = useState<{r: number, c: number, shapeIndex: number} | null>(null);
+  
+  // Cell size for matching selector to grid
+  const [cellSize, setCellSize] = useState(30);
+
   // Helper to get image for current round
   const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
   
@@ -83,7 +89,19 @@ export default function BlockBlast() {
   // Initialize shapes on mount
   useEffect(() => {
       generateNewShapes(currentImageIndex);
+      updateCellSize();
+      window.addEventListener('resize', updateCellSize);
+      return () => window.removeEventListener('resize', updateCellSize);
   }, []);
+
+  const updateCellSize = () => {
+    if (gridRef.current) {
+        const rect = gridRef.current.getBoundingClientRect();
+        // Width includes padding (p-1.5 = 6px total horizontal) and gaps (0.5 * 7 = 3.5px)
+        // Roughly rect.width / GRID_SIZE
+        setCellSize((rect.width - 12) / GRID_SIZE);
+    }
+  };
 
   function generateNewShapes(imgIndex: number) {
       const img = getRoundImage(imgIndex);
@@ -91,9 +109,6 @@ export default function BlockBlast() {
       
       for (let i = 0; i < 3; i++) {
           // ~1/7 chance for a single dot (approx 14%)
-          // There are ~29 shapes. 
-          // If we want 1/7 chance, we force 'dot' if rand < 1/7
-          // Otherwise pick from full pool (which also contains dot, slightly increasing chance further but negligible)
           if (Math.random() < (1/7)) {
               newShapes.push({ ...SHAPES[0], img }); // SHAPES[0] is 'dot'
           } else {
@@ -101,10 +116,7 @@ export default function BlockBlast() {
           }
       }
       setCurrentShapes(newShapes);
-
-      // Check for game over immediately after generating new shapes
       // We need to wait for state update or pass newShapes directly
-      // Since state update is async, we pass it directly
       checkGameOver(grid, newShapes);
   }
 
@@ -131,54 +143,78 @@ export default function BlockBlast() {
       setGameOver(true);
   };
 
+  // Shared logic to determine placement position
+  const getPlacementPosition = (pointerX: number, pointerY: number, shape: any) => {
+      if (!gridRef.current) return null;
+
+      const gridRect = gridRef.current.getBoundingClientRect();
+
+      if (
+          pointerX < gridRect.left || 
+          pointerX > gridRect.right || 
+          pointerY < gridRect.top || 
+          pointerY > gridRect.bottom
+      ) {
+          return null; 
+      }
+
+      const cellWidth = gridRect.width / GRID_SIZE;
+      const cellHeight = gridRect.height / GRID_SIZE;
+      
+      const relativeX = pointerX - gridRect.left;
+      const relativeY = pointerY - gridRect.top;
+      
+      const rawC = Math.floor(relativeX / cellWidth);
+      const rawR = Math.floor(relativeY / cellHeight);
+
+      const shapeWidth = Math.max(...shape.points.map((p: number[]) => p[0])) + 1;
+      const shapeHeight = Math.max(...shape.points.map((p: number[]) => p[1])) + 1;
+
+      const c = rawC - Math.floor((shapeWidth - 1) / 2);
+      const r = rawR - Math.floor((shapeHeight - 1) / 2);
+
+      const offsets = [
+        [0, 0], 
+        [0, 1], [0, -1], [1, 0], [-1, 0], 
+        [1, 1], [1, -1], [-1, 1], [-1, -1] 
+      ];
+
+      for (const [dr, dc] of offsets) {
+        const testR = r + dr;
+        const testC = c + dc;
+        
+        if (canPlaceShape(testR, testC, shape, grid)) {
+            return { r: testR, c: testC };
+        }
+      }
+
+      return null;
+  };
+
+  const handleDrag = (event: any, info: any, shapeIndex: number) => {
+      if (gameOver) return;
+      const shape = currentShapes[shapeIndex];
+      if (!shape) return;
+
+      const placement = getPlacementPosition(info.point.x, info.point.y, shape);
+      if (placement) {
+          setHoverPlacement({ ...placement, shapeIndex });
+      } else {
+          setHoverPlacement(null);
+      }
+  };
+
   const handleDragEnd = (event: any, info: any, shapeIndex: number) => {
+    setHoverPlacement(null);
     if (!gridRef.current || gameOver) return;
 
     const shape = currentShapes[shapeIndex];
     if (!shape) return;
 
-    const gridRect = gridRef.current.getBoundingClientRect();
-    const pointerX = info.point.x;
-    const pointerY = info.point.y;
-
-    if (
-        pointerX < gridRect.left || 
-        pointerX > gridRect.right || 
-        pointerY < gridRect.top || 
-        pointerY > gridRect.bottom
-    ) {
-        return; 
-    }
-
-    const cellWidth = gridRect.width / GRID_SIZE;
-    const cellHeight = gridRect.height / GRID_SIZE;
+    const placement = getPlacementPosition(info.point.x, info.point.y, shape);
     
-    const relativeX = pointerX - gridRect.left;
-    const relativeY = pointerY - gridRect.top;
-    
-    const rawC = Math.floor(relativeX / cellWidth);
-    const rawR = Math.floor(relativeY / cellHeight);
-
-    const shapeWidth = Math.max(...shape.points.map(p => p[0])) + 1;
-    const shapeHeight = Math.max(...shape.points.map(p => p[1])) + 1;
-
-    const c = rawC - Math.floor((shapeWidth - 1) / 2);
-    const r = rawR - Math.floor((shapeHeight - 1) / 2);
-    
-    const offsets = [
-        [0, 0], 
-        [0, 1], [0, -1], [1, 0], [-1, 0], 
-        [1, 1], [1, -1], [-1, 1], [-1, -1] 
-    ];
-
-    for (const [dr, dc] of offsets) {
-        const testR = r + dr;
-        const testC = c + dc;
-        
-        if (canPlaceShape(testR, testC, shape, grid)) {
-            placeShape(testR, testC, shape, shapeIndex);
-            return; 
-        }
+    if (placement) {
+        placeShape(placement.r, placement.c, shape, shapeIndex);
     }
   };
 
@@ -336,18 +372,33 @@ export default function BlockBlast() {
         {/* Grid */}
         <div 
             ref={gridRef}
-            className="grid gap-0.5 bg-black/50 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
+            className="grid gap-0.5 bg-black p-1.5 rounded-xl border-4 border-white/40 shadow-2xl w-full aspect-square max-w-[320px] relative z-0"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
         >
             {grid.map((row, r) => 
                 row.map((cell, c) => {
                     const isClearing = clearingCells.some(cell => cell.r === r && cell.c === c);
+                    
+                    // Check if this cell is part of the ghost preview
+                    let isGhost = false;
+                    if (hoverPlacement && !cell) {
+                        const shape = currentShapes[hoverPlacement.shapeIndex];
+                        if (shape) {
+                            isGhost = shape.points.some(([dx, dy]: number[]) => 
+                                hoverPlacement.r + dy === r && hoverPlacement.c + dx === c
+                            );
+                        }
+                    }
+
                     return (
                         <motion.div
                             key={`${r}-${c}`}
                             animate={shakeGrid && cell ? getRandomShake() : { x: 0, y: 0, rotate: 0 }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
-                            className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
+                            className={`w-full h-full rounded-sm border transition-colors relative 
+                                ${cell ? 'bg-white border-white/5' : 
+                                  isGhost ? 'bg-white/30 border-white/30 animate-pulse' : 
+                                  'bg-white/5 border-white/10'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
                                 backgroundSize: 'cover',
@@ -379,28 +430,29 @@ export default function BlockBlast() {
         </div>
 
         {/* Shape Selector - Draggable */}
-        <div className="flex gap-4 h-32 items-center justify-center w-full relative z-10">
+        <div className="flex gap-4 min-h-[140px] items-center justify-center w-full relative z-10 px-2">
             {currentShapes.map((shape, i) => (
                 shape ? (
                     <motion.div
                         key={i}
                         drag
                         dragSnapToOrigin
+                        onDrag={(e, info) => handleDrag(e, info, i)}
                         onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.1, zIndex: 100 }}
-                        className={`p-3 rounded-lg cursor-grab active:cursor-grabbing transition-colors bg-black/40 hover:bg-black/60`}
+                        whileDrag={{ scale: 1.0, zIndex: 100 }}
+                        className={`p-2 rounded-lg cursor-grab active:cursor-grabbing transition-colors bg-black/40 hover:bg-black/60`}
                     >
                         <div 
-                            className="grid gap-1 pointer-events-none"
+                            className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, 24px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, 24px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
                             }}
                         >
                             {shape.points.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-6 h-6 bg-white rounded-[2px]"
+                                    className="w-full h-full bg-white rounded-sm"
                                     style={{ 
                                         gridColumnStart: p[0] + 1,
                                         gridRowStart: p[1] + 1,
