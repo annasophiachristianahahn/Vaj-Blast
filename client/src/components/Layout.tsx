@@ -40,7 +40,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </main>
 
         <footer className="p-4 text-center text-xs opacity-60 font-mono">
-            VAJUNNIE © 2025
+            10 Strawberry Street ent
         </footer>
       </div>
     </div>

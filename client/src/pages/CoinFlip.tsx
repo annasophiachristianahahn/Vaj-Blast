@@ -80,8 +80,8 @@ export default function CoinFlip() {
   };
 
   return (
-    <Layout>
-      <div className="h-[60vh] w-full relative">
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <div className="h-[50vh] w-full relative">
         <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
@@ -92,7 +92,7 @@ export default function CoinFlip() {
         </Canvas>
       </div>
       
-      <div className="flex flex-col items-center gap-4 mt-4">
+      <div className="flex flex-col items-center gap-4 mt-4 relative z-10">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
@@ -111,6 +111,6 @@ export default function CoinFlip() {
             {flipping ? "FLIPPING..." : "FLIP COIN"}
         </Button>
       </div>
-    </Layout>
+    </div>
   );
 }

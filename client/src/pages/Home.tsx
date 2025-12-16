@@ -1,11 +1,19 @@
 import { Layout } from "@/components/Layout";
-import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import CoinFlip from "./CoinFlip";
+import QuietGame from "./QuietGame";
+import BlockBlast from "./BlockBlast";
+import { Button } from "@/components/ui/button";
+
+type GameType = 'coin-flip' | 'quiet-game' | 'block-blast';
 
 export default function Home() {
+  const [activeGame, setActiveGame] = useState<GameType>('coin-flip');
+
   return (
     <Layout>
-      <div className="flex flex-col items-center gap-8 w-full">
+      <div className="flex flex-col items-center gap-8 w-full h-full">
         <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -20,49 +28,63 @@ export default function Home() {
             </p>
         </motion.div>
 
-        <div className="grid gap-4 w-full">
-            <GameCard 
-                title="COIN FLIP" 
-                desc="Test your luck" 
-                href="/coin-flip" 
+        {/* Game Selector */}
+        <div className="flex flex-wrap justify-center gap-2 md:gap-4 w-full max-w-lg z-20">
+            <GameTab 
+                active={activeGame === 'coin-flip'} 
+                onClick={() => setActiveGame('coin-flip')}
+                label="COIN FLIP"
                 color="bg-red-500"
-                delay={0.1}
             />
-            <GameCard 
-                title="THE QUIET GAME" 
-                desc="Don't make a sound" 
-                href="/quiet-game" 
+            <GameTab 
+                active={activeGame === 'quiet-game'} 
+                onClick={() => setActiveGame('quiet-game')}
+                label="QUIET GAME"
                 color="bg-purple-500"
-                delay={0.2}
             />
-            <GameCard 
-                title="VAJ BLAST" 
-                desc="Meme puzzle madness" 
-                href="/block-blast" 
+            <GameTab 
+                active={activeGame === 'block-blast'} 
+                onClick={() => setActiveGame('block-blast')}
+                label="VAJ BLAST"
                 color="bg-green-500"
-                delay={0.3}
             />
+        </div>
+
+        {/* Game Container */}
+        <div className="w-full flex-1 min-h-[500px] relative">
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeGame}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full"
+                >
+                    {activeGame === 'coin-flip' && <CoinFlip />}
+                    {activeGame === 'quiet-game' && <QuietGame />}
+                    {activeGame === 'block-blast' && <BlockBlast />}
+                </motion.div>
+            </AnimatePresence>
         </div>
       </div>
     </Layout>
   );
 }
 
-function GameCard({ title, desc, href, color, delay }: { title: string, desc: string, href: string, color: string, delay: number }) {
+function GameTab({ active, onClick, label, color }: { active: boolean, onClick: () => void, label: string, color: string }) {
     return (
-        <Link href={href}>
-            <motion.div 
-                initial={{ x: -50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay }}
-                whileHover={{ scale: 1.05, rotate: -1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`w-full p-6 rounded-xl border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,1)] cursor-pointer transition-colors ${color} group relative overflow-hidden`}
-            >
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <h2 className="text-3xl font-display text-white drop-shadow-md uppercase">{title}</h2>
-                <p className="font-bold opacity-90 text-black/80">{desc}</p>
-            </motion.div>
-        </Link>
+        <Button
+            onClick={onClick}
+            className={`
+                relative h-12 px-4 md:px-6 font-display text-lg md:text-xl uppercase transition-all
+                border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]
+                hover:-translate-y-1 hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
+                active:translate-y-0 active:shadow-[2px_2px_0_rgba(0,0,0,1)]
+                ${active ? `${color} text-white scale-105 z-10` : 'bg-white text-black hover:bg-gray-100'}
+            `}
+        >
+            {label}
+        </Button>
     )
 }

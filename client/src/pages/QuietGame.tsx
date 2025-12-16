@@ -89,8 +89,7 @@ export default function QuietGame() {
   }, []);
 
   return (
-    <Layout>
-      <div className="flex flex-col items-center gap-8 w-full max-w-sm">
+    <div className="flex flex-col items-center gap-8 w-full max-w-sm mt-8">
         <div className="text-center">
             <h1 className="text-4xl font-display text-primary mb-2">SHHHH!</h1>
             <p className="opacity-80">Don't make a sound. Survive.</p>
@@ -128,6 +127,5 @@ export default function QuietGame() {
             </div>
         )}
       </div>
-    </Layout>
   );
 }
