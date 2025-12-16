@@ -6,7 +6,7 @@ import { Shuffle } from "lucide-react";
 // Import generated assets
 import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
 import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
-import paperTexture from "@assets/generated_images/realistic_white_notebook_paper_texture.png";
+import paperTexture from "@assets/generated_images/liquor_stained_paper_texture.png";
 
 export default function TicTacToe() {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
@@ -68,7 +68,7 @@ export default function TicTacToe() {
       </div>
 
       <div 
-        className="relative p-8 rounded-sm shadow-2xl rotate-1 transform transition-transform hover:rotate-0 duration-300"
+        className="relative p-8 rounded-sm shadow-2xl"
         style={{
             backgroundImage: `url(${paperTexture})`,
             backgroundSize: 'cover',
@@ -88,7 +88,7 @@ export default function TicTacToe() {
               className={`
                 w-20 h-20 md:w-24 md:h-24 
                 flex items-center justify-center text-4xl relative overflow-hidden
-                border-black/20
+                border-[#800020]/80
                 ${index < 6 ? 'border-b-4' : ''}
                 ${index % 3 !== 2 ? 'border-r-4' : ''}
                 ${winningLine?.includes(index) ? "bg-green-500/10" : ""}
