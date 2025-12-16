@@ -219,7 +219,7 @@ export default function BlockBlast() {
                   // Check game over with remaining shapes and NEW grid state
                   checkGameOver(finalGrid, newShapes);
               }
-          }, 1000); // 1s duration
+          }, 500); // 0.5s duration
       } else {
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
@@ -266,9 +266,19 @@ export default function BlockBlast() {
 
   // Helper for generating random shake intensity
   const getRandomShake = () => ({
-      x: [0, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, 0],
-      y: [0, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, 0],
-      rotate: [0, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, 0]
+      x: [0, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          0],
+      y: [0, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          Math.random() * 10 - 5, Math.random() * 10 - 5, 
+          0],
+      rotate: [0, Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5, 0]
   });
 
   return (
@@ -328,7 +338,7 @@ export default function BlockBlast() {
                         <motion.div
                             key={`${r}-${c}`}
                             animate={shakeGrid && cell ? getRandomShake() : {}}
-                            transition={{ duration: 1.0, ease: "easeInOut" }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
@@ -349,7 +359,7 @@ export default function BlockBlast() {
                                             backgroundColor: ["#fff", "#ff0000", "#ffff00", "#ff4500", "#fff"]
                                         }}
                                         exit={{ opacity: 0 }}
-                                        transition={{ duration: 1.0, ease: "easeOut" }}
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
                                         className="absolute inset-0 z-20 rounded-full mix-blend-screen pointer-events-none"
                                     />
                                 )}
