@@ -46,7 +46,7 @@ export default function TicTacToe() {
       setWinner(result.winner);
       setWinningLine(result.line);
     } else if (!newBoard.includes(null)) {
-      setWinner("DRAW");
+      setWinner("TIE");
     }
   };
 
@@ -116,9 +116,9 @@ export default function TicTacToe() {
                 >
                     <div className="text-center p-4">
                         <div className="text-4xl font-display text-white drop-shadow-lg mb-4 animate-bounce">
-                            {winner === "DRAW" ? "DRAW!" : "WINNER!"}
+                            {winner === "TIE" ? "TIE" : "WINNER!"}
                         </div>
-                        {winner !== "DRAW" && (
+                        {winner !== "TIE" && (
                             <img 
                                 src={winner === "X" ? player1Image : player2Image} 
                                 className="w-24 h-24 mx-auto mb-4 border-4 border-white rounded-full shadow-lg"
