@@ -219,7 +219,7 @@ export default function BlockBlast() {
                   // Check game over with remaining shapes and NEW grid state
                   checkGameOver(finalGrid, newShapes);
               }
-          }, 1000); // Extended animation duration to 1s
+          }, 1000); // 1s duration
       } else {
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
@@ -263,6 +263,13 @@ export default function BlockBlast() {
       setGameOver(false);
       setClearingCells([]);
   };
+
+  // Helper for generating random shake intensity
+  const getRandomShake = () => ({
+      x: [0, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, 0],
+      y: [0, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10, 0],
+      rotate: [0, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, Math.random() * 15 - 7.5, 0]
+  });
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-[90vw] md:max-w-md mt-2 mx-auto select-none touch-none relative">
@@ -320,12 +327,8 @@ export default function BlockBlast() {
                     return (
                         <motion.div
                             key={`${r}-${c}`}
-                            animate={shakeGrid && cell ? { 
-                                x: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
-                                y: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
-                                rotate: [0, Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5, 0]
-                            } : {}}
-                            transition={{ duration: 1.0 }}
+                            animate={shakeGrid && cell ? getRandomShake() : {}}
+                            transition={{ duration: 1.0, ease: "easeInOut" }}
                             className={`w-full h-full rounded-sm border border-white/5 transition-colors relative ${cell ? 'bg-white' : 'bg-transparent'}`}
                             style={{
                                 backgroundImage: cell ? `url(${cell})` : 'none',
