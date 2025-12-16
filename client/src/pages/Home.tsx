@@ -19,7 +19,7 @@ export default function Home() {
         {/* Game Selector */}
         <div className="w-full z-20 px-4 flex flex-col items-center gap-4">
             {/* Main Games Row - Force all items to fit without scrolling on larger screens, scroll on very small */}
-            <div className="flex flex-nowrap w-full justify-between gap-2 overflow-x-auto md:overflow-visible pb-1">
+            <div className="grid grid-cols-3 w-full gap-2 pb-1">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -44,7 +44,7 @@ export default function Home() {
             <Button
                 onClick={() => setActiveGame('tic-tac-toe')}
                 className={`
-                    w-full h-auto min-h-[40px] py-3 px-2 font-display text-[9px] sm:text-xs md:text-lg uppercase transition-all whitespace-nowrap overflow-hidden text-ellipsis
+                    w-full h-auto min-h-[44px] py-2 px-2 font-display text-xs sm:text-sm md:text-lg uppercase transition-all whitespace-normal leading-none
                     border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]
                     hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)]
                     active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
@@ -83,14 +83,14 @@ function GameTab({ active, onClick, label, color }: { active: boolean, onClick: 
         <Button
             onClick={onClick}
             className={`
-                relative h-10 md:h-12 px-2 md:px-6 font-display text-[10px] sm:text-xs md:text-xl uppercase transition-all whitespace-nowrap flex-1
+                relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase transition-all whitespace-normal overflow-hidden leading-none
                 border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] md:shadow-[4px_4px_0_rgba(0,0,0,1)]
                 hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
                 active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
                 ${active ? `${color} text-white scale-[1.02] z-10` : 'bg-white text-black hover:bg-gray-100'}
             `}
         >
-            {label}
+            <span className="w-full break-words">{label}</span>
         </Button>
     )
 }
