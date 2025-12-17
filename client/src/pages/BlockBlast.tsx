@@ -190,27 +190,27 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
-      // DEFAULT WEIGHTS (Super Easy Mode)
+      // DEFAULT WEIGHTS (Super Easy Mode, but not boring)
       let weights = {
           safety: 0.1, 
-          structural: 0.85, 
-          stressor: 0.05
+          structural: 0.8, // Heavy focus on useful shapes
+          stressor: 0.1
       };
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 60) {
-          // Empty Board: Give big pieces to fill space fast
-          weights = { safety: 0.05, structural: 0.8, stressor: 0.15 };
+          // Empty Board: Give big structural pieces to fill space fast and allow combos
+          weights = { safety: 0.0, structural: 0.9, stressor: 0.1 };
       } else if (metrics.emptyCount < 40) {
-          // Half Full: Stop stressors completely. Focus on clearable shapes.
-          weights = { safety: 0.2, structural: 0.8, stressor: 0.0 };
+          // Half Full: Stop stressors. Focus on clearable shapes.
+          weights = { safety: 0.15, structural: 0.85, stressor: 0.0 };
       } else if (metrics.emptyCount < 20) {
-          // Danger Zone: Need more safety, but still prefer useful structural pieces
-          weights = { safety: 0.6, structural: 0.4, stressor: 0.0 };
+          // Danger Zone: Need safety to survive
+          weights = { safety: 0.7, structural: 0.3, stressor: 0.0 };
       } else if (metrics.holes > 3) {
           // Fragmented: Patch it up
-          weights.safety += 0.3;
-          weights.structural -= 0.3;
+          weights.safety += 0.4;
+          weights.structural -= 0.4;
           weights.stressor = 0;
       }
       
@@ -332,26 +332,28 @@ export default function BlockBlast() {
       const weights = getDynamicWeights(metrics);
       
       // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is nearly empty (< 12 blocks), we STOP random generation
+      // If the board is relatively empty (< 25 blocks), we STOP random generation
       // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 12) {
+      if (totalBlocks > 0 && totalBlocks < 25) {
            let endgameBatch: any[] = [];
            // Strategy: Give mostly 1x1s and small pieces to let user snipe the last blocks
            // OR find a perfect sequence if possible.
            
            // Try to find a perfect clear sequence first
+           // We now include ALL structural pieces in the perfect search to avoid "filler" feeling
            const perfectBatch = findPerfectClearBatch(currentGrid);
            
            if (perfectBatch) {
                endgameBatch = perfectBatch;
            } else {
-               // Fallback: Give a mix of small pieces, but not just dots.
-               // 40% Dot, 40% Domino, 20% Corner
+               // Fallback: Give a mix of useful small/medium pieces.
+               // Reduced 1x1 frequency to avoid "filler" complaint.
                for(let i=0; i<3; i++) {
                    const r = Math.random();
-                   if (r < 0.3) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
-                   else if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
-                   else endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
+                   if (r < 0.2) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
+                   else if (r < 0.5) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
+                   else if (r < 0.8) endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
+                   else endgameBatch.push(SHAPES.find(s => s.id.startsWith('line-3'))); // Add lines for clearing
                }
            }
            
