@@ -389,6 +389,14 @@ export default function BlockBlast() {
                           batchScore += lines.length * 10;
                           if (needsRescue) batchScore += 50; // Bonus for saving player
                       }
+                      
+                      // CRITICAL: HUGE BONUS FOR FULL BOARD CLEAR
+                      const remainingBlocks = countBlocks(simGrid);
+                      if (remainingBlocks === 0) {
+                          batchScore += 10000; // Infinite priority
+                      } else if (remainingBlocks < 5) {
+                          batchScore += 500; // Very high priority for almost clear
+                      }
                   }
               }
           }
@@ -400,7 +408,7 @@ export default function BlockBlast() {
                   bestBatch = currentBatch;
               }
               // If we found a really good batch (clears lines), stop early
-              if (batchScore > 20) break;
+              if (batchScore > 1000) break; // Found a Full Clear
           }
       }
       
@@ -420,6 +428,16 @@ export default function BlockBlast() {
       setCurrentShapes(finalShapes);
   }
 
+  const countBlocks = (currentGrid: (string | null)[][]) => {
+      let count = 0;
+      for(let r=0; r<GRID_SIZE; r++) {
+          for(let c=0; c<GRID_SIZE; c++) {
+              if (currentGrid[r][c]) count++;
+          }
+      }
+      return count;
+  };
+
   // Helper: Find a shape that fits and ideally clears lines
   const findBestRescueShape = (currentGrid: (string | null)[][], weights: any) => {
       // Prioritize safety shapes for rescue
@@ -429,17 +447,25 @@ export default function BlockBlast() {
       
       let bestShape = null;
       let maxClears = -1;
+      let minRemaining = Infinity;
       
       for (const shape of candidates) {
           const move = findBestMove(currentGrid, shape);
           if (move) {
               // It fits!
+              if (move.remaining < minRemaining) {
+                  minRemaining = move.remaining;
+                  bestShape = shape;
+              }
+              
               if (move.clears > maxClears) {
                   maxClears = move.clears;
                   bestShape = shape;
               }
               // If it clears lines, take it immediately
-              if (move.clears > 0) return shape;
+              // Unless we are super close to full clear
+              if (move.clears > 0 && minRemaining > 5) return shape;
+              if (minRemaining === 0) return shape; // INSTANT WIN
           }
       }
       return bestShape;
@@ -449,6 +475,7 @@ export default function BlockBlast() {
   const findBestMove = (currentGrid: (string | null)[][], shape: any) => {
       let bestMove = null;
       let maxClears = -1;
+      let minRemaining = Infinity;
       
       for(let r=0; r<GRID_SIZE; r++) {
           for(let c=0; c<GRID_SIZE; c++) {
@@ -456,9 +483,32 @@ export default function BlockBlast() {
                    // Simulate
                    const simGrid = simulatePlacement(currentGrid, shape, r, c);
                    const lines = findLinesToClear(simGrid);
+                   
+                   let remaining = 0;
+                   if (lines.length > 0) {
+                        const clearedGrid = clearLinesFromGrid(simGrid, lines);
+                        remaining = countBlocks(clearedGrid);
+                   } else {
+                        remaining = countBlocks(simGrid);
+                   }
+
+                   // Priority 1: Full Board Clear
+                   if (remaining === 0) {
+                       return { r, c, clears: lines.length, remaining: 0 };
+                   }
+
+                   // Priority 2: Maximize Clears
                    if (lines.length > maxClears) {
                        maxClears = lines.length;
-                       bestMove = { r, c, clears: lines.length };
+                       minRemaining = remaining;
+                       bestMove = { r, c, clears: lines.length, remaining };
+                   } 
+                   // Priority 3: Minimize Remaining Blocks (if same clears)
+                   else if (lines.length === maxClears) {
+                       if (remaining < minRemaining) {
+                           minRemaining = remaining;
+                           bestMove = { r, c, clears: lines.length, remaining };
+                       }
                    }
               }
           }
