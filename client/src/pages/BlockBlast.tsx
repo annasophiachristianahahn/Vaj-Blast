@@ -327,175 +327,143 @@ export default function BlockBlast() {
       // 1. Analyze Board
       const metrics = analyzeBoard(currentGrid);
       const totalBlocks = countBlocks(currentGrid);
-      const weights = getDynamicWeights(metrics);
       
-      // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is relatively empty (< 28 blocks, increased from 18), we STOP random generation
-      // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 28) {
-           let endgameBatch: any[] = [];
-           
-           // Strategy 1: Perfect Clear Search (Deep)
-           const perfectBatch = findPerfectClearBatch(currentGrid);
-           
-           if (perfectBatch) {
-               endgameBatch = perfectBatch;
-           } else {
-               // Strategy 2: "Mind Reader" Fallback
-               // If we can't find a perfect sequence, we analyze the grid geometry
-               // and give the exact shapes that fit the largest holes or clear remaining lines.
-               
-               // Find the largest contiguous filled blocks (to break them)
-               // OR find the largest holes (to fill them)
-               
-               // Simple heuristic: Count consecutive blocks in rows/cols to see if we need lines
-               let neededShapes: any[] = [];
-               
-               // Check rows for long segments
-               for(let r=0; r<GRID_SIZE; r++) {
-                   let count = 0;
-                   for(let c=0; c<GRID_SIZE; c++) if (currentGrid[r][c]) count++;
-                   if (count >= 5) neededShapes.push(SHAPES.find(s => s.id === 'line-5-h')); // Clear whole row
-                   else if (count >= 3) neededShapes.push(SHAPES.find(s => s.id === 'line-3-h'));
-               }
-               
-               // Check cols
-               for(let c=0; c<GRID_SIZE; c++) {
-                   let count = 0;
-                   for(let r=0; r<GRID_SIZE; r++) if (currentGrid[r][c]) count++;
-                   if (count >= 5) neededShapes.push(SHAPES.find(s => s.id === 'line-5-v'));
-                   else if (count >= 3) neededShapes.push(SHAPES.find(s => s.id === 'line-3-v'));
-               }
-
-               // Randomize and fill batch
-               neededShapes.sort(() => Math.random() - 0.5);
-               
-               // Fill batch with smart picks or fallbacks
-               for(let i=0; i<3; i++) {
-                   if (i < neededShapes.length && neededShapes[i] && Math.random() < 0.7) {
-                       endgameBatch.push(neededShapes[i]);
-                   } else {
-                       // Fallback to general helpers (Lines and Corners, NOT just dots)
-                       const r = Math.random();
-                       if (r < 0.4) endgameBatch.push(SHAPES.find(s => s.id.startsWith('line-3'))); 
-                       else if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
-                       else endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
-                   }
-               }
-           }
-           
-           // Apply and return early
-           const finalShapes = endgameBatch.map((s, i) => ({ 
-               ...s, 
-               img: getRoundImage(imgIndex), 
-               uniqueId: `${s.id}-${Date.now()}-${i}` 
-           }));
-           setCurrentShapes(finalShapes);
-           return;
-      }
-
-      // 3. CONSTRUCTIVE GENERATION (Standard Play)
-      // Instead of guessing a batch, we build one that is guaranteed to work
-      // and biases towards clearing lines if the board is tight.
+      // GOD MODE: The user wants it to be VERY EASY to clear the board.
+      // We will shift from "Weighted Random" to "Deterministic Assistance".
+      // The game will now actively look for gaps and give you the piece that fits them.
       
       let bestBatch: any[] = [];
       
-      // Attempt to build a batch 10 times (increased from 5 for better quality)
-      let bestBatchScore = -1;
-      
-      for(let attempt=0; attempt<10; attempt++) {
-          let currentBatch: any[] = [];
-          // Clone grid for simulation
-          let simGrid = currentGrid.map(row => [...row]);
-          let batchScore = 0;
-          
-          // Pick 3 shapes sequentially
-          for(let i=0; i<3; i++) {
-              // Contextual Selection
-              let candidateShape;
-              
-              // RESCUE MODE: If board is tight (<30 empty) or fragmented (holes > 3), force a "Helper"
-              // Helper = shape that fits in largest hole OR clears a line
-              // Trigger when actually needed, not too early
-              const needsRescue = metrics.emptyCount < 30 || metrics.holes > 3;
-              
-              if (needsRescue) {
-                  // Try to find a shape that fits and clears lines
-                  // In deep rescue (<10 empty), force 1x1 block if nothing else is perfect
-                  if (metrics.emptyCount < 10) {
-                      candidateShape = SHAPES.find(s => s.id === 'dot');
-                  } else {
-                      candidateShape = findBestRescueShape(simGrid, weights);
-                  }
-              } 
-              
-              if (!candidateShape) {
-                   // Standard Weighted Selection
-                   // Try up to 20 times to find one that fits the simGrid
-                   for(let k=0; k<20; k++) {
-                       const s = pickWeightedShape(weights);
-                       if (canPlaceShapeAnywhere(simGrid, s)) {
-                           candidateShape = s;
-                           break;
-                       }
-                   }
-              }
-              
-              // Fallback: 1x1 always fits if there is ANY space.
-              // If we are about to fail generation, just give a 1x1.
-              if (!candidateShape && metrics.emptyCount > 0) {
-                  candidateShape = SHAPES.find(s => s.id === 'dot');
-              }
-              
-              if (candidateShape) {
-                  currentBatch.push(candidateShape);
-                  
-                  // Simulate placing it in best spot to update simGrid for next shape
-                  const bestMove = findBestMove(simGrid, candidateShape);
-                  if (bestMove) {
-                      simGrid = simulatePlacement(simGrid, candidateShape, bestMove.r, bestMove.c);
-                      // Check clears
-                      const lines = findLinesToClear(simGrid);
-                      if (lines.length > 0) {
-                          simGrid = clearLinesFromGrid(simGrid, lines);
-                          batchScore += lines.length * 10;
-                          if (needsRescue) batchScore += 50; // Bonus for saving player
-                      }
-                      
-                      // CRITICAL: HUGE BONUS FOR FULL BOARD CLEAR
-                      const remainingBlocks = countBlocks(simGrid);
-                      if (remainingBlocks === 0) {
-                          batchScore += 10000; // Infinite priority
-                      } else if (remainingBlocks < 5) {
-                          batchScore += 500; // Very high priority for almost clear
-                      }
-                  }
-              }
-          }
-          
-          // If we managed to pick 3 valid shapes
-          if (currentBatch.length === 3) {
-              if (batchScore > bestBatchScore) {
-                  bestBatchScore = batchScore;
-                  bestBatch = currentBatch;
-              }
-              // If we found a really good batch (clears lines), stop early
-              if (batchScore > 1000) break; // Found a Full Clear
-          }
-      }
-      
-      // Final Fallback (should rarely happen with constructive logic)
-      if (bestBatch.length < 3) {
-           const safetyPool = SHAPES.filter(s => s.category === 'safety');
-           bestBatch = [
-               safetyPool[Math.floor(Math.random() * safetyPool.length)],
-               safetyPool[Math.floor(Math.random() * safetyPool.length)],
-               safetyPool[Math.floor(Math.random() * safetyPool.length)]
-           ];
+      // --- PHASE 1: ENDGAME (Cleanup) ---
+      // If board is < 30 blocks, we force a cleanup.
+      if (totalBlocks > 0 && totalBlocks < 30) {
+           const perfectBatch = findPerfectClearBatch(currentGrid);
+           if (perfectBatch) {
+               // FOUND A WINNING SEQUENCE
+               const finalShapes = perfectBatch.map((s, i) => ({ 
+                   ...s, 
+                   img, 
+                   uniqueId: `${s.id}-${Date.now()}-${i}` 
+               }));
+               setCurrentShapes(finalShapes);
+               return;
+           }
       }
 
-      // Add image to shapes
-      const finalShapes = bestBatch.map((s, i) => ({ ...s, img, uniqueId: `${s.id}-${Date.now()}-${i}` }));
+      // --- PHASE 2: GAP FILLER (Main Gameplay) ---
+      // Instead of random shapes, we look at the board's "Needs".
+      
+      // Find all "almost complete" rows and cols
+      const neededShapes: any[] = [];
+      
+      // Scan Rows
+      for(let r=0; r<GRID_SIZE; r++) {
+          let emptyInRow = [];
+          for(let c=0; c<GRID_SIZE; c++) if (!currentGrid[r][c]) emptyInRow.push(c);
+          
+          if (emptyInRow.length > 0 && emptyInRow.length <= 3) {
+              // Row is almost full! Give a piece that fits.
+              if (emptyInRow.length === 1) neededShapes.push(SHAPES.find(s => s.id === 'dot'));
+              else if (emptyInRow.length === 2) {
+                  // Check adjacency
+                  if (emptyInRow[1] - emptyInRow[0] === 1) neededShapes.push(SHAPES.find(s => s.id === 'domino-h'));
+                  else neededShapes.push(SHAPES.find(s => s.id === 'dot')); // Split gap, give dot
+              }
+              else if (emptyInRow.length === 3) {
+                  // Check adjacency
+                  if (emptyInRow[2] - emptyInRow[0] === 2) neededShapes.push(SHAPES.find(s => s.id === 'line-3-h'));
+              }
+          }
+      }
+      
+      // Scan Cols
+      for(let c=0; c<GRID_SIZE; c++) {
+          let emptyInCol = [];
+          for(let r=0; r<GRID_SIZE; r++) if (!currentGrid[r][c]) emptyInCol.push(r);
+          
+          if (emptyInCol.length > 0 && emptyInCol.length <= 3) {
+              if (emptyInCol.length === 1) neededShapes.push(SHAPES.find(s => s.id === 'dot'));
+              else if (emptyInCol.length === 2) {
+                  if (emptyInCol[1] - emptyInCol[0] === 1) neededShapes.push(SHAPES.find(s => s.id === 'domino-v'));
+                  else neededShapes.push(SHAPES.find(s => s.id === 'dot'));
+              }
+              else if (emptyInCol.length === 3) {
+                  if (emptyInCol[2] - emptyInCol[0] === 2) neededShapes.push(SHAPES.find(s => s.id === 'line-3-v'));
+              }
+          }
+      }
+
+      // --- PHASE 3: CONSTRUCT THE BATCH ---
+      // We need 3 shapes.
+      // Slot 1: The "Solution" (A piece that clears a line or fills a big gap)
+      // Slot 2: The "Setup" (A big piece to build structure)
+      // Slot 3: The "Filler" (A utility piece)
+
+      const batch = [];
+      
+      // 1. The Solver Piece
+      if (neededShapes.length > 0) {
+          // We have specific needs, pick one!
+          batch.push(neededShapes[Math.floor(Math.random() * neededShapes.length)]);
+      } else {
+          // Board is open or messy, give a Structural piece (Lines/Ls)
+          // Bias heavily towards LINES for satisfaction
+          const lines = SHAPES.filter(s => s.category === 'structural' && s.id.includes('line'));
+          batch.push(lines[Math.floor(Math.random() * lines.length)]);
+      }
+
+      // 2. The Structure Piece (Keep the game moving)
+      // If board is empty, give BIG stuff. If full, give MEDIUM stuff.
+      if (metrics.emptyCount > 40) {
+          const big = SHAPES.filter(s => s.id.includes('line-4') || s.id.includes('line-5') || s.id.includes('square'));
+          batch.push(big[Math.floor(Math.random() * big.length)]);
+      } else {
+          const medium = SHAPES.filter(s => s.category === 'structural');
+          batch.push(medium[Math.floor(Math.random() * medium.length)]);
+      }
+
+      // 3. The Safety Piece (Always playable)
+      const safety = SHAPES.filter(s => s.category === 'safety');
+      batch.push(safety[Math.floor(Math.random() * safety.length)]);
+
+      // SHUFFLE and Verify
+      // We want to make sure the user doesn't realize we are "feeding" them.
+      // But we also need to ensure these are playable.
+      
+      // Fallback: If for some reason we picked undefined, just give a dot.
+      const sanitizedBatch = batch.map(s => s || SHAPES[0]);
+      
+      // Final Check: Are these actually playable?
+      // If not, replace with 1x1 dots until playable.
+      // This prevents "Game Over" purely from bad RNG.
+      let validBatch = sanitizedBatch;
+      
+      // Simple verification: Can at least ONE shape be placed?
+      // If not, game over is legit. But we try to avoid "unfair" game overs.
+      // Actually, we should check if *each* shape has *some* valid place if the board was empty?
+      // No, just ensure we don't give a 3x3 when there is only a 2x2 hole.
+      
+      // We'll trust the logic for now, but adding a "Safety Swap" if board is critical
+      if (metrics.emptyCount < 10) {
+          // Panic mode: All small pieces
+          validBatch = [SHAPES[0], SHAPES[1], SHAPES[2]]; 
+      }
+
+      // FINAL SAFETY CHECK: Ensure every shape is actually playable
+      // If a shape doesn't fit, downgrade it to a 1x1 Dot
+      validBatch = validBatch.map(shape => {
+          if (canPlaceShapeAnywhere(currentGrid, shape)) return shape;
+          // If original shape doesn't fit, try a Dot
+          if (canPlaceShapeAnywhere(currentGrid, SHAPES[0])) return SHAPES[0];
+          // If even a Dot doesn't fit, the game is truly over, but return Dot to show *something*
+          return SHAPES[0];
+      });
+
+      const finalShapes = validBatch.map((s, i) => ({ 
+          ...s, 
+          img, 
+          uniqueId: `${s.id}-${Date.now()}-${i}` 
+      }));
       
       setCurrentShapes(finalShapes);
   }
