@@ -576,10 +576,10 @@ export default function BlockBlast() {
                         className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
-                            className="grid gap-0.5"
+                            className="grid gap-0.5 pointer-events-none"
                             style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.6}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.6}px)`
                             }}
                         >
                             {shape.points.map(([x, y], idx) => (
