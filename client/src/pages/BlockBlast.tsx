@@ -327,9 +327,44 @@ export default function BlockBlast() {
       
       // 1. Analyze Board
       const metrics = analyzeBoard(currentGrid);
+      const totalBlocks = countBlocks(currentGrid);
       const weights = getDynamicWeights(metrics);
       
-      // 2. CONSTRUCTIVE GENERATION
+      // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
+      // If the board is nearly empty (< 15 blocks), we STOP random generation
+      // and actively give the player the exact tools to finish the job.
+      if (totalBlocks > 0 && totalBlocks < 15) {
+           let endgameBatch: any[] = [];
+           // Strategy: Give mostly 1x1s and small pieces to let user snipe the last blocks
+           // OR find a perfect sequence if possible.
+           
+           // Try to find a perfect clear sequence first
+           const perfectBatch = findPerfectClearBatch(currentGrid);
+           
+           if (perfectBatch) {
+               endgameBatch = perfectBatch;
+           } else {
+               // Fallback: Just give 1x1s and 1x2s. These are the best "finishers".
+               // 70% chance of Dot, 30% chance of small line/corner
+               for(let i=0; i<3; i++) {
+                   const r = Math.random();
+                   if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
+                   else if (r < 0.9) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
+                   else endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
+               }
+           }
+           
+           // Apply and return early
+           const finalShapes = endgameBatch.map((s, i) => ({ 
+               ...s, 
+               img: getRoundImage(imgIndex), 
+               uniqueId: `${s.id}-${Date.now()}-${i}` 
+           }));
+           setCurrentShapes(finalShapes);
+           return;
+      }
+
+      // 3. CONSTRUCTIVE GENERATION (Standard Play)
       // Instead of guessing a batch, we build one that is guaranteed to work
       // and biases towards clearing lines if the board is tight.
       
@@ -443,6 +478,45 @@ export default function BlockBlast() {
           }
       }
       return count;
+  };
+
+  // Helper: Try to find a batch that leads to 0 blocks
+  const findPerfectClearBatch = (currentGrid: (string | null)[][]) => {
+      // Limit search to small shapes for performance and realism in endgame
+      const candidates = SHAPES.filter(s => s.category === 'safety');
+      
+      // Try random sequences of 3 small shapes
+      for(let i=0; i<50; i++) {
+          const s1 = candidates[Math.floor(Math.random() * candidates.length)];
+          const s2 = candidates[Math.floor(Math.random() * candidates.length)];
+          const s3 = candidates[Math.floor(Math.random() * candidates.length)];
+          
+          // Simulate s1
+          let sim1 = currentGrid.map(row => [...row]);
+          const m1 = findBestMove(sim1, s1);
+          if (!m1) continue;
+          sim1 = simulatePlacement(sim1, s1, m1.r, m1.c);
+          const l1 = findLinesToClear(sim1);
+          if (l1.length > 0) sim1 = clearLinesFromGrid(sim1, l1);
+          if (countBlocks(sim1) === 0) return [s1, s2, s3]; // Found it early!
+
+          // Simulate s2
+          const m2 = findBestMove(sim1, s2);
+          if (!m2) continue;
+          sim1 = simulatePlacement(sim1, s2, m2.r, m2.c);
+          const l2 = findLinesToClear(sim1);
+          if (l2.length > 0) sim1 = clearLinesFromGrid(sim1, l2);
+          if (countBlocks(sim1) === 0) return [s1, s2, s3];
+
+          // Simulate s3
+          const m3 = findBestMove(sim1, s3);
+          if (!m3) continue;
+          sim1 = simulatePlacement(sim1, s3, m3.r, m3.c);
+          const l3 = findLinesToClear(sim1);
+          if (l3.length > 0) sim1 = clearLinesFromGrid(sim1, l3);
+          if (countBlocks(sim1) === 0) return [s1, s2, s3];
+      }
+      return null;
   };
 
   // Helper: Find a shape that fits and ideally clears lines
