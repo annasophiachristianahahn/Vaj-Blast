@@ -383,16 +383,6 @@ export default function BlockBlast() {
            setCurrentShapes(finalShapes);
            return;
       }
-           
-           // Apply and return early
-           const finalShapes = endgameBatch.map((s, i) => ({ 
-               ...s, 
-               img: getRoundImage(imgIndex), 
-               uniqueId: `${s.id}-${Date.now()}-${i}` 
-           }));
-           setCurrentShapes(finalShapes);
-           return;
-      }
 
       // 3. CONSTRUCTIVE GENERATION (Standard Play)
       // Instead of guessing a batch, we build one that is guaranteed to work
