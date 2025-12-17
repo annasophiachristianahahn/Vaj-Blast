@@ -166,7 +166,17 @@ export default function BlockBlast() {
       // 1. REFILL BAG logic
       if (currentBag.length < 3) {
           // Shuffle full set of SHAPES
-          const newBag = [...SHAPES].sort(() => Math.random() - 0.5);
+          // To make it easier: Add extra copies of Common (3x) and Medium (2x) shapes
+          // This dilutes the Hard shapes significantly
+          const commonShapes = SHAPES.filter(s => s.weight === 'common');
+          const mediumShapes = SHAPES.filter(s => s.weight === 'medium');
+          
+          const newBag = [
+              ...SHAPES, 
+              ...commonShapes, ...commonShapes, 
+              ...mediumShapes
+          ].sort(() => Math.random() - 0.5);
+          
           currentBag = [...currentBag, ...newBag];
       }
 
@@ -528,7 +538,7 @@ export default function BlockBlast() {
                                 className={`w-full h-full rounded-sm border transition-colors relative 
                                     ${cell ? 'bg-white border-white/5' : 
                                       isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
-                                      'bg-white/10 border-white/20'}`}
+                                      'bg-white/20 border-white/40'}`}
                                 style={{
                                     backgroundImage: cell ? `url(${cell})` : 'none',
                                     backgroundSize: 'cover',
