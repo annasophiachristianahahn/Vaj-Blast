@@ -236,15 +236,13 @@ export default function BlockBlast() {
 
   // Check if there is ANY valid sequence to place these 3 shapes
   const isBatchSolvable = (currentGrid: (string | null)[][], shapes: any[]) => {
-      // If shapes array is empty, it's solvable (trivial)
+      // This function is now deprecated in favor of the integrated check in generateNewShapes
+      // Keeping it as a dummy or for potential external checks
       if (shapes.length === 0) return true;
-      
-      // Try every permutation of the shapes
-      // For 3 shapes, max 6 permutations. For 2 shapes, 2 perms.
       const permutations = getPermutations(shapes);
-      
       for (const perm of permutations) {
-          if (canSolveSequence(currentGrid, perm)) return true;
+          const result = canSolveSequence(currentGrid, perm);
+          if (result.solvable) return true;
       }
       return false;
   };
@@ -267,13 +265,11 @@ export default function BlockBlast() {
   };
 
   // Depth-first search to see if a sequence of shapes can be placed
-  const canSolveSequence = (currentGrid: (string | null)[][], sequence: any[]): boolean => {
-      if (sequence.length === 0) return true;
+  // Returns { solvable: boolean, maxClears: number }
+  const canSolveSequence = (currentGrid: (string | null)[][], sequence: any[]): { solvable: boolean, maxClears: number } => {
+      if (sequence.length === 0) return { solvable: true, maxClears: 0 };
       
       const [head, ...tail] = sequence;
-      
-      // Optimization: For empty board, 1st shape always fits.
-      // But we need to simulate placement to check subsequent ones.
       
       // Find all valid placements for 'head'
       const validMoves: {r: number, c: number}[] = [];
@@ -282,15 +278,16 @@ export default function BlockBlast() {
               if (canPlaceShape(r, c, head, currentGrid)) {
                   validMoves.push({r, c});
                   // Optimization: If board is very open, we don't need to check ALL valid moves.
-                  // Checking the first few valid ones is usually enough to prove solvability.
                   if (validMoves.length > 5) break; 
               }
           }
           if (validMoves.length > 5) break;
       }
       
-      if (validMoves.length === 0) return false;
+      if (validMoves.length === 0) return { solvable: false, maxClears: 0 };
       
+      let bestResult = { solvable: false, maxClears: 0 };
+
       // For each valid move, simulate and recurse
       for (const move of validMoves) {
           // Simulate placement
@@ -298,12 +295,22 @@ export default function BlockBlast() {
           
           // Check if lines cleared (crucial! clearing makes room)
           const lines = findLinesToClear(nextGrid);
+          const currentClears = lines.length;
           const gridAfterClear = lines.length > 0 ? clearLinesFromGrid(nextGrid, lines) : nextGrid;
           
-          if (canSolveSequence(gridAfterClear, tail)) return true;
+          const result = canSolveSequence(gridAfterClear, tail);
+          
+          if (result.solvable) {
+              const totalClears = currentClears + result.maxClears;
+              if (totalClears > bestResult.maxClears) {
+                  bestResult = { solvable: true, maxClears: totalClears };
+              }
+              // If we found a solvable path, mark as solvable (but keep searching for better clears)
+              bestResult.solvable = true;
+          }
       }
       
-      return false;
+      return bestResult;
   };
 
   const simulatePlacement = (currentGrid: (string | null)[][], shape: any, r: number, c: number) => {
@@ -322,12 +329,16 @@ export default function BlockBlast() {
       const metrics = analyzeBoard(currentGrid);
       const weights = getDynamicWeights(metrics);
       
-      // 2. Generate Batch with Solvability Guarantee
-      let validBatch = false;
+      // 2. Generate Batch with Solvability Guarantee AND Clearing Potential
+      let bestBatch: any[] = [];
+      let bestScore = -1;
       let attempts = 0;
-      let selectedShapes: any[] = [];
       
-      while (!validBatch && attempts < 50) {
+      // We will try to find MULTIPLE valid batches and pick the one that yields the most clears
+      // This simulates the "thinking ahead" AI
+      const MAX_ATTEMPTS = 20;
+      
+      while (attempts < MAX_ATTEMPTS) {
           // Pick 3 candidates based on weights
           const s1 = pickWeightedShape(weights);
           const s2 = pickWeightedShape(weights);
@@ -341,20 +352,51 @@ export default function BlockBlast() {
               continue;
           }
           
-          // Solvability Check: Can these 3 be played in SOME order?
-          if (isBatchSolvable(currentGrid, batch)) {
-              selectedShapes = batch;
-              validBatch = true;
-          } else {
-              attempts++;
+          // Evaluate this batch
+          // We check permutations to find the BEST sequence for this batch
+          const permutations = getPermutations(batch);
+          let batchSolvable = false;
+          let maxBatchClears = 0;
+          
+          for (const perm of permutations) {
+              const result = canSolveSequence(currentGrid, perm);
+              if (result.solvable) {
+                  batchSolvable = true;
+                  if (result.maxClears > maxBatchClears) {
+                      maxBatchClears = result.maxClears;
+                  }
+              }
           }
+
+          if (batchSolvable) {
+               // Calculate Score for this batch
+               // Base score: 1 (it's solvable)
+               // Clears: +10 per line
+               let currentScore = 1 + (maxBatchClears * 10);
+               
+               // Crisis Management: If board is tight, prioritize ANY clear massively
+               if (metrics.emptyCount < 20 && maxBatchClears > 0) {
+                   currentScore += 50; 
+               }
+
+               if (currentScore > bestScore) {
+                   bestScore = currentScore;
+                   bestBatch = batch;
+                   
+                   // Optimization: If we found a batch with clears, and we're in a hurry, take it
+                   // But if we have time, keep searching for a better one
+                   if (maxBatchClears >= 2) break; 
+               }
+          }
+          
+          attempts++;
       }
       
-      // Fallback: If we can't find a solvable batch (board too full), 
-      // give very simple shapes (1x1, 1x2) to give player a fighting chance
-      if (!validBatch) {
+      // Fallback: If we couldn't find ANY solvable batch (game over usually, or very bad luck),
+      // give the simplest shapes to try and extend life
+      if (bestBatch.length === 0) {
            const safetyPool = SHAPES.filter(s => s.category === 'safety');
-           selectedShapes = [
+           bestBatch = [
                safetyPool[Math.floor(Math.random() * safetyPool.length)],
                safetyPool[Math.floor(Math.random() * safetyPool.length)],
                safetyPool[Math.floor(Math.random() * safetyPool.length)]
@@ -362,7 +404,7 @@ export default function BlockBlast() {
       }
 
       // Add image to shapes
-      const finalShapes = selectedShapes.map((s, i) => ({ ...s, img, uniqueId: `${s.id}-${Date.now()}-${i}` }));
+      const finalShapes = bestBatch.map((s, i) => ({ ...s, img, uniqueId: `${s.id}-${Date.now()}-${i}` }));
       
       setCurrentShapes(finalShapes);
       // No need to check game over here immediately, let the player try to find the solution we proved exists
