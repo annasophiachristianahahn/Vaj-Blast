@@ -202,9 +202,10 @@ export default function BlockBlast() {
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 50) {
-          // OPEN BOARD: Aggressive Complexity
-          // Safety 0, but Stressor reduced to 30% (was 40%) to be less punishing
-          weights = { safety: 0.0, structural: 0.7, stressor: 0.3 };
+          // OPEN BOARD: SATISFACTION MODE
+          // Give mostly structural pieces (lines, Ls) to encourage big clears.
+          // Reduce stressors significantly so they don't block the fun early on.
+          weights = { safety: 0.05, structural: 0.85, stressor: 0.10 };
       } else if (metrics.emptyCount < 30) {
           // TIGHTENING: Start introducing help earlier
           // Safety boosted to 30%, Stressor almost gone
@@ -225,7 +226,7 @@ export default function BlockBlast() {
       return weights;
   };
 
-  const pickWeightedShape = (weights: { safety: number, structural: number, stressor: number }) => {
+  const pickWeightedShape = (weights: { safety: number, structural: number, stressor: number }, emptyCount: number) => {
       const rand = Math.random();
       let category = 'structural';
       
@@ -239,7 +240,19 @@ export default function BlockBlast() {
       else category = 'stressor';
       
       // Filter shapes by category
-      const pool = SHAPES.filter(s => s.category === category);
+      let pool = SHAPES.filter(s => s.category === category);
+
+      // SATISFACTION BIAS: In the very early game (empty board), prioritize LINES
+      // to make clearing rows/columns intuitive and satisfying.
+      if (emptyCount > 40 && category === 'structural') {
+          // Boost probability of Lines (3, 4, 5) and simple corners
+          // Filter pool to prefer lines
+          const lineShapes = pool.filter(s => s.id.includes('line'));
+          if (lineShapes.length > 0 && Math.random() < 0.7) {
+              pool = lineShapes;
+          }
+      }
+
       return pool[Math.floor(Math.random() * pool.length)];
   };
 
