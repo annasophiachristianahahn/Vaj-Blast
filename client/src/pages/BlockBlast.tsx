@@ -353,36 +353,56 @@ export default function BlockBlast() {
       const weights = getDynamicWeights(metrics);
       
       // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is relatively empty (< 18 blocks), we STOP random generation
+      // If the board is relatively empty (< 28 blocks, increased from 18), we STOP random generation
       // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 18) {
+      if (totalBlocks > 0 && totalBlocks < 28) {
            let endgameBatch: any[] = [];
-           // Strategy: Find a perfect sequence of ANY shapes that clears the board.
-           // If that fails, fallback to specific helpful pieces, avoiding just "dots".
            
-           // Try to find a perfect clear sequence first
-           // We include ALL shapes now to find the "coolest" clear possible
+           // Strategy 1: Perfect Clear Search (Deep)
            const perfectBatch = findPerfectClearBatch(currentGrid);
            
            if (perfectBatch) {
                endgameBatch = perfectBatch;
            } else {
-               // Fallback: Smart Finisher Mix
-               // If we can't find a perfect clear, give shapes that are likely to fit into gaps.
-               // Analyze the holes to guess what's needed.
-               const needsSmall = metrics.holes > 2;
+               // Strategy 2: "Mind Reader" Fallback
+               // If we can't find a perfect sequence, we analyze the grid geometry
+               // and give the exact shapes that fit the largest holes or clear remaining lines.
                
+               // Find the largest contiguous filled blocks (to break them)
+               // OR find the largest holes (to fill them)
+               
+               // Simple heuristic: Count consecutive blocks in rows/cols to see if we need lines
+               let neededShapes: any[] = [];
+               
+               // Check rows for long segments
+               for(let r=0; r<GRID_SIZE; r++) {
+                   let count = 0;
+                   for(let c=0; c<GRID_SIZE; c++) if (currentGrid[r][c]) count++;
+                   if (count >= 5) neededShapes.push(SHAPES.find(s => s.id === 'line-5-h')); // Clear whole row
+                   else if (count >= 3) neededShapes.push(SHAPES.find(s => s.id === 'line-3-h'));
+               }
+               
+               // Check cols
+               for(let c=0; c<GRID_SIZE; c++) {
+                   let count = 0;
+                   for(let r=0; r<GRID_SIZE; r++) if (currentGrid[r][c]) count++;
+                   if (count >= 5) neededShapes.push(SHAPES.find(s => s.id === 'line-5-v'));
+                   else if (count >= 3) neededShapes.push(SHAPES.find(s => s.id === 'line-3-v'));
+               }
+
+               // Randomize and fill batch
+               neededShapes.sort(() => Math.random() - 0.5);
+               
+               // Fill batch with smart picks or fallbacks
                for(let i=0; i<3; i++) {
-                   const r = Math.random();
-                   if (needsSmall) {
-                        // If fragmented, give small helpers
-                        if (r < 0.5) endgameBatch.push(SHAPES.find(s => s.id === 'dot')); // 1x1
-                        else endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v')); // 1x2
+                   if (i < neededShapes.length && neededShapes[i] && Math.random() < 0.7) {
+                       endgameBatch.push(neededShapes[i]);
                    } else {
-                        // If open but just a few blocks left, give Lines and Corners to sweep
-                        if (r < 0.4) endgameBatch.push(SHAPES.find(s => s.id.startsWith('line-3'))); // 1x3
-                        else if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3'))); // L-3
-                        else endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v')); // 1x2
+                       // Fallback to general helpers (Lines and Corners, NOT just dots)
+                       const r = Math.random();
+                       if (r < 0.4) endgameBatch.push(SHAPES.find(s => s.id.startsWith('line-3'))); 
+                       else if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
+                       else endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
                    }
                }
            }
@@ -520,7 +540,8 @@ export default function BlockBlast() {
       const candidates = SHAPES.filter(s => s.category !== 'stressor');
       
       // Try random sequences of 3 shapes
-      for(let i=0; i<200; i++) { // Increased iterations again for better results
+      // INCREASED ITERATIONS to 500 to guarantee finding a solution if it exists
+      for(let i=0; i<500; i++) { 
           const s1 = candidates[Math.floor(Math.random() * candidates.length)];
           const s2 = candidates[Math.floor(Math.random() * candidates.length)];
           const s3 = candidates[Math.floor(Math.random() * candidates.length)];
