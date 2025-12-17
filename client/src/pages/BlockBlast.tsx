@@ -190,26 +190,27 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
-      // DEFAULT WEIGHTS (Standard balanced gameplay)
+      // DEFAULT WEIGHTS (Super Easy Mode)
       let weights = {
-          safety: 0.1, // Drastically reduced to prevent "filler" feeling
-          structural: 0.8, // Focus on Tetris-like shapes
-          stressor: 0.1
+          safety: 0.1, 
+          structural: 0.85, 
+          stressor: 0.05
       };
 
       // CONTEXTUAL ADJUSTMENTS
-      if (metrics.emptyCount > 55) {
-          // Early Game: Almost purely structural
-          weights = { safety: 0.05, structural: 0.85, stressor: 0.1 };
-      } else if (metrics.emptyCount < 30) {
-          // Board Tightening: Introduce safety, but don't flood it
-          weights = { safety: 0.3, structural: 0.65, stressor: 0.05 };
-      } else if (metrics.emptyCount < 15) {
-          // Critical: Now we need safety
-          weights = { safety: 0.8, structural: 0.2, stressor: 0.0 };
-      } else if (metrics.holes > 5) { // Increased threshold for "Swiss Cheese"
-          // Fragmented: Needs patching
+      if (metrics.emptyCount > 60) {
+          // Empty Board: Give big pieces to fill space fast
+          weights = { safety: 0.05, structural: 0.8, stressor: 0.15 };
+      } else if (metrics.emptyCount < 40) {
+          // Half Full: Stop stressors completely. Focus on clearable shapes.
+          weights = { safety: 0.2, structural: 0.8, stressor: 0.0 };
+      } else if (metrics.emptyCount < 20) {
+          // Danger Zone: Need more safety, but still prefer useful structural pieces
+          weights = { safety: 0.6, structural: 0.4, stressor: 0.0 };
+      } else if (metrics.holes > 3) {
+          // Fragmented: Patch it up
           weights.safety += 0.3;
+          weights.structural -= 0.3;
           weights.stressor = 0;
       }
       
@@ -331,9 +332,9 @@ export default function BlockBlast() {
       const weights = getDynamicWeights(metrics);
       
       // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is nearly empty (< 10 blocks), we STOP random generation
+      // If the board is nearly empty (< 12 blocks), we STOP random generation
       // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 10) {
+      if (totalBlocks > 0 && totalBlocks < 12) {
            let endgameBatch: any[] = [];
            // Strategy: Give mostly 1x1s and small pieces to let user snipe the last blocks
            // OR find a perfect sequence if possible.
@@ -348,8 +349,8 @@ export default function BlockBlast() {
                // 40% Dot, 40% Domino, 20% Corner
                for(let i=0; i<3; i++) {
                    const r = Math.random();
-                   if (r < 0.4) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
-                   else if (r < 0.8) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
+                   if (r < 0.3) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
+                   else if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
                    else endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
                }
            }
@@ -370,10 +371,10 @@ export default function BlockBlast() {
       
       let bestBatch: any[] = [];
       
-      // Attempt to build a batch 5 times, keep the one with best score
+      // Attempt to build a batch 10 times (increased from 5 for better quality)
       let bestBatchScore = -1;
       
-      for(let attempt=0; attempt<5; attempt++) {
+      for(let attempt=0; attempt<10; attempt++) {
           let currentBatch: any[] = [];
           // Clone grid for simulation
           let simGrid = currentGrid.map(row => [...row]);
@@ -384,15 +385,15 @@ export default function BlockBlast() {
               // Contextual Selection
               let candidateShape;
               
-              // RESCUE MODE: If board is tight (<25 empty) or fragmented (holes > 5), force a "Helper"
+              // RESCUE MODE: If board is tight (<30 empty) or fragmented (holes > 3), force a "Helper"
               // Helper = shape that fits in largest hole OR clears a line
               // Trigger when actually needed, not too early
-              const needsRescue = metrics.emptyCount < 25 || metrics.holes > 5;
+              const needsRescue = metrics.emptyCount < 30 || metrics.holes > 3;
               
               if (needsRescue) {
                   // Try to find a shape that fits and clears lines
-                  // In deep rescue (<15 empty), force 1x1 block if nothing else is perfect
-                  if (metrics.emptyCount < 15) {
+                  // In deep rescue (<10 empty), force 1x1 block if nothing else is perfect
+                  if (metrics.emptyCount < 10) {
                       candidateShape = SHAPES.find(s => s.id === 'dot');
                   } else {
                       candidateShape = findBestRescueShape(simGrid, weights);
@@ -482,11 +483,11 @@ export default function BlockBlast() {
 
   // Helper: Try to find a batch that leads to 0 blocks
   const findPerfectClearBatch = (currentGrid: (string | null)[][]) => {
-      // Limit search to small shapes for performance and realism in endgame
-      const candidates = SHAPES.filter(s => s.category === 'safety');
+      // Limit search to small and medium shapes
+      const candidates = SHAPES.filter(s => s.category === 'safety' || s.category === 'structural');
       
-      // Try random sequences of 3 small shapes
-      for(let i=0; i<50; i++) {
+      // Try random sequences of 3 shapes
+      for(let i=0; i<100; i++) { // Increased iterations
           const s1 = candidates[Math.floor(Math.random() * candidates.length)];
           const s2 = candidates[Math.floor(Math.random() * candidates.length)];
           const s3 = candidates[Math.floor(Math.random() * candidates.length)];
