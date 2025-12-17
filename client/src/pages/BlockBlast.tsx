@@ -64,6 +64,7 @@ export default function BlockBlast() {
   // Round management
   const [round, setRound] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [movesSinceClear, setMovesSinceClear] = useState(0);
   
   // Animation state
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
@@ -122,7 +123,15 @@ export default function BlockBlast() {
       const mediumShapes = SHAPES.filter(s => s.type === 'medium');
       const hardShapes = SHAPES.filter(s => s.type === 'hard');
 
-      // Generate 3 shapes
+      // Define helpful shapes for early game/clearing (Dots, Dominos, Small Lines)
+      const helpfulShapes = SHAPES.filter(s => 
+          s.id === 'dot' || 
+          s.id.includes('domino') || 
+          s.id.includes('line-3') ||
+          s.id.includes('small-L')
+      );
+
+      // 3. Select 3 shapes with "Playful" logic
       for (let i = 0; i < 3; i++) {
           let selectedShape;
           
@@ -141,6 +150,11 @@ export default function BlockBlast() {
              // Only Dot and Dominos
              const tinyShapes = SHAPES.filter(s => s.id === 'dot' || s.id.includes('domino'));
              selectedShape = tinyShapes[Math.floor(Math.random() * tinyShapes.length)];
+          }
+          // EARLY GAME HANDICAP: If moves < 15 and we haven't cleared board recently, prioritize helpful shapes
+          // This gives the user "the opportunity to clear the board" early on
+          else if (movesSinceClear < 15 && helpfulShapes.length > 0 && Math.random() < 0.6) {
+             selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
           }
           else {
              // Revised Weighted Probability for Easier Board Clears
@@ -320,6 +334,9 @@ export default function BlockBlast() {
               if (isBoardEmpty && score > 0) {
                   setRound(r => r + 1);
                   setCurrentImageIndex(i => i + 1);
+                  setMovesSinceClear(0); // Reset move counter on clear
+              } else {
+                  setMovesSinceClear(m => m + 1);
               }
               
               if (newShapes.every(s => !s)) {
@@ -331,6 +348,7 @@ export default function BlockBlast() {
               }
           }, 250); // 0.25s duration
       } else {
+          setMovesSinceClear(m => m + 1);
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
           } else {
@@ -368,6 +386,7 @@ export default function BlockBlast() {
       setGrid(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
       setRound(1);
       setCurrentImageIndex(0);
+      setMovesSinceClear(0);
       generateNewShapes(0);
       setScore(0);
       setGameOver(false);
