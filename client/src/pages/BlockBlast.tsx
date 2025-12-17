@@ -12,48 +12,46 @@ import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
 const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
 const GRID_SIZE = 8;
 
-// Define shapes
+// Define shapes based on Block Blast standard set
 const SHAPES = [
-    // 1. Single & Small Blocks
-    { points: [[0,0]], id: 'dot' },
-    { points: [[0,0], [1,0]], id: '1x2' },
-    { points: [[0,0], [0,1]], id: '2x1' },
-    { points: [[0,0], [1,0], [0,1], [1,1]], id: 'square-2x2' },
+    // --- EASY (Single, Dominos, Small Ls, 2x2) ---
+    { points: [[0,0]], id: 'dot', type: 'easy' },
+    { points: [[0,0], [1,0]], id: 'domino-h', type: 'easy' },
+    { points: [[0,0], [0,1]], id: 'domino-v', type: 'easy' },
+    { points: [[0,0], [1,0], [0,1], [1,1]], id: 'square-2x2', type: 'easy' },
+    // Small Ls (Corner pieces - 3 blocks)
+    { points: [[0,0], [0,1], [1,1]], id: 'small-L-1', type: 'easy' }, // ⌞
+    { points: [[1,0], [1,1], [0,1]], id: 'small-L-2', type: 'easy' }, // ⌝
+    { points: [[0,0], [1,0], [1,1]], id: 'small-L-3', type: 'easy' }, // ⌟
+    { points: [[0,0], [1,0], [0,1]], id: 'small-L-4', type: 'easy' }, // ⌜
 
-    // 2. Straight Lines
-    { points: [[0,0], [1,0], [2,0]], id: '1x3' },
-    { points: [[0,0], [0,1], [0,2]], id: '3x1' },
-    { points: [[0,0], [1,0], [2,0], [3,0]], id: '1x4' },
-    { points: [[0,0], [0,1], [0,2], [0,3]], id: '4x1' },
-    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: '1x5' },
-    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: '5x1' },
+    // --- MEDIUM (Lines 3/4, Tetris L/J/T/S/Z) ---
+    // Lines
+    { points: [[0,0], [1,0], [2,0]], id: 'line-3-h', type: 'medium' },
+    { points: [[0,0], [0,1], [0,2]], id: 'line-3-v', type: 'medium' },
+    { points: [[0,0], [1,0], [2,0], [3,0]], id: 'line-4-h', type: 'medium' },
+    { points: [[0,0], [0,1], [0,2], [0,3]], id: 'line-4-v', type: 'medium' },
+    // Tetris L (4 blocks)
+    { points: [[0,0], [0,1], [0,2], [1,2]], id: 'L-1', type: 'medium' },
+    { points: [[0,0], [1,0], [2,0], [0,1]], id: 'L-2', type: 'medium' },
+    { points: [[0,0], [1,0], [1,1], [1,2]], id: 'L-3', type: 'medium' },
+    { points: [[2,0], [2,1], [1,1], [0,1]], id: 'L-4', type: 'medium' },
+    // Tetris T
+    { points: [[0,0], [1,0], [2,0], [1,1]], id: 'T-down', type: 'medium' },
+    { points: [[1,0], [1,1], [1,2], [0,1]], id: 'T-left', type: 'medium' },
+    { points: [[0,1], [1,1], [2,1], [1,0]], id: 'T-up', type: 'medium' },
+    { points: [[0,0], [0,1], [0,2], [1,1]], id: 'T-right', type: 'medium' },
+    // S & Z
+    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-h', type: 'medium' },
+    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-h', type: 'medium' },
+    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-v', type: 'medium' },
+    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-v', type: 'medium' },
 
-    // 3. L-Shapes (Small & Large)
-    { points: [[0,0], [0,1], [1,1]], id: 'L-small-1' },
-    { points: [[0,0], [1,0], [0,1]], id: 'L-small-2' },
-    { points: [[0,0], [1,0], [1,1]], id: 'L-small-3' },
-    { points: [[1,0], [1,1], [0,1]], id: 'L-small-4' },
-    { points: [[0,0], [0,1], [0,2], [1,2], [2,2]], id: 'L-large-1' }, // 3x3 L
-    { points: [[2,0], [2,1], [2,2], [1,2], [0,2]], id: 'L-large-2' },
-    { points: [[0,0], [1,0], [2,0], [0,1], [0,2]], id: 'L-large-3' },
-    { points: [[0,0], [1,0], [2,0], [2,1], [2,2]], id: 'L-large-4' },
-
-    // 4. T-Shapes
-    { points: [[0,0], [1,0], [2,0], [1,1]], id: 'T-down' },
-    { points: [[1,0], [1,1], [1,2], [0,1]], id: 'T-left' },
-    { points: [[0,1], [1,1], [2,1], [1,0]], id: 'T-up' },
-    { points: [[0,0], [0,1], [0,2], [1,1]], id: 'T-right' },
-
-    // 5. Zig-Zag / S Shapes
-    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-horiz' },
-    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-horiz' },
-    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-vert' },
-    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-vert' },
-
-    // 6. Large / Chunky Shapes
-    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3' },
-    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus' },
-    { points: [[0,0], [0,1], [1,1], [1,2], [2,2]], id: 'stairs' },
+    // --- HARD (Line 5, 3x3, Plus) ---
+    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: 'line-5-h', type: 'hard' },
+    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: 'line-5-v', type: 'hard' },
+    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', type: 'hard' },
+    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus', type: 'hard' },
 ];
 
 export default function BlockBlast() {
@@ -114,87 +112,33 @@ export default function BlockBlast() {
       const img = getRoundImage(imgIndex);
       const newShapes = [];
       
-      // GAME DIRECTOR AI LOGIC
-      // 1. Analyze the board for "almost complete" lines
-      const helpfulShapes = findHelpfulShapes(grid);
-      
-      // 2. Check board fullness
+      // Calculate board fullness
       let filledCells = 0;
       grid.forEach(row => row.forEach(cell => { if(cell) filledCells++; }));
       const fullness = filledCells / (GRID_SIZE * GRID_SIZE);
-      const isVeryFull = fullness > 0.6;
-      const isEmpty = fullness < 0.1;
+      const isCrowded = fullness > 0.6; // 60% full
 
-      // 3. Select 3 shapes with "Playful" logic
+      const easyShapes = SHAPES.filter(s => s.type === 'easy');
+      const mediumShapes = SHAPES.filter(s => s.type === 'medium');
+      const hardShapes = SHAPES.filter(s => s.type === 'hard');
+
+      // Generate 3 shapes
       for (let i = 0; i < 3; i++) {
           let selectedShape;
-          const rand = Math.random();
-
-          // SCENARIO A: Empty Board (Start of game or after clear)
-          // Give fun, big chunky shapes to build fast
-          if (isEmpty) {
-              const bigShapes = SHAPES.filter(s => s.points.length >= 4);
-              selectedShape = bigShapes[Math.floor(Math.random() * bigShapes.length)];
-          }
-          // SCENARIO B: Helpful "Smart" Move (Easy Mode)
-          // Frequently throw a bone to clear lines
-          else if (helpfulShapes.length > 0 && rand < 0.40) {
-             // 40% chance (was 25%) to give a perfect piece
-             selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
-          }
-          // SCENARIO C: Crisis Management
-          // If board is full, try to give small playable pieces
-          else if (isVeryFull) {
-              // Get all shapes that can actually fit right now
-              const playableShapes = SHAPES.filter(s => {
-                  for (let r = 0; r < GRID_SIZE; r++) {
-                      for (let c = 0; c < GRID_SIZE; c++) {
-                          if (canPlaceShape(r, c, s, grid)) return true;
-                      }
-                  }
-                  return false;
-              });
-
-              if (playableShapes.length > 0) {
-                  // Pick a random playable one
-                  selectedShape = playableShapes[Math.floor(Math.random() * playableShapes.length)];
-                  
-                  // "Mercy" Mechanic: If we picked a big shape but board is super tight, maybe downgrade to smaller one?
-                  // Frequent "Savior" dot (1/5 chance - was 1/10)
-                  if (playableShapes.length < 5 && rand < 0.2) {
-                      selectedShape = SHAPES[0]; // The Dot (Savior)
-                  }
-              } else {
-                  // If literally nothing fits (Game Over incoming), just give random small ones so user sees they lost
-                  selectedShape = SHAPES[Math.floor(Math.random() * 3)];
-              }
-          }
-          // SCENARIO D: Evil Random (Weighted towards harder shapes)
-          else {
-               const randType = Math.random();
-               
-               // 35% chance for Hard/Complex shapes (was 50%)
-               if (randType < 0.35) {
-                   const hardShapes = SHAPES.filter(s => s.points.length >= 4 || s.id.includes('Z') || s.id.includes('S'));
-                   selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
-               }
-               // 45% chance for Medium shapes (was 35%)
-               else if (randType < 0.80) {
-                   const medShapes = SHAPES.filter(s => s.points.length === 3);
-                   selectedShape = medShapes[Math.floor(Math.random() * medShapes.length)];
-               }
-               // 20% chance for Small/Easy shapes (was 15%)
-               else {
-                   const easyShapes = SHAPES.filter(s => s.points.length <= 2);
-                   selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-               }
-
-               // DOUBLE CHECK: Enforce extreme rarity of the single dot
-               // If we somehow picked a dot, 80% chance to RE-ROLL (was 90%)
-               if (selectedShape.id === 'dot' && Math.random() > 0.2) {
-                   const mediumShapes = SHAPES.filter(s => s.points.length >= 3);
-                   selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
-               }
+          
+          // SAFETY NET: If board is crowded, force the first piece to be EASY
+          if (isCrowded && i === 0) {
+             selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
+          } else {
+             // Standard Weighted Probability
+             const rand = Math.random();
+             if (rand < 0.45) { // 45% Easy
+                 selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
+             } else if (rand < 0.85) { // 40% Medium
+                 selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
+             } else { // 15% Hard
+                 selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
+             }
           }
 
           newShapes.push({ ...selectedShape, img });
@@ -203,69 +147,6 @@ export default function BlockBlast() {
       setCurrentShapes(newShapes);
       checkGameOver(grid, newShapes);
   }
-
-  // AI Helper: Find shapes that would perfectly fill gaps to clear lines
-  const findHelpfulShapes = (currentGrid: (string | null)[][]) => {
-      const helpful: any[] = [];
-      
-      // Check Rows
-      for (let r = 0; r < GRID_SIZE; r++) {
-          const emptyIndices = [];
-          for (let c = 0; c < GRID_SIZE; c++) {
-              if (currentGrid[r][c] === null) emptyIndices.push(c);
-          }
-          
-          // If row has 1-3 empty spots, it's a candidate for clearing
-          if (emptyIndices.length > 0 && emptyIndices.length <= 3) {
-              // Find contiguous gaps
-              // e.g. empty at 2,3 -> needs a 1x2 horizontal
-              // This is a simplified check: just looks for shapes that match the gap pattern
-              
-              // 1. Single hole? Suggest dot
-              if (emptyIndices.length === 1) {
-                  helpful.push(SHAPES.find(s => s.id === 'dot'));
-              }
-              // 2. Two holes?
-              else if (emptyIndices.length === 2) {
-                  const dist = emptyIndices[1] - emptyIndices[0];
-                  if (dist === 1) helpful.push(SHAPES.find(s => s.id === '1x2')); // Horizontal 2
-                  else helpful.push(SHAPES.find(s => s.id === 'dot')); // Two dots (we can suggest one)
-              }
-               // 3. Three holes?
-              else if (emptyIndices.length === 3) {
-                  const d1 = emptyIndices[1] - emptyIndices[0];
-                  const d2 = emptyIndices[2] - emptyIndices[1];
-                  if (d1 === 1 && d2 === 1) helpful.push(SHAPES.find(s => s.id === '1x3'));
-              }
-          }
-      }
-
-      // Check Cols
-      for (let c = 0; c < GRID_SIZE; c++) {
-          const emptyIndices = [];
-          for (let r = 0; r < GRID_SIZE; r++) {
-              if (currentGrid[r][c] === null) emptyIndices.push(r);
-          }
-          
-          if (emptyIndices.length > 0 && emptyIndices.length <= 3) {
-               if (emptyIndices.length === 1) {
-                  helpful.push(SHAPES.find(s => s.id === 'dot'));
-              }
-              else if (emptyIndices.length === 2) {
-                  const dist = emptyIndices[1] - emptyIndices[0];
-                  if (dist === 1) helpful.push(SHAPES.find(s => s.id === '2x1')); // Vertical 2
-              }
-               else if (emptyIndices.length === 3) {
-                  const d1 = emptyIndices[1] - emptyIndices[0];
-                  const d2 = emptyIndices[2] - emptyIndices[1];
-                  if (d1 === 1 && d2 === 1) helpful.push(SHAPES.find(s => s.id === '3x1'));
-              }
-          }
-      }
-      
-      // Filter out undefined and duplicates
-      return Array.from(new Set(helpful.filter(s => s)));
-  };
 
   // Check if ANY available shape can fit ANYWHERE on the grid
   const checkGameOver = (currentGrid: (string | null)[][], shapes: any[]) => {
