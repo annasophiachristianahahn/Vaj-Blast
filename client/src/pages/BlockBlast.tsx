@@ -129,14 +129,21 @@ export default function BlockBlast() {
           // SAFETY NET: If board is crowded, force the first piece to be EASY
           if (isCrowded && i === 0) {
              selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-          } else {
-             // Standard Weighted Probability
+          } 
+          // BOARD CLEAR ASSIST: If board is almost empty (< 5 blocks), give tiny shapes to help finish it
+          else if (filledCells > 0 && filledCells < 5) {
+             // Only Dot and Dominos
+             const tinyShapes = SHAPES.filter(s => s.id === 'dot' || s.id.includes('domino'));
+             selectedShape = tinyShapes[Math.floor(Math.random() * tinyShapes.length)];
+          }
+          else {
+             // Revised Weighted Probability for Easier Board Clears
              const rand = Math.random();
-             if (rand < 0.45) { // 45% Easy
+             if (rand < 0.60) { // 60% Easy (was 45%)
                  selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-             } else if (rand < 0.85) { // 40% Medium
+             } else if (rand < 0.90) { // 30% Medium (was 40%)
                  selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
-             } else { // 15% Hard
+             } else { // 10% Hard (was 15%)
                  selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
              }
           }
