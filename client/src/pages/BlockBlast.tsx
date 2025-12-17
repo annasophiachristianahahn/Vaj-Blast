@@ -190,28 +190,31 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
-      // DEFAULT WEIGHTS (Super Easy Mode, but not boring)
+      // DEFAULT WEIGHTS (Balanced Challenge)
+      // Safety: 10% (Small dots/dominoes)
+      // Structural: 60% (Tetris pieces)
+      // Stressor: 30% (Big shapes - 3x3, 5-line, etc)
       let weights = {
           safety: 0.1, 
-          structural: 0.8, // Heavy focus on useful shapes
-          stressor: 0.1
+          structural: 0.6, 
+          stressor: 0.3
       };
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 60) {
-          // Empty Board: Give big structural pieces to fill space fast and allow combos
-          weights = { safety: 0.0, structural: 0.9, stressor: 0.1 };
+          // Empty Board: Encourage big plays with more stressors
+          weights = { safety: 0.05, structural: 0.65, stressor: 0.3 };
       } else if (metrics.emptyCount < 40) {
-          // Half Full: Stop stressors. Focus on clearable shapes.
-          weights = { safety: 0.15, structural: 0.85, stressor: 0.0 };
+          // Half Full: Reduce stressors slightly, focus on structure
+          weights = { safety: 0.15, structural: 0.7, stressor: 0.15 };
       } else if (metrics.emptyCount < 20) {
-          // Danger Zone: Need safety to survive
-          weights = { safety: 0.7, structural: 0.3, stressor: 0.0 };
+          // Danger Zone: Emergency mode - mostly safety
+          weights = { safety: 0.6, structural: 0.4, stressor: 0.0 };
       } else if (metrics.holes > 3) {
           // Fragmented: Patch it up
-          weights.safety += 0.4;
-          weights.structural -= 0.4;
-          weights.stressor = 0;
+          weights.safety += 0.3;
+          weights.structural -= 0.2;
+          weights.stressor -= 0.1;
       }
       
       return weights;
@@ -332,9 +335,9 @@ export default function BlockBlast() {
       const weights = getDynamicWeights(metrics);
       
       // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is relatively empty (< 25 blocks), we STOP random generation
+      // If the board is relatively empty (< 20 blocks), we STOP random generation
       // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 25) {
+      if (totalBlocks > 0 && totalBlocks < 20) {
            let endgameBatch: any[] = [];
            // Strategy: Give mostly 1x1s and small pieces to let user snipe the last blocks
            // OR find a perfect sequence if possible.
