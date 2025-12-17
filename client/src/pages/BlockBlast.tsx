@@ -12,46 +12,92 @@ import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
 const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
 const GRID_SIZE = 8;
 
-// Define shapes based on Block Blast standard set
+// Define shapes based on official Block Blast mechanics
+// 19 unique shape types + their rotations
 const SHAPES = [
-    // --- EASY (Single, Dominos, Small Ls, 2x2) ---
-    { points: [[0,0]], id: 'dot', type: 'easy' },
-    { points: [[0,0], [1,0]], id: 'domino-h', type: 'easy' },
-    { points: [[0,0], [0,1]], id: 'domino-v', type: 'easy' },
-    { points: [[0,0], [1,0], [0,1], [1,1]], id: 'square-2x2', type: 'easy' },
-    // Small Ls (Corner pieces - 3 blocks)
-    { points: [[0,0], [0,1], [1,1]], id: 'small-L-1', type: 'easy' }, // ⌞
-    { points: [[1,0], [1,1], [0,1]], id: 'small-L-2', type: 'easy' }, // ⌝
-    { points: [[0,0], [1,0], [1,1]], id: 'small-L-3', type: 'easy' }, // ⌟
-    { points: [[0,0], [1,0], [0,1]], id: 'small-L-4', type: 'easy' }, // ⌜
+    // 1. Single Block (1x1)
+    { points: [[0,0]], id: 'dot', weight: 'common' },
+    
+    // 2. Domino (1x2) - 2 rotations
+    { points: [[0,0], [1,0]], id: 'domino-h', weight: 'common' },
+    { points: [[0,0], [0,1]], id: 'domino-v', weight: 'common' },
+    
+    // 3. Triomino Line (1x3) - 2 rotations
+    { points: [[0,0], [1,0], [2,0]], id: 'line-3-h', weight: 'common' },
+    { points: [[0,0], [0,1], [0,2]], id: 'line-3-v', weight: 'common' },
+    
+    // 4. Triomino Corner (L-3) - 4 rotations
+    { points: [[0,0], [0,1], [1,1]], id: 'corner-3-1', weight: 'common' }, // ⌞
+    { points: [[1,0], [1,1], [0,1]], id: 'corner-3-2', weight: 'common' }, // ⌝
+    { points: [[0,0], [1,0], [1,1]], id: 'corner-3-3', weight: 'common' }, // ⌟
+    { points: [[0,0], [1,0], [0,1]], id: 'corner-3-4', weight: 'common' }, // ⌜
+    
+    // 5. Tetris I (1x4) - 2 rotations
+    { points: [[0,0], [1,0], [2,0], [3,0]], id: 'line-4-h', weight: 'medium' },
+    { points: [[0,0], [0,1], [0,2], [0,3]], id: 'line-4-v', weight: 'medium' },
+    
+    // 6. Tetris O (2x2)
+    { points: [[0,0], [1,0], [0,1], [1,1]], id: 'square-2x2', weight: 'medium' },
+    
+    // 7. Tetris T - 4 rotations
+    { points: [[0,0], [1,0], [2,0], [1,1]], id: 'T-down', weight: 'medium' },
+    { points: [[1,0], [1,1], [1,2], [0,1]], id: 'T-left', weight: 'medium' },
+    { points: [[0,1], [1,1], [2,1], [1,0]], id: 'T-up', weight: 'medium' },
+    { points: [[0,0], [0,1], [0,2], [1,1]], id: 'T-right', weight: 'medium' },
+    
+    // 8. Tetris L - 4 rotations
+    { points: [[0,0], [0,1], [0,2], [1,2]], id: 'L-1', weight: 'medium' },
+    { points: [[0,0], [1,0], [2,0], [0,1]], id: 'L-2', weight: 'medium' },
+    { points: [[0,0], [1,0], [1,1], [1,2]], id: 'L-3', weight: 'medium' },
+    { points: [[2,0], [2,1], [1,1], [0,1]], id: 'L-4', weight: 'medium' },
+    
+    // 9. Tetris J - 4 rotations (mirrored L)
+    { points: [[1,0], [1,1], [1,2], [0,2]], id: 'J-1', weight: 'medium' },
+    { points: [[0,0], [0,1], [1,0], [2,0]], id: 'J-2', weight: 'medium' },
+    { points: [[0,0], [0,1], [0,2], [1,0]], id: 'J-3', weight: 'medium' },
+    { points: [[0,1], [1,1], [2,1], [2,0]], id: 'J-4', weight: 'medium' },
+    
+    // 10. Tetris S - 2 rotations
+    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-h', weight: 'medium' },
+    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-v', weight: 'medium' },
+    
+    // 11. Tetris Z - 2 rotations
+    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-h', weight: 'medium' },
+    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-v', weight: 'medium' },
+    
+    // 12. Line 5 (1x5) - 2 rotations ("Big Three" threat)
+    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: 'line-5-h', weight: 'hard' },
+    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: 'line-5-v', weight: 'hard' },
+    
+    // 13. Square 3x3 ("Big Three" threat)
+    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', weight: 'hard' },
+    
+    // 14. Rectangle 2x3 - 2 rotations
+    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1]], id: 'rect-2x3-h', weight: 'hard' },
+    { points: [[0,0], [0,1], [0,2], [1,0], [1,1], [1,2]], id: 'rect-2x3-v', weight: 'hard' },
 
-    // --- MEDIUM (Lines 3/4, Tetris L/J/T/S/Z) ---
-    // Lines
-    { points: [[0,0], [1,0], [2,0]], id: 'line-3-h', type: 'medium' },
-    { points: [[0,0], [0,1], [0,2]], id: 'line-3-v', type: 'medium' },
-    { points: [[0,0], [1,0], [2,0], [3,0]], id: 'line-4-h', type: 'medium' },
-    { points: [[0,0], [0,1], [0,2], [0,3]], id: 'line-4-v', type: 'medium' },
-    // Tetris L (4 blocks)
-    { points: [[0,0], [0,1], [0,2], [1,2]], id: 'L-1', type: 'medium' },
-    { points: [[0,0], [1,0], [2,0], [0,1]], id: 'L-2', type: 'medium' },
-    { points: [[0,0], [1,0], [1,1], [1,2]], id: 'L-3', type: 'medium' },
-    { points: [[2,0], [2,1], [1,1], [0,1]], id: 'L-4', type: 'medium' },
-    // Tetris T
-    { points: [[0,0], [1,0], [2,0], [1,1]], id: 'T-down', type: 'medium' },
-    { points: [[1,0], [1,1], [1,2], [0,1]], id: 'T-left', type: 'medium' },
-    { points: [[0,1], [1,1], [2,1], [1,0]], id: 'T-up', type: 'medium' },
-    { points: [[0,0], [0,1], [0,2], [1,1]], id: 'T-right', type: 'medium' },
-    // S & Z
-    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-h', type: 'medium' },
-    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-h', type: 'medium' },
-    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-v', type: 'medium' },
-    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-v', type: 'medium' },
-
-    // --- HARD (Line 5, 3x3, Plus) ---
-    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: 'line-5-h', type: 'hard' },
-    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: 'line-5-v', type: 'hard' },
-    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', type: 'hard' },
-    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus', type: 'hard' },
+    // 15. Big L (3x3 bounds) - 4 rotations ("Big Three" threat)
+    { points: [[0,0], [0,1], [0,2], [1,2], [2,2]], id: 'big-L-1', weight: 'hard' }, // ⌞
+    { points: [[0,0], [1,0], [2,0], [0,1], [0,2]], id: 'big-L-2', weight: 'hard' }, // ⌜
+    { points: [[0,0], [1,0], [2,0], [2,1], [2,2]], id: 'big-L-3', weight: 'hard' }, // ⌝
+    { points: [[2,0], [2,1], [2,2], [1,0], [0,0]], id: 'big-L-4', weight: 'hard' }, // ⌟
+    
+    // 16. Plus Shape (3x3 bounds)
+    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus', weight: 'hard' },
+    
+    // 17. U-Shape (3x2 bounds) - 4 rotations
+    { points: [[0,0], [2,0], [0,1], [1,1], [2,1]], id: 'U-up', weight: 'hard' },
+    { points: [[0,0], [0,1], [1,0], [2,0], [2,1]], id: 'U-down', weight: 'hard' },
+    { points: [[0,0], [0,1], [0,2], [1,0], [1,2]], id: 'U-left', weight: 'hard' },
+    { points: [[1,0], [1,1], [1,2], [0,0], [0,2]], id: 'U-right', weight: 'hard' },
+    
+    // 18. Diagonal 2 (2 blocks) - 2 types
+    { points: [[0,0], [1,1]], id: 'diag-2-1', weight: 'medium' },
+    { points: [[0,1], [1,0]], id: 'diag-2-2', weight: 'medium' },
+    
+    // 19. Diagonal 3 (3 blocks) - 2 types
+    { points: [[0,0], [1,1], [2,2]], id: 'diag-3-1', weight: 'hard' },
+    { points: [[0,2], [1,1], [2,0]], id: 'diag-3-2', weight: 'hard' },
 ];
 
 export default function BlockBlast() {
@@ -64,8 +110,10 @@ export default function BlockBlast() {
   // Round management
   const [round, setRound] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [movesSinceClear, setMovesSinceClear] = useState(0);
   
+  // BAG SYSTEM: Track current bag of shapes
+  const [shapeBag, setShapeBag] = useState<any[]>([]);
+
   // Animation state
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
   const [shakeGrid, setShakeGrid] = useState(false);
@@ -111,68 +159,67 @@ export default function BlockBlast() {
 
   function generateNewShapes(imgIndex: number) {
       const img = getRoundImage(imgIndex);
-      const newShapes = [];
       
-      // Calculate board fullness
-      let filledCells = 0;
-      grid.forEach(row => row.forEach(cell => { if(cell) filledCells++; }));
-      const fullness = filledCells / (GRID_SIZE * GRID_SIZE);
-      const isCrowded = fullness > 0.6; // 60% full
-
-      const easyShapes = SHAPES.filter(s => s.type === 'easy');
-      const mediumShapes = SHAPES.filter(s => s.type === 'medium');
-      const hardShapes = SHAPES.filter(s => s.type === 'hard');
-
-      // Define helpful shapes for early game/clearing (Dots, Dominos, Small Lines)
-      const helpfulShapes = SHAPES.filter(s => 
-          s.id === 'dot' || 
-          s.id.includes('domino') || 
-          s.id.includes('line-3') ||
-          s.id.includes('small-L')
-      );
-
-      // 3. Select 3 shapes with "Playful" logic
-      for (let i = 0; i < 3; i++) {
-          let selectedShape;
-          
-          // SAFETY NET: If board is crowded, force the first piece to be EASY
-          if (isCrowded && i === 0) {
-             selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-          } 
-          // ULTIMATE CLEAR ASSIST: If board is super close to empty (< 5 blocks), give ONLY dots to guarantee cleanup
-          else if (filledCells > 0 && filledCells < 5) {
-             selectedShape = SHAPES.find(s => s.id === 'dot');
-             // Fallback if dot not found (shouldn't happen)
-             if (!selectedShape) selectedShape = easyShapes[0];
-          }
-          // BOARD CLEAR ASSIST: If board is getting empty (< 10 blocks), give tiny shapes
-          else if (filledCells > 0 && filledCells < 10) {
-             // Only Dot and Dominos
-             const tinyShapes = SHAPES.filter(s => s.id === 'dot' || s.id.includes('domino'));
-             selectedShape = tinyShapes[Math.floor(Math.random() * tinyShapes.length)];
-          }
-          // EARLY GAME HANDICAP: If moves < 15 and we haven't cleared board recently, prioritize helpful shapes
-          // This gives the user "the opportunity to clear the board" early on
-          else if (movesSinceClear < 15 && helpfulShapes.length > 0 && Math.random() < 0.6) {
-             selectedShape = helpfulShapes[Math.floor(Math.random() * helpfulShapes.length)];
-          }
-          else {
-             // Revised Weighted Probability for Easier Board Clears
-             const rand = Math.random();
-             if (rand < 0.70) { // 70% Easy (was 60%)
-                 selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-             } else if (rand < 0.95) { // 25% Medium (was 30%)
-                 selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
-             } else { // 5% Hard (was 10%)
-                 selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
-             }
-          }
-
-          newShapes.push({ ...selectedShape, img });
+      // Use local bag copy to mutate during this generation step
+      let currentBag = [...shapeBag];
+      
+      // 1. REFILL BAG logic
+      if (currentBag.length < 3) {
+          // Shuffle full set of SHAPES
+          const newBag = [...SHAPES].sort(() => Math.random() - 0.5);
+          currentBag = [...currentBag, ...newBag];
       }
+
+      // 2. Try to draw 3 shapes that satisfy the "Placement Guarantee"
+      let validSetFound = false;
+      let attempts = 0;
+      let candidateShapes: any[] = [];
       
-      setCurrentShapes(newShapes);
-      checkGameOver(grid, newShapes);
+      while (!validSetFound && attempts < 100) {
+          // If bag gets low during search, refill it again
+          if (currentBag.length < 3) {
+               const newBag = [...SHAPES].sort(() => Math.random() - 0.5);
+               currentBag = [...currentBag, ...newBag];
+          }
+
+          // Peek at next 3
+          candidateShapes = currentBag.slice(0, 3);
+          
+          // Check if ANY of these 3 can fit
+          const canFitAny = candidateShapes.some(shape => {
+               // Check all positions for this shape
+               for (let r = 0; r < GRID_SIZE; r++) {
+                   for (let c = 0; c < GRID_SIZE; c++) {
+                       if (canPlaceShape(r, c, shape, grid)) return true;
+                   }
+               }
+               return false;
+          });
+
+          if (canFitAny) {
+              validSetFound = true;
+              // Remove them from bag
+              currentBag = currentBag.slice(3);
+          } else {
+              // Shuffle bag to find a valid combo
+              currentBag.sort(() => Math.random() - 0.5);
+              attempts++;
+          }
+      }
+
+      // Fallback if no valid set found (rare/impossible unless board is full)
+      if (!validSetFound) {
+          candidateShapes = currentBag.slice(0, 3);
+          currentBag = currentBag.slice(3);
+      }
+
+      // Add image to shapes
+      const finalShapes = candidateShapes.map(s => ({ ...s, img }));
+      
+      // Update state
+      setShapeBag(currentBag);
+      setCurrentShapes(finalShapes);
+      checkGameOver(grid, finalShapes);
   }
 
   // Check if ANY available shape can fit ANYWHERE on the grid
@@ -334,9 +381,6 @@ export default function BlockBlast() {
               if (isBoardEmpty && score > 0) {
                   setRound(r => r + 1);
                   setCurrentImageIndex(i => i + 1);
-                  setMovesSinceClear(0); // Reset move counter on clear
-              } else {
-                  setMovesSinceClear(m => m + 1);
               }
               
               if (newShapes.every(s => !s)) {
@@ -348,7 +392,6 @@ export default function BlockBlast() {
               }
           }, 250); // 0.25s duration
       } else {
-          setMovesSinceClear(m => m + 1);
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex);
           } else {
@@ -386,7 +429,6 @@ export default function BlockBlast() {
       setGrid(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
       setRound(1);
       setCurrentImageIndex(0);
-      setMovesSinceClear(0);
       generateNewShapes(0);
       setScore(0);
       setGameOver(false);
@@ -534,20 +576,19 @@ export default function BlockBlast() {
                         className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
                     >
                         <div 
-                            className="grid gap-0.5 pointer-events-none"
+                            className="grid gap-0.5"
                             style={{ 
-                                // Use 65% of cell size for selector to make them visible but not huge
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.65}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.65}px)`
+                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize}px)`,
+                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize}px)`
                             }}
                         >
-                            {shape.points.map((p, idx) => (
+                            {shape.points.map(([x, y], idx) => (
                                 <div 
-                                    key={idx} 
-                                    className="w-full h-full bg-white rounded-sm"
+                                    key={idx}
+                                    className="w-full h-full border border-white/10 rounded-sm shadow-sm"
                                     style={{ 
-                                        gridColumnStart: p[0] + 1,
-                                        gridRowStart: p[1] + 1,
+                                        gridColumn: x + 1, 
+                                        gridRow: y + 1,
                                         backgroundImage: `url(${shape.img})`,
                                         backgroundSize: 'cover',
                                         backgroundPosition: 'center',

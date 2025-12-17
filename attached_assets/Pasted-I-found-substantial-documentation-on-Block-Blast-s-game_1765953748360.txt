@@ -1,0 +1,92 @@
+I found substantial documentation on Block Blast's game logic. Here's a comprehensive analysis of how the block shapes and game mechanics create satisfying, skill-based gameplay:
+
+---
+
+## Block Blast Game Logic: How It Creates "Winnable but Challenging" Gameplay
+
+### The Block Shape Library
+
+Block Blast features **19 unique block shapes** that players must strategically place on the 8×8 grid. These blocks are inspired by classic Tetris pieces but include additional variations to create more challenging puzzle scenarios.
+
+**The 19 shapes break down into:**
+
+**Standard Tetris-Style Blocks (7):**
+- I-piece (straight line of 4 blocks)
+- O-piece (2×2 square)
+- T-piece (T-shaped, 4 squares)
+- S-piece (zigzag leaning right)
+- Z-piece (zigzag leaning left)
+- J-piece (L-shape facing left)
+- L-piece (L-shape facing right)
+
+**Additional Variations (12):**
+- Single blocks (1×1)
+- Domino pieces (1×2 and 2×1)
+- Triomino shapes (3-block L-shapes and straight lines)
+- Modified T-pieces with extended arms
+- Corner pieces and irregular shapes
+- Larger rectangular blocks (1×3, 1×4, 2×3)
+
+The community also identifies 2×2 L-shapes (for corner management), 2×3 L-shapes (for edge control), 3×3 L-shapes (for complex combinations), 2×3 rectangles, 2×2 squares, 3×3 squares, and 2×3 S-shapes.
+
+---
+
+### The Core Algorithm: Random Bag + Placement Guarantee
+
+The key insight is that Block Blast uses a **controlled randomization** system rather than pure randomness:
+
+**Random Bag Algorithm:**
+
+Rather than relying on pure randomness, the game implements a "Random Bag" algorithm. This involves creating a "bag" containing one of each block shape, which the game draws from without replacement. This method ensures a balanced distribution of blocks, preventing sequences that feel impossible.
+
+**Fair Distribution:** The algorithm ensures that players encounter a balanced mix of blocks, keeping the game winnable and engaging. It eliminates the risk of impossible-to-place blocks, allowing player skill to determine the outcome rather than bad luck.
+
+**Critical Safety Net:**
+
+Under the hood, the game engine guarantees that at least one of the three available shapes can always be placed, ensuring no unwinnable states arise prematurely.
+
+This is crucial—the game never puts you in an immediately impossible situation where all three pieces cannot fit anywhere.
+
+---
+
+### The Placement Mechanics (No Gravity)
+
+Unlike traditional Tetris, Block Blast doesn't use gravity – pieces stay exactly where you place them until cleared. The scoring system rewards multiple simultaneous line clears with exponential point bonuses.
+
+The algorithm constantly evaluates whether any of the three available shapes can fit anywhere on the current grid. When no valid placements exist for all three pieces, the game ends. This creates strategic tension as players must balance immediate scoring with maintaining board flexibility.
+
+---
+
+### Difficulty Balancing Through Shape Selection
+
+The game dynamically adjusts which shapes appear based on player skill:
+
+The most commendable feature lies in its AI-based difficulty adjustment. The game silently evaluates your skill level based on combos, optimal moves, and consecutive row-clears. The better you perform, the harder the blocks and tighter the board become:
+- Reduced frequency of easy blocks like 2×2 squares or 1×3 lines
+- Increased chance of difficult blocks like 3×3 or diagonal shapes
+
+The "Big Three" threats are: the 3x3 square, the 3x3 L-shape, and the 1x5 line. These blocks are hard to place and can instantly end your run if you don't plan for them early.
+
+---
+
+### Why It Feels Satisfying (Not Too Simple)
+
+The true design genius behind Block Blast lies in its balance. The game gives you just enough control through strategy, but it also injects enough randomness to keep you on edge and make every playthrough different.
+
+If Block Blast were purely fair — always offering the perfect block at the right moment — the game would quickly become boring. If it were purely random, nobody would play for long. Its blend of skill and luck is what makes it so engaging.
+
+The randomness isn't just your imagination. Like many puzzle games, Block Blast uses an algorithm to select which blocks appear, and while the choices are "random," they are often weighted to balance variety and challenge.
+
+---
+
+### Technical Implementation Summary
+
+For your modular video generation app, here's the core logic pattern:
+
+1. **Shape Pool:** 19 defined polyomino shapes from 1-block to 3×3 formations
+2. **Random Bag:** Cycle through all shape types before repeating (prevents streaks of bad shapes)
+3. **Placement Validation:** Always guarantee at least 1 of 3 pieces can be placed
+4. **Adaptive Weighting:** Optionally reduce easy shapes (1×1, 2×2) as player skill increases
+5. **Three-at-a-Time Serving:** Player must place all three before receiving new pieces (creates commitment/planning pressure)
+
+This creates the "satisfying challenge" feeling: players never feel cheated by impossible states, but must think strategically because the shapes aren't always ideal.
