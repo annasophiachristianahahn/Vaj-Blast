@@ -78,29 +78,6 @@ const SHAPES = [
     
     // 13. Square 3x3 ("Big Three" threat)
     { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', weight: 'hard', category: 'stressor' },
-    
-    // 14. Rectangle 2x3 - 2 rotations
-    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1]], id: 'rect-2x3-h', weight: 'hard', category: 'stressor' },
-    { points: [[0,0], [0,1], [0,2], [1,0], [1,1], [1,2]], id: 'rect-2x3-v', weight: 'hard', category: 'stressor' },
-
-    // 15. Big L (3x3 bounds) - 4 rotations ("Big Three" threat)
-    { points: [[0,0], [0,1], [0,2], [1,2], [2,2]], id: 'big-L-1', weight: 'hard', category: 'stressor' }, // ⌞
-    { points: [[0,0], [1,0], [2,0], [0,1], [0,2]], id: 'big-L-2', weight: 'hard', category: 'stressor' }, // ⌜
-    { points: [[0,0], [1,0], [2,0], [2,1], [2,2]], id: 'big-L-3', weight: 'hard', category: 'stressor' }, // ⌝
-    { points: [[2,0], [2,1], [2,2], [1,0], [0,0]], id: 'big-L-4', weight: 'hard', category: 'stressor' }, // ⌟
-    
-    // 16. Plus Shape (3x3 bounds)
-    { points: [[1,0], [0,1], [1,1], [2,1], [1,2]], id: 'plus', weight: 'hard', category: 'stressor' },
-    
-    // 17. U-Shape (3x2 bounds) - 4 rotations
-    { points: [[0,0], [2,0], [0,1], [1,1], [2,1]], id: 'U-up', weight: 'hard', category: 'stressor' },
-    { points: [[0,0], [0,1], [1,0], [2,0], [2,1]], id: 'U-down', weight: 'hard', category: 'stressor' },
-    { points: [[0,0], [0,1], [0,2], [1,0], [1,2]], id: 'U-left', weight: 'hard', category: 'stressor' },
-    { points: [[1,0], [1,1], [1,2], [0,0], [0,2]], id: 'U-right', weight: 'hard', category: 'stressor' },
-    
-    // 19. Diagonal 3 (3 blocks) - 2 types
-    { points: [[0,0], [1,1], [2,2]], id: 'diag-3-1', weight: 'hard', category: 'stressor' },
-    { points: [[0,2], [1,1], [2,0]], id: 'diag-3-2', weight: 'hard', category: 'stressor' },
 ];
 
 export default function BlockBlast() {
