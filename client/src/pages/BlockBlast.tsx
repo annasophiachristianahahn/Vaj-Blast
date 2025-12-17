@@ -130,8 +130,14 @@ export default function BlockBlast() {
           if (isCrowded && i === 0) {
              selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
           } 
-          // BOARD CLEAR ASSIST: If board is almost empty (< 5 blocks), give tiny shapes to help finish it
+          // ULTIMATE CLEAR ASSIST: If board is super close to empty (< 5 blocks), give ONLY dots to guarantee cleanup
           else if (filledCells > 0 && filledCells < 5) {
+             selectedShape = SHAPES.find(s => s.id === 'dot');
+             // Fallback if dot not found (shouldn't happen)
+             if (!selectedShape) selectedShape = easyShapes[0];
+          }
+          // BOARD CLEAR ASSIST: If board is getting empty (< 10 blocks), give tiny shapes
+          else if (filledCells > 0 && filledCells < 10) {
              // Only Dot and Dominos
              const tinyShapes = SHAPES.filter(s => s.id === 'dot' || s.id.includes('domino'));
              selectedShape = tinyShapes[Math.floor(Math.random() * tinyShapes.length)];
@@ -139,11 +145,11 @@ export default function BlockBlast() {
           else {
              // Revised Weighted Probability for Easier Board Clears
              const rand = Math.random();
-             if (rand < 0.60) { // 60% Easy (was 45%)
+             if (rand < 0.70) { // 70% Easy (was 60%)
                  selectedShape = easyShapes[Math.floor(Math.random() * easyShapes.length)];
-             } else if (rand < 0.90) { // 30% Medium (was 40%)
+             } else if (rand < 0.95) { // 25% Medium (was 30%)
                  selectedShape = mediumShapes[Math.floor(Math.random() * mediumShapes.length)];
-             } else { // 10% Hard (was 15%)
+             } else { // 5% Hard (was 10%)
                  selectedShape = hardShapes[Math.floor(Math.random() * hardShapes.length)];
              }
           }
