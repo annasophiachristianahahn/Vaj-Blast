@@ -190,21 +190,21 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
-      // DEFAULT WEIGHTS (Very forgiving baseline)
+      // DEFAULT WEIGHTS (Standard balanced gameplay)
       let weights = {
-          safety: 0.4,
-          structural: 0.5,
+          safety: 0.2, // Reduced from 0.4 to prevent filler feeling
+          structural: 0.7, // Increased to provide substance
           stressor: 0.1
       };
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 55) {
           // Early Game: Mostly structural, minimal stress
-          weights = { safety: 0.3, structural: 0.6, stressor: 0.1 };
-      } else if (metrics.emptyCount < 40) {
-          // Board Filling Up: Safety mode engaged early
-          weights = { safety: 0.6, structural: 0.35, stressor: 0.05 };
-      } else if (metrics.emptyCount < 25) {
+          weights = { safety: 0.1, structural: 0.8, stressor: 0.1 };
+      } else if (metrics.emptyCount < 30) {
+          // Board Tightening: Start introducing safety
+          weights = { safety: 0.5, structural: 0.45, stressor: 0.05 };
+      } else if (metrics.emptyCount < 15) {
           // Critical: Pure safety mode
           weights = { safety: 0.9, structural: 0.1, stressor: 0.0 };
       } else if (metrics.holes > 3) {
@@ -331,9 +331,9 @@ export default function BlockBlast() {
       const weights = getDynamicWeights(metrics);
       
       // 2. ENDGAME PROTOCOL (The "Full Clear" Assistant)
-      // If the board is nearly empty (< 15 blocks), we STOP random generation
+      // If the board is nearly empty (< 10 blocks), we STOP random generation
       // and actively give the player the exact tools to finish the job.
-      if (totalBlocks > 0 && totalBlocks < 15) {
+      if (totalBlocks > 0 && totalBlocks < 10) {
            let endgameBatch: any[] = [];
            // Strategy: Give mostly 1x1s and small pieces to let user snipe the last blocks
            // OR find a perfect sequence if possible.
@@ -384,15 +384,15 @@ export default function BlockBlast() {
               // Contextual Selection
               let candidateShape;
               
-              // RESCUE MODE: If board is tight (<40 empty) or fragmented (holes > 4), force a "Helper"
+              // RESCUE MODE: If board is tight (<25 empty) or fragmented (holes > 5), force a "Helper"
               // Helper = shape that fits in largest hole OR clears a line
-              // Trigger MUCH earlier to prevent game over anxiety
-              const needsRescue = metrics.emptyCount < 40 || metrics.holes > 4;
+              // Trigger when actually needed, not too early
+              const needsRescue = metrics.emptyCount < 25 || metrics.holes > 5;
               
               if (needsRescue) {
                   // Try to find a shape that fits and clears lines
-                  // In deep rescue (<20 empty), force 1x1 block if nothing else is perfect
-                  if (metrics.emptyCount < 20) {
+                  // In deep rescue (<15 empty), force 1x1 block if nothing else is perfect
+                  if (metrics.emptyCount < 15) {
                       candidateShape = SHAPES.find(s => s.id === 'dot');
                   } else {
                       candidateShape = findBestRescueShape(simGrid, weights);
