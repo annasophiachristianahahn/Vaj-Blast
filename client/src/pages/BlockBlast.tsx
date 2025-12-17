@@ -191,34 +191,34 @@ export default function BlockBlast() {
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
       // DEFAULT WEIGHTS (Standard balanced gameplay)
-      // Safety: 5% (Only rarely see small pieces by default)
-      // Structural: 65% (Tetris pieces)
-      // Stressor: 30% (Big shapes)
+      // Safety: 10% (Easier default)
+      // Structural: 70% (Tetris pieces)
+      // Stressor: 20% (Reduced from 30%)
       let weights = {
-          safety: 0.05, 
-          structural: 0.65, 
-          stressor: 0.3
+          safety: 0.10, 
+          structural: 0.70, 
+          stressor: 0.20
       };
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 50) {
           // OPEN BOARD: Aggressive Complexity
-          // Zero safety pieces. Give them big shapes to build a base.
-          // This makes the game feel "complex" immediately.
-          weights = { safety: 0.0, structural: 0.6, stressor: 0.4 };
+          // Safety 0, but Stressor reduced to 30% (was 40%) to be less punishing
+          weights = { safety: 0.0, structural: 0.7, stressor: 0.3 };
       } else if (metrics.emptyCount < 30) {
-          // TIGHTENING: Start introducing help
-          // But prefer Structural shapes (lines/Ls) over tiny dots.
-          weights = { safety: 0.2, structural: 0.7, stressor: 0.1 };
-      } else if (metrics.emptyCount < 15) {
-          // CRITICAL: Now we save them
-          weights = { safety: 0.6, structural: 0.4, stressor: 0.0 };
+          // TIGHTENING: Start introducing help earlier
+          // Safety boosted to 30%, Stressor almost gone
+          weights = { safety: 0.3, structural: 0.65, stressor: 0.05 };
+      } else if (metrics.emptyCount < 20) {
+          // CRITICAL: Now we save them earlier (was <15)
+          // Mostly safety pieces
+          weights = { safety: 0.7, structural: 0.3, stressor: 0.0 };
       }
       
       // Swiss Cheese Exception: If the board is messy with holes, we MUST give small pieces
       // regardless of how empty it is, otherwise they die.
-      if (metrics.holes > 4) {
-          weights.safety = Math.max(weights.safety, 0.4);
+      if (metrics.holes > 3) { // Lowered threshold from 4 to 3
+          weights.safety = Math.max(weights.safety, 0.5); // Boost safety to 50%
           weights.stressor = 0;
       }
       
