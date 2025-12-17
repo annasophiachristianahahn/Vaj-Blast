@@ -190,27 +190,27 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
-      // DEFAULT WEIGHTS
+      // DEFAULT WEIGHTS (Very forgiving baseline)
       let weights = {
-          safety: 0.2,
-          structural: 0.6,
-          stressor: 0.2
+          safety: 0.4,
+          structural: 0.5,
+          stressor: 0.1
       };
 
       // CONTEXTUAL ADJUSTMENTS
-      if (metrics.emptyCount > 50) {
-          // Early Game: Build structure, low stress
-          weights = { safety: 0.1, structural: 0.7, stressor: 0.2 };
-      } else if (metrics.emptyCount < 20) {
-          // Tight Board: High safety needed
-          weights = { safety: 0.6, structural: 0.3, stressor: 0.1 };
-      } else if (metrics.emptyCount < 10) {
-          // Critical: Almost pure safety
-          weights = { safety: 0.8, structural: 0.2, stressor: 0.0 };
-      } else if (metrics.holes > 5) {
-          // Swiss Cheese: Needs safety/1x1s to patch
-          weights.safety += 0.3;
-          weights.stressor -= 0.1;
+      if (metrics.emptyCount > 55) {
+          // Early Game: Mostly structural, minimal stress
+          weights = { safety: 0.3, structural: 0.6, stressor: 0.1 };
+      } else if (metrics.emptyCount < 40) {
+          // Board Filling Up: Safety mode engaged early
+          weights = { safety: 0.6, structural: 0.35, stressor: 0.05 };
+      } else if (metrics.emptyCount < 25) {
+          // Critical: Pure safety mode
+          weights = { safety: 0.9, structural: 0.1, stressor: 0.0 };
+      } else if (metrics.holes > 3) {
+          // Fragmented: Needs patching immediately
+          weights.safety += 0.4;
+          weights.stressor = 0;
       }
       
       return weights;
@@ -349,19 +349,25 @@ export default function BlockBlast() {
               // Contextual Selection
               let candidateShape;
               
-              // RESCUE MODE: If board is tight (<20 empty) or fragmented (holes > 8), force a "Helper"
+              // RESCUE MODE: If board is tight (<40 empty) or fragmented (holes > 4), force a "Helper"
               // Helper = shape that fits in largest hole OR clears a line
-              const needsRescue = metrics.emptyCount < 20 || metrics.holes > 8;
+              // Trigger MUCH earlier to prevent game over anxiety
+              const needsRescue = metrics.emptyCount < 40 || metrics.holes > 4;
               
               if (needsRescue) {
                   // Try to find a shape that fits and clears lines
-                  candidateShape = findBestRescueShape(simGrid, weights);
+                  // In deep rescue (<20 empty), force 1x1 block if nothing else is perfect
+                  if (metrics.emptyCount < 20) {
+                      candidateShape = SHAPES.find(s => s.id === 'dot');
+                  } else {
+                      candidateShape = findBestRescueShape(simGrid, weights);
+                  }
               } 
               
               if (!candidateShape) {
                    // Standard Weighted Selection
-                   // Try up to 10 times to find one that fits the simGrid
-                   for(let k=0; k<10; k++) {
+                   // Try up to 20 times to find one that fits the simGrid
+                   for(let k=0; k<20; k++) {
                        const s = pickWeightedShape(weights);
                        if (canPlaceShapeAnywhere(simGrid, s)) {
                            candidateShape = s;
@@ -370,7 +376,8 @@ export default function BlockBlast() {
                    }
               }
               
-              // Fallback: 1x1 always fits if there is ANY space
+              // Fallback: 1x1 always fits if there is ANY space.
+              // If we are about to fail generation, just give a 1x1.
               if (!candidateShape && metrics.emptyCount > 0) {
                   candidateShape = SHAPES.find(s => s.id === 'dot');
               }
