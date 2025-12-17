@@ -4,12 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 // Import generated assets
-import catImg from "@assets/generated_images/pixel_art_crying_cat_meme.png";
-import dogeImg from "@assets/generated_images/doge_coin_style_shiba_inu.png";
-import pepeImg from "@assets/generated_images/pepe_frog_style_funny_face.png";
-import skullImg from "@assets/generated_images/skull_emoji_with_flames.png";
+import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
 
-const IMAGES = [catImg, dogeImg, pepeImg, skullImg];
+const IMAGES = BLOCK_BLAST_IMAGES;
 const GRID_SIZE = 8;
 
 // Define shapes based on official Block Blast mechanics
@@ -767,7 +764,7 @@ export default function BlockBlast() {
                         className="bg-black border-2 border-red-500/50 p-6 rounded-lg shadow-2xl flex flex-col items-center gap-4 text-white w-full max-w-sm"
                     >
                         <h2 className="text-4xl font-display text-red-500 animate-pulse text-center">GAME OVER</h2>
-                        <img src={skullImg} alt="Game Over" className="w-24 h-24 animate-bounce" />
+                        <img src={BLOCK_BLAST_IMAGES[3]} alt="Game Over" className="w-24 h-24 animate-bounce" />
                         <div className="text-center">
                             <p className="text-2xl font-mono">FINAL SCORE</p>
                             <p className="text-4xl font-bold text-yellow-400">{score}</p>

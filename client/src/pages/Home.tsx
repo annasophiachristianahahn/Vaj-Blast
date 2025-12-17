@@ -1,16 +1,30 @@
 import { Layout } from "@/components/Layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CoinFlip from "./CoinFlip";
 import QuietGame from "./QuietGame";
 import BlockBlast from "./BlockBlast";
 import TicTacToe from "./TicTacToe";
 import { Button } from "@/components/ui/button";
+import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
+
+// Preload images helper
+const preloadImages = (urls: string[]) => {
+    urls.forEach((url) => {
+        const img = new Image();
+        img.src = url;
+    });
+};
 
 type GameType = 'coin-flip' | 'quiet-game' | 'block-blast' | 'tic-tac-toe';
 
 export default function Home() {
   const [activeGame, setActiveGame] = useState<GameType>('coin-flip');
+
+  useEffect(() => {
+    // Preload Block Blast images immediately on mount
+    preloadImages(BLOCK_BLAST_IMAGES);
+  }, []);
 
   return (
     <Layout>
