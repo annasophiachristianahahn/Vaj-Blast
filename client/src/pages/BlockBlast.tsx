@@ -192,24 +192,24 @@ export default function BlockBlast() {
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
       // DEFAULT WEIGHTS (Standard balanced gameplay)
       let weights = {
-          safety: 0.2, // Reduced from 0.4 to prevent filler feeling
-          structural: 0.7, // Increased to provide substance
+          safety: 0.1, // Drastically reduced to prevent "filler" feeling
+          structural: 0.8, // Focus on Tetris-like shapes
           stressor: 0.1
       };
 
       // CONTEXTUAL ADJUSTMENTS
       if (metrics.emptyCount > 55) {
-          // Early Game: Mostly structural, minimal stress
-          weights = { safety: 0.1, structural: 0.8, stressor: 0.1 };
+          // Early Game: Almost purely structural
+          weights = { safety: 0.05, structural: 0.85, stressor: 0.1 };
       } else if (metrics.emptyCount < 30) {
-          // Board Tightening: Start introducing safety
-          weights = { safety: 0.5, structural: 0.45, stressor: 0.05 };
+          // Board Tightening: Introduce safety, but don't flood it
+          weights = { safety: 0.3, structural: 0.65, stressor: 0.05 };
       } else if (metrics.emptyCount < 15) {
-          // Critical: Pure safety mode
-          weights = { safety: 0.9, structural: 0.1, stressor: 0.0 };
-      } else if (metrics.holes > 3) {
-          // Fragmented: Needs patching immediately
-          weights.safety += 0.4;
+          // Critical: Now we need safety
+          weights = { safety: 0.8, structural: 0.2, stressor: 0.0 };
+      } else if (metrics.holes > 5) { // Increased threshold for "Swiss Cheese"
+          // Fragmented: Needs patching
+          weights.safety += 0.3;
           weights.stressor = 0;
       }
       
@@ -344,12 +344,12 @@ export default function BlockBlast() {
            if (perfectBatch) {
                endgameBatch = perfectBatch;
            } else {
-               // Fallback: Just give 1x1s and 1x2s. These are the best "finishers".
-               // 70% chance of Dot, 30% chance of small line/corner
+               // Fallback: Give a mix of small pieces, but not just dots.
+               // 40% Dot, 40% Domino, 20% Corner
                for(let i=0; i<3; i++) {
                    const r = Math.random();
-                   if (r < 0.7) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
-                   else if (r < 0.9) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
+                   if (r < 0.4) endgameBatch.push(SHAPES.find(s => s.id === 'dot'));
+                   else if (r < 0.8) endgameBatch.push(SHAPES.find(s => s.id === 'domino-h') || SHAPES.find(s => s.id === 'domino-v'));
                    else endgameBatch.push(SHAPES.find(s => s.id.startsWith('corner-3')));
                }
            }
