@@ -329,72 +329,83 @@ export default function BlockBlast() {
       const metrics = analyzeBoard(currentGrid);
       const weights = getDynamicWeights(metrics);
       
-      // 2. Generate Batch with Solvability Guarantee AND Clearing Potential
+      // 2. CONSTRUCTIVE GENERATION
+      // Instead of guessing a batch, we build one that is guaranteed to work
+      // and biases towards clearing lines if the board is tight.
+      
       let bestBatch: any[] = [];
-      let bestScore = -1;
-      let attempts = 0;
       
-      // We will try to find MULTIPLE valid batches and pick the one that yields the most clears
-      // This simulates the "thinking ahead" AI
-      const MAX_ATTEMPTS = 20;
+      // Attempt to build a batch 5 times, keep the one with best score
+      let bestBatchScore = -1;
       
-      while (attempts < MAX_ATTEMPTS) {
-          // Pick 3 candidates based on weights
-          const s1 = pickWeightedShape(weights);
-          const s2 = pickWeightedShape(weights);
-          const s3 = pickWeightedShape(weights);
+      for(let attempt=0; attempt<5; attempt++) {
+          let currentBatch: any[] = [];
+          // Clone grid for simulation
+          let simGrid = currentGrid.map(row => [...row]);
+          let batchScore = 0;
           
-          const batch = [s1, s2, s3];
-          
-          // Anti-Pattern: Avoid 3 identical shapes
-          if (s1.id === s2.id && s2.id === s3.id) {
-              attempts++;
-              continue;
-          }
-          
-          // Evaluate this batch
-          // We check permutations to find the BEST sequence for this batch
-          const permutations = getPermutations(batch);
-          let batchSolvable = false;
-          let maxBatchClears = 0;
-          
-          for (const perm of permutations) {
-              const result = canSolveSequence(currentGrid, perm);
-              if (result.solvable) {
-                  batchSolvable = true;
-                  if (result.maxClears > maxBatchClears) {
-                      maxBatchClears = result.maxClears;
+          // Pick 3 shapes sequentially
+          for(let i=0; i<3; i++) {
+              // Contextual Selection
+              let candidateShape;
+              
+              // RESCUE MODE: If board is tight (<20 empty) or fragmented (holes > 8), force a "Helper"
+              // Helper = shape that fits in largest hole OR clears a line
+              const needsRescue = metrics.emptyCount < 20 || metrics.holes > 8;
+              
+              if (needsRescue) {
+                  // Try to find a shape that fits and clears lines
+                  candidateShape = findBestRescueShape(simGrid, weights);
+              } 
+              
+              if (!candidateShape) {
+                   // Standard Weighted Selection
+                   // Try up to 10 times to find one that fits the simGrid
+                   for(let k=0; k<10; k++) {
+                       const s = pickWeightedShape(weights);
+                       if (canPlaceShapeAnywhere(simGrid, s)) {
+                           candidateShape = s;
+                           break;
+                       }
+                   }
+              }
+              
+              // Fallback: 1x1 always fits if there is ANY space
+              if (!candidateShape && metrics.emptyCount > 0) {
+                  candidateShape = SHAPES.find(s => s.id === 'dot');
+              }
+              
+              if (candidateShape) {
+                  currentBatch.push(candidateShape);
+                  
+                  // Simulate placing it in best spot to update simGrid for next shape
+                  const bestMove = findBestMove(simGrid, candidateShape);
+                  if (bestMove) {
+                      simGrid = simulatePlacement(simGrid, candidateShape, bestMove.r, bestMove.c);
+                      // Check clears
+                      const lines = findLinesToClear(simGrid);
+                      if (lines.length > 0) {
+                          simGrid = clearLinesFromGrid(simGrid, lines);
+                          batchScore += lines.length * 10;
+                          if (needsRescue) batchScore += 50; // Bonus for saving player
+                      }
                   }
               }
           }
-
-          if (batchSolvable) {
-               // Calculate Score for this batch
-               // Base score: 1 (it's solvable)
-               // Clears: +10 per line
-               let currentScore = 1 + (maxBatchClears * 10);
-               
-               // Crisis Management: If board is tight, prioritize ANY clear massively
-               if (metrics.emptyCount < 20 && maxBatchClears > 0) {
-                   currentScore += 50; 
-               }
-
-               if (currentScore > bestScore) {
-                   bestScore = currentScore;
-                   bestBatch = batch;
-                   
-                   // Optimization: If we found a batch with clears, and we're in a hurry, take it
-                   // But if we have time, keep searching for a better one
-                   if (maxBatchClears >= 2) break; 
-               }
-          }
           
-          attempts++;
+          // If we managed to pick 3 valid shapes
+          if (currentBatch.length === 3) {
+              if (batchScore > bestBatchScore) {
+                  bestBatchScore = batchScore;
+                  bestBatch = currentBatch;
+              }
+              // If we found a really good batch (clears lines), stop early
+              if (batchScore > 20) break;
+          }
       }
       
-      // Fallback: If we couldn't find ANY solvable batch (game over usually, or very bad luck),
-      // give the simplest shapes to try and extend life
-      if (bestBatch.length === 0) {
+      // Final Fallback (should rarely happen with constructive logic)
+      if (bestBatch.length < 3) {
            const safetyPool = SHAPES.filter(s => s.category === 'safety');
            bestBatch = [
                safetyPool[Math.floor(Math.random() * safetyPool.length)],
@@ -407,8 +418,62 @@ export default function BlockBlast() {
       const finalShapes = bestBatch.map((s, i) => ({ ...s, img, uniqueId: `${s.id}-${Date.now()}-${i}` }));
       
       setCurrentShapes(finalShapes);
-      // No need to check game over here immediately, let the player try to find the solution we proved exists
   }
+
+  // Helper: Find a shape that fits and ideally clears lines
+  const findBestRescueShape = (currentGrid: (string | null)[][], weights: any) => {
+      // Prioritize safety shapes for rescue
+      const candidates = SHAPES.filter(s => s.category === 'safety' || s.category === 'structural');
+      // Shuffle candidates to avoid same rescue piece every time
+      candidates.sort(() => Math.random() - 0.5);
+      
+      let bestShape = null;
+      let maxClears = -1;
+      
+      for (const shape of candidates) {
+          const move = findBestMove(currentGrid, shape);
+          if (move) {
+              // It fits!
+              if (move.clears > maxClears) {
+                  maxClears = move.clears;
+                  bestShape = shape;
+              }
+              // If it clears lines, take it immediately
+              if (move.clears > 0) return shape;
+          }
+      }
+      return bestShape;
+  };
+
+  // Helper: Find best move for a shape (max clears, or just fits)
+  const findBestMove = (currentGrid: (string | null)[][], shape: any) => {
+      let bestMove = null;
+      let maxClears = -1;
+      
+      for(let r=0; r<GRID_SIZE; r++) {
+          for(let c=0; c<GRID_SIZE; c++) {
+              if (canPlaceShape(r, c, shape, currentGrid)) {
+                   // Simulate
+                   const simGrid = simulatePlacement(currentGrid, shape, r, c);
+                   const lines = findLinesToClear(simGrid);
+                   if (lines.length > maxClears) {
+                       maxClears = lines.length;
+                       bestMove = { r, c, clears: lines.length };
+                   }
+              }
+          }
+      }
+      return bestMove;
+  };
+
+  const canPlaceShapeAnywhere = (currentGrid: (string | null)[][], shape: any) => {
+      for(let r=0; r<GRID_SIZE; r++) {
+          for(let c=0; c<GRID_SIZE; c++) {
+              if (canPlaceShape(r, c, shape, currentGrid)) return true;
+          }
+      }
+      return false;
+  };
 
   // Check if ANY available shape can fit ANYWHERE on the grid
   const checkGameOver = (currentGrid: (string | null)[][], shapes: any[]) => {
