@@ -5,6 +5,7 @@ import { Mesh, Vector3, MathUtils } from "three";
 import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
   const mesh = useRef<Mesh>(null!);
@@ -135,14 +136,30 @@ export default function CoinFlip() {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center py-2 min-h-0">
       <div className="w-full flex-1 relative min-h-[40vh]">
-        <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
-          <spotLight position={[-10, -10, -10]} intensity={0.5} />
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          <Coin flipping={flipping} result={result} onFlipStart={flipCoin} />
-          <Environment preset="city" />
-        </Canvas>
+        <ErrorBoundary
+            fallback={
+                <div className="w-full h-full flex items-center justify-center flex-col gap-4">
+                    <div 
+                        onClick={flipCoin}
+                        className="w-48 h-48 rounded-full bg-yellow-400 border-8 border-yellow-600 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform shadow-xl"
+                    >
+                        <span className="text-4xl font-bold text-yellow-800">
+                            {result || "$VAJ"}
+                        </span>
+                    </div>
+                    <p className="text-white/60 text-sm">3D View Unavailable (WebGL Error)</p>
+                </div>
+            }
+        >
+            <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={1} />
+            <spotLight position={[-10, -10, -10]} intensity={0.5} />
+            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+            <Coin flipping={flipping} result={result} onFlipStart={flipCoin} />
+            <Environment preset="city" />
+            </Canvas>
+        </ErrorBoundary>
       </div>
       
       <div className="flex flex-col items-center gap-2 mt-2 relative z-10 min-h-[60px]">

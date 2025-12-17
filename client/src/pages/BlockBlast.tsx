@@ -239,6 +239,47 @@ export default function BlockBlast() {
       return pool[Math.floor(Math.random() * pool.length)];
   };
 
+  const simulatePlacement = (currentGrid: (string | null)[][], shape: any, r: number, c: number) => {
+      const newGrid = currentGrid.map(row => [...row]);
+      shape.points.forEach(([dx, dy]: number[]) => {
+          if (r + dy < GRID_SIZE && c + dx < GRID_SIZE) {
+               newGrid[r + dy][c + dx] = 'filled'; 
+          }
+      });
+      return newGrid;
+  };
+
+  const isBatchSolvable = (currentGrid: (string | null)[][], batch: any[]) => {
+      const permutations = [
+          [0, 1, 2], [0, 2, 1],
+          [1, 0, 2], [1, 2, 0],
+          [2, 0, 1], [2, 1, 0]
+      ];
+
+      for (const perm of permutations) {
+          let tempGrid = currentGrid.map(row => [...row]);
+          let possible = true;
+          
+          for (const index of perm) {
+              const shape = batch[index];
+              const move = findBestMove(tempGrid, shape);
+              
+              if (move) {
+                  tempGrid = simulatePlacement(tempGrid, shape, move.r, move.c);
+                  const lines = findLinesToClear(tempGrid);
+                  if (lines.length > 0) {
+                      tempGrid = clearLinesFromGrid(tempGrid, lines);
+                  }
+              } else {
+                  possible = false;
+                  break;
+              }
+          }
+          if (possible) return true;
+      }
+      return false;
+  };
+
   // --- GENERATOR CORE ---
 
   function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][]) {
@@ -256,7 +297,7 @@ export default function BlockBlast() {
       // We try up to 20 times to find a batch that is "solvable" (has at least one valid permutation)
       while (!foundValidBatch && attempts < 20) {
           attempts++;
-          let batch = [];
+          let batch: any[] = [];
 
           // Selection Strategy:
           // Shape A: Pure weighted random
