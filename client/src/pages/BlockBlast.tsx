@@ -138,12 +138,16 @@ export default function BlockBlast() {
   const analyzeBoard = (currentGrid: (string | null)[][]) => {
       let emptyCount = 0;
       let holes = 0; // Isolated 1-cell gaps
+      let almostCompleteLines = 0; // Rows/Cols with only 1-2 empty spots
       
       // Basic counts
       for(let r=0; r<GRID_SIZE; r++) {
+          let rowEmpty = 0;
           for(let c=0; c<GRID_SIZE; c++) {
               if (!currentGrid[r][c]) {
                   emptyCount++;
+                  rowEmpty++;
+                  
                   // Check if it's a hole (surrounded by filled cells or edges)
                   let neighbors = 0;
                   if (r>0 && currentGrid[r-1][c]) neighbors++;
@@ -161,312 +165,178 @@ export default function BlockBlast() {
                   if (neighbors === 4) holes++;
               }
           }
+          if (rowEmpty > 0 && rowEmpty <= 2) almostCompleteLines++;
+      }
+
+      // Check cols for almost complete
+      for(let c=0; c<GRID_SIZE; c++) {
+          let colEmpty = 0;
+          for(let r=0; r<GRID_SIZE; r++) {
+              if (!currentGrid[r][c]) colEmpty++;
+          }
+          if (colEmpty > 0 && colEmpty <= 2) almostCompleteLines++;
       }
       
-      return { emptyCount, holes };
+      return { emptyCount, holes, almostCompleteLines };
   };
 
-  const getDynamicWeights = (metrics: { emptyCount: number, holes: number }) => {
+  const getDynamicWeights = (metrics: { emptyCount: number, holes: number, almostCompleteLines: number }) => {
       // DEFAULT WEIGHTS (Standard balanced gameplay)
-      // Safety: 10% (Easier default)
-      // Structural: 70% (Tetris pieces)
-      // Stressor: 20% (Reduced from 30%)
       let weights = {
-          safety: 0.10, 
-          structural: 0.70, 
+          safety: 0.15, 
+          structural: 0.65, 
           stressor: 0.20
       };
 
-      // CONTEXTUAL ADJUSTMENTS
+      // 1. Board Health Adjustment (Entropy based)
       if (metrics.emptyCount > 50) {
-          // OPEN BOARD: SATISFACTION MODE
-          // Give mostly structural pieces (lines, Ls) to encourage big clears.
-          // Reduce stressors significantly so they don't block the fun early on.
-          weights = { safety: 0.05, structural: 0.85, stressor: 0.10 };
+          // OPEN BOARD: Development Phase
+          // Encourage building structure.
+          weights = { safety: 0.05, structural: 0.80, stressor: 0.15 };
       } else if (metrics.emptyCount < 30) {
-          // TIGHTENING: Start introducing help earlier
-          // Safety boosted to 30%, Stressor almost gone
-          weights = { safety: 0.3, structural: 0.65, stressor: 0.05 };
-      } else if (metrics.emptyCount < 20) {
-          // CRITICAL: Now we save them earlier (was <15)
-          // Mostly safety pieces
-          weights = { safety: 0.7, structural: 0.3, stressor: 0.0 };
+          // TIGHTENING: Mid-game tension
+          // Reduce stressors, increase safety tools.
+          weights = { safety: 0.35, structural: 0.60, stressor: 0.05 };
+      } else if (metrics.emptyCount < 15) {
+          // CRITICAL: Survival Mode
+          // Mostly safety pieces to allow recovery.
+          weights = { safety: 0.80, structural: 0.20, stressor: 0.0 };
       }
-      
-      // Swiss Cheese Exception: If the board is messy with holes, we MUST give small pieces
-      // regardless of how empty it is, otherwise they die.
-      if (metrics.holes > 3) { // Lowered threshold from 4 to 3
-          weights.safety = Math.max(weights.safety, 0.5); // Boost safety to 50%
+
+      // 2. "Swiss Cheese" Factor
+      // If board has many single holes, we NEED 1x1 or 1x2s to fix it.
+      if (metrics.holes > 3) {
+          weights.safety += 0.4;
+          weights.structural -= 0.2;
           weights.stressor = 0;
       }
+
+      // 3. "Sniper" Opportunity
+      // If we have lines ready to clear (almostCompleteLines), slightly boost 1x1/1x2/1x3 availability
+      // implicitly by boosting safety/structural.
+      if (metrics.almostCompleteLines > 2) {
+          weights.safety += 0.1;
+      }
       
+      // Normalize
+      const total = weights.safety + weights.structural + weights.stressor;
+      weights.safety /= total;
+      weights.structural /= total;
+      weights.stressor /= total;
+
       return weights;
   };
 
-  const pickWeightedShape = (weights: { safety: number, structural: number, stressor: number }, emptyCount: number) => {
+  const pickWeightedShape = (weights: { safety: number, structural: number, stressor: number }) => {
       const rand = Math.random();
       let category = 'structural';
       
-      // Normalize weights
-      const total = weights.safety + weights.structural + weights.stressor;
-      const wS = weights.safety / total;
-      const wSt = weights.structural / total;
-      
-      if (rand < wS) category = 'safety';
-      else if (rand < wS + wSt) category = 'structural';
+      if (rand < weights.safety) category = 'safety';
+      else if (rand < weights.safety + weights.structural) category = 'structural';
       else category = 'stressor';
       
-      // Filter shapes by category
-      let pool = SHAPES.filter(s => s.category === category);
-
-      // SATISFACTION BIAS: In the very early game (empty board), prioritize LINES
-      // to make clearing rows/columns intuitive and satisfying.
-      if (emptyCount > 40 && category === 'structural') {
-          // Boost probability of Lines (3, 4, 5) and simple corners
-          // Filter pool to prefer lines
-          const lineShapes = pool.filter(s => s.id.includes('line'));
-          if (lineShapes.length > 0 && Math.random() < 0.7) {
-              pool = lineShapes;
-          }
-      }
-
+      const pool = SHAPES.filter(s => s.category === category);
       return pool[Math.floor(Math.random() * pool.length)];
   };
 
-  // Check if there is ANY valid sequence to place these 3 shapes
-  const isBatchSolvable = (currentGrid: (string | null)[][], shapes: any[]) => {
-      // This function is now deprecated in favor of the integrated check in generateNewShapes
-      // Keeping it as a dummy or for potential external checks
-      if (shapes.length === 0) return true;
-      const permutations = getPermutations(shapes);
-      for (const perm of permutations) {
-          const result = canSolveSequence(currentGrid, perm);
-          if (result.solvable) return true;
-      }
-      return false;
-  };
-
-  const getPermutations = (arr: any[]): any[][] => {
-      if (arr.length === 0) return [[]];
-      const firstEl = arr[0];
-      const rest = arr.slice(1);
-      const permsWithoutFirst = getPermutations(rest);
-      const allPerms: any[][] = [];
-      
-      permsWithoutFirst.forEach((perm) => {
-          for (let i = 0; i <= perm.length; i++) {
-              const start = perm.slice(0, i);
-              const end = perm.slice(i);
-              allPerms.push([...start, firstEl, ...end]);
-          }
-      });
-      return allPerms;
-  };
-
-  // Depth-first search to see if a sequence of shapes can be placed
-  // Returns { solvable: boolean, maxClears: number }
-  const canSolveSequence = (currentGrid: (string | null)[][], sequence: any[]): { solvable: boolean, maxClears: number } => {
-      if (sequence.length === 0) return { solvable: true, maxClears: 0 };
-      
-      const [head, ...tail] = sequence;
-      
-      // Find all valid placements for 'head'
-      const validMoves: {r: number, c: number}[] = [];
-      for(let r=0; r<GRID_SIZE; r++) {
-          for(let c=0; c<GRID_SIZE; c++) {
-              if (canPlaceShape(r, c, head, currentGrid)) {
-                  validMoves.push({r, c});
-                  // Optimization: If board is very open, we don't need to check ALL valid moves.
-                  if (validMoves.length > 5) break; 
-              }
-          }
-          if (validMoves.length > 5) break;
-      }
-      
-      if (validMoves.length === 0) return { solvable: false, maxClears: 0 };
-      
-      let bestResult = { solvable: false, maxClears: 0 };
-
-      // For each valid move, simulate and recurse
-      for (const move of validMoves) {
-          // Simulate placement
-          const nextGrid = simulatePlacement(currentGrid, head, move.r, move.c);
-          
-          // Check if lines cleared (crucial! clearing makes room)
-          const lines = findLinesToClear(nextGrid);
-          const currentClears = lines.length;
-          const gridAfterClear = lines.length > 0 ? clearLinesFromGrid(nextGrid, lines) : nextGrid;
-          
-          const result = canSolveSequence(gridAfterClear, tail);
-          
-          if (result.solvable) {
-              const totalClears = currentClears + result.maxClears;
-              if (totalClears > bestResult.maxClears) {
-                  bestResult = { solvable: true, maxClears: totalClears };
-              }
-              // If we found a solvable path, mark as solvable (but keep searching for better clears)
-              bestResult.solvable = true;
-          }
-      }
-      
-      return bestResult;
-  };
-
-  const simulatePlacement = (currentGrid: (string | null)[][], shape: any, r: number, c: number) => {
-      // Deep copy grid
-      const newGrid = currentGrid.map(row => [...row]);
-      shape.points.forEach(([dx, dy]: number[]) => {
-          newGrid[r + dy][c + dx] = 'placeholder'; // Use dummy value
-      });
-      return newGrid;
-  };
+  // --- GENERATOR CORE ---
 
   function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][]) {
       const img = getRoundImage(imgIndex);
       
-      // 1. Analyze Board
+      // 1. Analyze Board State
       const metrics = analyzeBoard(currentGrid);
-      const totalBlocks = countBlocks(currentGrid);
+      const weights = getDynamicWeights(metrics);
       
-      // GOD MODE: The user wants it to be VERY EASY to clear the board.
-      // We will shift from "Weighted Random" to "Deterministic Assistance".
-      // The game will now actively look for gaps and give you the piece that fits them.
-      
-      let bestBatch: any[] = [];
-      
-      // --- PHASE 1: ENDGAME (Cleanup) ---
-      // If board is < 30 blocks, we force a cleanup.
-      if (totalBlocks > 0 && totalBlocks < 30) {
-           const perfectBatch = findPerfectClearBatch(currentGrid);
-           if (perfectBatch) {
-               // FOUND A WINNING SEQUENCE
-               const finalShapes = perfectBatch.map((s, i) => ({ 
-                   ...s, 
-                   img, 
-                   uniqueId: `${s.id}-${Date.now()}-${i}` 
-               }));
-               setCurrentShapes(finalShapes);
-               return;
-           }
-      }
+      let finalBatch: any[] = [];
+      let attempts = 0;
+      let foundValidBatch = false;
 
-      // --- PHASE 2: GAP FILLER (Main Gameplay) ---
-      // Instead of random shapes, we look at the board's "Needs".
-      
-      // Find all "almost complete" rows and cols
-      const neededShapes: any[] = [];
-      
-      // Scan Rows
-      for(let r=0; r<GRID_SIZE; r++) {
-          let emptyInRow = [];
-          for(let c=0; c<GRID_SIZE; c++) if (!currentGrid[r][c]) emptyInRow.push(c);
-          
-          if (emptyInRow.length > 0 && emptyInRow.length <= 3) {
-              // Row is almost full! Give a piece that fits.
-              if (emptyInRow.length === 1) neededShapes.push(SHAPES.find(s => s.id === 'dot'));
-              else if (emptyInRow.length === 2) {
-                  // Check adjacency
-                  if (emptyInRow[1] - emptyInRow[0] === 1) neededShapes.push(SHAPES.find(s => s.id === 'domino-h'));
-                  else neededShapes.push(SHAPES.find(s => s.id === 'dot')); // Split gap, give dot
+      // Try to construct a valid batch (Constrained Sampler)
+      // We try up to 20 times to find a batch that is "solvable" (has at least one valid permutation)
+      while (!foundValidBatch && attempts < 20) {
+          attempts++;
+          let batch = [];
+
+          // Selection Strategy:
+          // Shape A: Pure weighted random
+          // Shape B: Weighted random, but bias towards different category if possible
+          // Shape C: Weighted random
+
+          // Rule: Max 1 Stressor per batch (unless board is super open)
+          let stressorCount = 0;
+
+          for (let i = 0; i < 3; i++) {
+              let shape = pickWeightedShape(weights);
+              
+              // Soft Constraint: Diversity
+              // If we already picked this ID, try to pick another (50% chance reroll)
+              if (batch.some(s => s.id === shape.id) && Math.random() > 0.5) {
+                  shape = pickWeightedShape(weights);
               }
-              else if (emptyInRow.length === 3) {
-                  // Check adjacency
-                  if (emptyInRow[2] - emptyInRow[0] === 2) neededShapes.push(SHAPES.find(s => s.id === 'line-3-h'));
+
+              // Hard Constraint: Cap stressors
+              if (shape.category === 'stressor') {
+                  if (stressorCount >= 1 && metrics.emptyCount < 45) {
+                      // Too many stressors for this board state, downgrade to structural
+                      const structPool = SHAPES.filter(s => s.category === 'structural');
+                      shape = structPool[Math.floor(Math.random() * structPool.length)];
+                  } else {
+                      stressorCount++;
+                  }
               }
+
+              batch.push(shape);
           }
-      }
-      
-      // Scan Cols
-      for(let c=0; c<GRID_SIZE; c++) {
-          let emptyInCol = [];
-          for(let r=0; r<GRID_SIZE; r++) if (!currentGrid[r][c]) emptyInCol.push(r);
+
+          // Validation: Is this batch solvable?
+          // We check if there exists ANY sequence [A,B,C], [A,C,B], etc. that fits on the board.
+          const check = isBatchSolvable(currentGrid, batch);
           
-          if (emptyInCol.length > 0 && emptyInCol.length <= 3) {
-              if (emptyInCol.length === 1) neededShapes.push(SHAPES.find(s => s.id === 'dot'));
-              else if (emptyInCol.length === 2) {
-                  if (emptyInCol[1] - emptyInCol[0] === 1) neededShapes.push(SHAPES.find(s => s.id === 'domino-v'));
-                  else neededShapes.push(SHAPES.find(s => s.id === 'dot'));
-              }
-              else if (emptyInCol.length === 3) {
-                  if (emptyInCol[2] - emptyInCol[0] === 2) neededShapes.push(SHAPES.find(s => s.id === 'line-3-v'));
-              }
+          if (check) {
+              finalBatch = batch;
+              foundValidBatch = true;
+          } else {
+              // If not solvable, we loop again. 
+              // As attempts increase, we implicitly might get luckier or we fall back.
           }
       }
 
-      // --- PHASE 3: CONSTRUCT THE BATCH ---
-      // We need 3 shapes.
-      // Slot 1: The "Solution" (A piece that clears a line or fills a big gap)
-      // Slot 2: The "Setup" (A big piece to build structure)
-      // Slot 3: The "Filler" (A utility piece)
-
-      const batch = [];
-      
-      // 1. The Solver Piece
-      if (neededShapes.length > 0) {
-          // We have specific needs, pick one!
-          batch.push(neededShapes[Math.floor(Math.random() * neededShapes.length)]);
-      } else {
-          // Board is open or messy, give a Structural piece (Lines/Ls)
-          // Bias heavily towards LINES for satisfaction
-          const lines = SHAPES.filter(s => s.category === 'structural' && s.id.includes('line'));
-          batch.push(lines[Math.floor(Math.random() * lines.length)]);
+      // FALLBACK: If we couldn't find a solvable batch in 20 tries (rare, but possible on tight boards)
+      // We construct a "Safety Batch" guaranteed to help.
+      if (!foundValidBatch) {
+          // "Panic Mode" Logic
+          if (metrics.emptyCount < 10) {
+             finalBatch = [SHAPES[0], SHAPES[1], SHAPES[2]]; // Dot, Domino, Corner
+          } else {
+             // Just give 3 random Safety shapes
+             const safetyPool = SHAPES.filter(s => s.category === 'safety');
+             finalBatch = [
+                 safetyPool[Math.floor(Math.random() * safetyPool.length)],
+                 safetyPool[Math.floor(Math.random() * safetyPool.length)],
+                 safetyPool[Math.floor(Math.random() * safetyPool.length)]
+             ];
+          }
       }
 
-      // 2. The Structure Piece (Keep the game moving)
-      // If board is empty, give BIG stuff. If full, give MEDIUM stuff.
-      if (metrics.emptyCount > 40) {
-          const big = SHAPES.filter(s => s.id.includes('line-4') || s.id.includes('line-5') || s.id.includes('square'));
-          batch.push(big[Math.floor(Math.random() * big.length)]);
-      } else {
-          const medium = SHAPES.filter(s => s.category === 'structural');
-          batch.push(medium[Math.floor(Math.random() * medium.length)]);
-      }
-
-      // 3. The Safety Piece (Always playable)
-      const safety = SHAPES.filter(s => s.category === 'safety');
-      batch.push(safety[Math.floor(Math.random() * safety.length)]);
-
-      // SHUFFLE and Verify
-      // We want to make sure the user doesn't realize we are "feeding" them.
-      // But we also need to ensure these are playable.
-      
-      // Fallback: If for some reason we picked undefined, just give a dot.
-      const sanitizedBatch = batch.map(s => s || SHAPES[0]);
-      
-      // Final Check: Are these actually playable?
-      // If not, replace with 1x1 dots until playable.
-      // This prevents "Game Over" purely from bad RNG.
-      let validBatch = sanitizedBatch;
-      
-      // Simple verification: Can at least ONE shape be placed?
-      // If not, game over is legit. But we try to avoid "unfair" game overs.
-      // Actually, we should check if *each* shape has *some* valid place if the board was empty?
-      // No, just ensure we don't give a 3x3 when there is only a 2x2 hole.
-      
-      // We'll trust the logic for now, but adding a "Safety Swap" if board is critical
-      if (metrics.emptyCount < 10) {
-          // Panic mode: All small pieces
-          validBatch = [SHAPES[0], SHAPES[1], SHAPES[2]]; 
-      }
-
-      // FINAL SAFETY CHECK: Ensure every shape is actually playable
-      // If a shape doesn't fit, downgrade it to a 1x1 Dot
-      validBatch = validBatch.map(shape => {
+      // FINAL SANITY CHECK:
+      // Even the fallback batch might not fit if the board is 100% full minus 1 spot.
+      // We run the "downgrade to dot" logic on the final selection.
+      finalBatch = finalBatch.map(shape => {
           if (canPlaceShapeAnywhere(currentGrid, shape)) return shape;
-          // If original shape doesn't fit, try a Dot
-          if (canPlaceShapeAnywhere(currentGrid, SHAPES[0])) return SHAPES[0];
-          // If even a Dot doesn't fit, the game is truly over, but return Dot to show *something*
-          return SHAPES[0];
+          if (canPlaceShapeAnywhere(currentGrid, SHAPES[0])) return SHAPES[0]; // 1x1 Dot
+          return SHAPES[0]; // Game is likely over, but return dot.
       });
 
-      const finalShapes = validBatch.map((s, i) => ({ 
+      const formattedShapes = finalBatch.map((s, i) => ({ 
           ...s, 
           img, 
           uniqueId: `${s.id}-${Date.now()}-${i}` 
       }));
       
-      setCurrentShapes(finalShapes);
+      setCurrentShapes(formattedShapes);
   }
+
 
   const countBlocks = (currentGrid: (string | null)[][]) => {
       let count = 0;
