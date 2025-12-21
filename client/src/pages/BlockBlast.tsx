@@ -131,7 +131,7 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                     {shape.points.map(([x, y]: number[], idx: number) => (
                         <div 
                             key={idx}
-                            className="w-full h-full border border-white/10 rounded-sm shadow-sm"
+                            className="w-full h-full border border-white/10 rounded-sm shadow-sm relative overflow-hidden"
                             style={{ 
                                 gridColumn: x + 1, 
                                 gridRow: y + 1,
@@ -140,7 +140,12 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat'
                             }}
-                        />
+                        >
+                             <div 
+                                className="absolute inset-0 opacity-50 mix-blend-multiply"
+                                style={{ backgroundColor: shape.color }}
+                            />
+                        </div>
                     ))}
                 </div>
             </motion.div>
@@ -148,8 +153,16 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
     );
 };
 
+// Helper for random fun colors
+const getRandomFunColor = () => {
+    const hues = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+    const hue = hues[Math.floor(Math.random() * hues.length)];
+    return `hsl(${hue}, 100%, 70%)`; // Bright, vibrant colors
+};
+
 export default function BlockBlast() {
-  const [grid, setGrid] = useState<(string | null)[][]>(
+  // GRID STATE NOW STORES OBJECTS { img, color }
+  const [grid, setGrid] = useState<({ img: string, color: string } | null)[][]>(
     Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))
   );
   const [score, setScore] = useState(0);
@@ -174,11 +187,11 @@ export default function BlockBlast() {
   // Cell size for matching selector to grid
   const [cellSize, setCellSize] = useState(30);
 
-  // Helper to get image for current round
-  const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
+  // Helper to get image for current round (Modified to random picker per shape)
+  // const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
   
   // Shapes state needs to depend on round image
-  const [currentShapes, setCurrentShapes] = useState<{points: number[][], id: string, img: string}[]>([]);
+  const [currentShapes, setCurrentShapes] = useState<{points: number[][], id: string, img: string, color: string}[]>([]);
   
   // Grid Ref for drag calculations
   const gridRef = useRef<HTMLDivElement>(null);
@@ -205,7 +218,7 @@ export default function BlockBlast() {
 
   // --- ANALYSIS ENGINE ---
   
-  const analyzeBoard = (currentGrid: (string | null)[][]) => {
+  const analyzeBoard = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       let emptyCount = 0;
       let holes = 0; // Isolated 1-cell gaps
       let almostCompleteLines = 0; // Rows/Cols with only 1-2 empty spots
@@ -310,17 +323,17 @@ export default function BlockBlast() {
       return pool[Math.floor(Math.random() * pool.length)];
   };
 
-  const simulatePlacement = (currentGrid: (string | null)[][], shape: any, r: number, c: number) => {
+  const simulatePlacement = (currentGrid: ({ img: string, color: string } | null)[][], shape: any, r: number, c: number) => {
       const newGrid = currentGrid.map(row => [...row]);
       shape.points.forEach(([dx, dy]: number[]) => {
           if (r + dy < GRID_SIZE && c + dx < GRID_SIZE) {
-               newGrid[r + dy][c + dx] = 'filled'; 
+               newGrid[r + dy][c + dx] = { img: shape.img || '', color: shape.color || '' }; 
           }
       });
       return newGrid;
   };
 
-  const isBatchSolvable = (currentGrid: (string | null)[][], batch: any[]) => {
+  const isBatchSolvable = (currentGrid: ({ img: string, color: string } | null)[][], batch: any[]) => {
       const permutations = [
           [0, 1, 2], [0, 2, 1],
           [1, 0, 2], [1, 2, 0],
@@ -354,7 +367,7 @@ export default function BlockBlast() {
   // --- SMART HELPERS ---
   
   // Helper: Identify which shapes would fit perfectly into "almost complete" lines
-  const getHelpfulShapes = (currentGrid: (string | null)[][]) => {
+  const getHelpfulShapes = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       const helpfulShapeIds = new Set<string>();
 
       // 1. Scan Rows
@@ -414,8 +427,8 @@ export default function BlockBlast() {
 
   // --- GENERATOR CORE ---
 
-  function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][], currentMoves: number = 0) {
-      const img = getRoundImage(imgIndex);
+  function generateNewShapes(imgIndex: number, currentGrid: ({ img: string, color: string } | null)[][], currentMoves: number = 0) {
+      // No single image per round anymore
       
       // 1. Analyze Board State
       const metrics = analyzeBoard(currentGrid);
@@ -435,7 +448,8 @@ export default function BlockBlast() {
               // Found a magic sequence! Use it.
               const formattedShapes = perfectBatch.map((s: any, i: number) => ({ 
                   ...s, 
-                  img, 
+                  img: BLOCK_BLAST_IMAGES[Math.floor(Math.random() * BLOCK_BLAST_IMAGES.length)], 
+                  color: getRandomFunColor(),
                   uniqueId: `${s.id}-${Date.now()}-${i}` 
               }));
               setCurrentShapes(formattedShapes);
@@ -604,7 +618,8 @@ export default function BlockBlast() {
 
       const formattedShapes = finalBatch.map((s, i) => ({ 
           ...s, 
-          img, 
+          img: BLOCK_BLAST_IMAGES[Math.floor(Math.random() * BLOCK_BLAST_IMAGES.length)], 
+          color: getRandomFunColor(), 
           uniqueId: `${s.id}-${Date.now()}-${i}` 
       }));
       
@@ -612,7 +627,7 @@ export default function BlockBlast() {
   }
 
 
-  const countBlocks = (currentGrid: (string | null)[][]) => {
+  const countBlocks = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       let count = 0;
       for(let r=0; r<GRID_SIZE; r++) {
           for(let c=0; c<GRID_SIZE; c++) {
@@ -623,7 +638,7 @@ export default function BlockBlast() {
   };
 
   // Helper: Try to find a batch that leads to 0 blocks
-  const findPerfectClearBatch = (currentGrid: (string | null)[][]) => {
+  const findPerfectClearBatch = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       // Use practically ALL shapes except the massive ones for the perfect search.
       // This ensures we find a "cool" solution if one exists (e.g. clearing with a T-shape).
       const candidates = SHAPES.filter(s => s.category !== 'stressor');
@@ -664,7 +679,7 @@ export default function BlockBlast() {
   };
 
   // Helper: Find a shape that fits and ideally clears lines
-  const findBestRescueShape = (currentGrid: (string | null)[][], weights: any) => {
+  const findBestRescueShape = (currentGrid: ({ img: string, color: string } | null)[][], weights: any) => {
       // EXPANDED RESCUE POOL:
       // Don't just pick safety shapes. If a big Structural shape fits and clears lines, use it!
       // This makes the "rescue" feel less like "pity mode" and more like "clutch gaming".
@@ -707,7 +722,7 @@ export default function BlockBlast() {
   };
   
   // Helper: Find the ABSOLUTE best shape to clear lines from the entire pool
-  const findMiracleShape = (currentGrid: (string | null)[][]) => {
+  const findMiracleShape = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       // Check ALL shapes
       let candidates = [...SHAPES];
       
@@ -741,7 +756,7 @@ export default function BlockBlast() {
   };
 
   // Helper: Find best move for a shape (max clears, or just fits)
-  const findBestMove = (currentGrid: (string | null)[][], shape: any) => {
+  const findBestMove = (currentGrid: ({ img: string, color: string } | null)[][], shape: any) => {
       let bestMove = null;
       let maxClears = -1;
       let minRemaining = Infinity;
@@ -785,7 +800,7 @@ export default function BlockBlast() {
       return bestMove;
   };
 
-  const canPlaceShapeAnywhere = (currentGrid: (string | null)[][], shape: any) => {
+  const canPlaceShapeAnywhere = (currentGrid: ({ img: string, color: string } | null)[][], shape: any) => {
       for(let r=0; r<GRID_SIZE; r++) {
           for(let c=0; c<GRID_SIZE; c++) {
               if (canPlaceShape(r, c, shape, currentGrid)) return true;
@@ -795,7 +810,7 @@ export default function BlockBlast() {
   };
 
   // Check if ANY available shape can fit ANYWHERE on the grid
-  const checkGameOver = (currentGrid: (string | null)[][], shapes: any[]) => {
+  const checkGameOver = (currentGrid: ({ img: string, color: string } | null)[][], shapes: any[]) => {
       // Filter out null shapes (already placed)
       const availableShapes = shapes.filter(s => s !== null);
       
@@ -917,7 +932,7 @@ export default function BlockBlast() {
     }
   };
 
-  const canPlaceShape = (r: number, c: number, shape: any, currentGrid: (string | null)[][]) => {
+  const canPlaceShape = (r: number, c: number, shape: any, currentGrid: ({ img: string, color: string } | null)[][]) => {
       return shape.points.every(([dx, dy]: number[]) => {
           const nr = r + dy;
           const nc = c + dx;
@@ -928,7 +943,7 @@ export default function BlockBlast() {
   const placeShape = (r: number, c: number, shape: any, shapeIndex: number) => {
       const newGrid = grid.map(row => [...row]);
       shape.points.forEach(([dx, dy]: number[]) => {
-          newGrid[r + dy][c + dx] = shape.img;
+          newGrid[r + dy][c + dx] = { img: shape.img, color: shape.color };
       });
       setGrid(newGrid);
 
@@ -983,7 +998,7 @@ export default function BlockBlast() {
       }
   };
 
-  const findLinesToClear = (currentGrid: (string | null)[][]) => {
+  const findLinesToClear = (currentGrid: ({ img: string, color: string } | null)[][]) => {
       const rowsToClear = currentGrid.map((row, r) => row.every(cell => cell !== null) ? r : -1).filter(r => r !== -1);
       const colsToClear = Array(GRID_SIZE).fill(0).map((_, c) => currentGrid.every(row => row[c] !== null) ? c : -1).filter(c => c !== -1);
       
@@ -999,7 +1014,7 @@ export default function BlockBlast() {
       return cellsToClear.filter((v, i, a) => a.findIndex(t => t.r === v.r && t.c === v.c) === i);
   };
 
-  const clearLinesFromGrid = (currentGrid: (string | null)[][], cellsToClear: {r: number, c: number}[]) => {
+  const clearLinesFromGrid = (currentGrid: ({ img: string, color: string } | null)[][], cellsToClear: {r: number, c: number}[]) => {
       const newGrid = currentGrid.map(row => [...row]);
       cellsToClear.forEach(({r, c}) => {
           newGrid[r][c] = null;
@@ -1168,12 +1183,19 @@ export default function BlockBlast() {
                                       isGhost ? 'bg-green-500/60 border-2 border-green-400 animate-pulse z-10' : 
                                       'bg-white/20 border-white/40'}`}
                                 style={{
-                                    backgroundImage: cell ? `url(${cell})` : 'none',
+                                    backgroundImage: cell ? `url(${cell.img})` : 'none',
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
-                                    backgroundRepeat: 'no-repeat'
+                                    backgroundRepeat: 'no-repeat',
                                 }}
                             >
+                                {cell && (
+                                    <div 
+                                        className="absolute inset-0 opacity-50 mix-blend-multiply"
+                                        style={{ backgroundColor: cell.color }}
+                                    />
+                                )}
+                                
                                 {/* Explosion Animation Overlay */}
                                 <AnimatePresence>
                                     {isClearing && (
