@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Shuffle } from "lucide-react";
 
 // Import generated assets
-import player1Image from "@assets/grams-400_1766349849850.jpg";
-import player2Image from "@assets/vaj-400_1766349849850.jpg";
+import player1Image from "@assets/vaj-400_1766349849850.jpg";
+import player2Image from "@assets/grams-400_1766349849850.jpg";
 import paperTexture from "@assets/generated_images/crumpled_lined_paper_with_tea_stains.png";
 
 export default function TicTacToe() {
@@ -145,14 +145,14 @@ export default function TicTacToe() {
             <div className="w-12 h-12 rounded-full border-2 border-current overflow-hidden mb-1">
                 <img src={player1Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xs font-mono">PLAYER 1</span>
+            <span className="text-xs font-mono">VAJUNNIE</span>
         </div>
         <div className="text-xl font-display">VS</div>
         <div className={`flex flex-col items-center ${!isXNext && !winner ? "scale-110 text-yellow-400 font-bold" : "opacity-50"}`}>
              <div className="w-12 h-12 rounded-full border-2 border-current overflow-hidden mb-1">
                 <img src={player2Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xs font-mono">PLAYER 2</span>
+            <span className="text-xs font-mono">GRAMS</span>
         </div>
       </div>
     </div>
