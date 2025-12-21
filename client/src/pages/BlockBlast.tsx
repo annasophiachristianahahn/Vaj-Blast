@@ -277,6 +277,67 @@ export default function BlockBlast() {
       return false;
   };
 
+  // --- SMART HELPERS ---
+  
+  // Helper: Identify which shapes would fit perfectly into "almost complete" lines
+  const getHelpfulShapes = (currentGrid: (string | null)[][]) => {
+      const helpfulShapeIds = new Set<string>();
+
+      // 1. Scan Rows
+      for(let r=0; r<GRID_SIZE; r++) {
+          let emptyIndices: number[] = [];
+          for(let c=0; c<GRID_SIZE; c++) {
+              if (!currentGrid[r][c]) emptyIndices.push(c);
+          }
+
+          if (emptyIndices.length === 1) {
+              // Single gap -> Dot
+              helpfulShapeIds.add('dot');
+          } else if (emptyIndices.length === 2) {
+              if (emptyIndices[1] === emptyIndices[0] + 1) {
+                  // Consecutive -> Horizontal Domino
+                  helpfulShapeIds.add('domino-h');
+              } else {
+                  // Separated -> Dots
+                  helpfulShapeIds.add('dot');
+              }
+          } else if (emptyIndices.length === 3) {
+             if (emptyIndices[1] === emptyIndices[0] + 1 && emptyIndices[2] === emptyIndices[1] + 1) {
+                  // 3 Consecutive -> Line 3 Horizontal
+                  helpfulShapeIds.add('line-3-h');
+             }
+          }
+      }
+
+      // 2. Scan Columns
+      for(let c=0; c<GRID_SIZE; c++) {
+          let emptyIndices: number[] = [];
+          for(let r=0; r<GRID_SIZE; r++) {
+              if (!currentGrid[r][c]) emptyIndices.push(r);
+          }
+
+          if (emptyIndices.length === 1) {
+              // Single gap -> Dot
+              helpfulShapeIds.add('dot');
+          } else if (emptyIndices.length === 2) {
+              if (emptyIndices[1] === emptyIndices[0] + 1) {
+                  // Consecutive -> Vertical Domino
+                  helpfulShapeIds.add('domino-v');
+              } else {
+                  // Separated -> Dots
+                  helpfulShapeIds.add('dot');
+              }
+          } else if (emptyIndices.length === 3) {
+             if (emptyIndices[1] === emptyIndices[0] + 1 && emptyIndices[2] === emptyIndices[1] + 1) {
+                  // 3 Consecutive -> Line 3 Vertical
+                  helpfulShapeIds.add('line-3-v');
+             }
+          }
+      }
+      
+      return Array.from(helpfulShapeIds);
+  };
+
   // --- GENERATOR CORE ---
 
   function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][]) {
@@ -303,9 +364,22 @@ export default function BlockBlast() {
 
           // Rule: Max 1 Stressor per batch (unless board is super open)
           let stressorCount = 0;
+          const helpfulIds = getHelpfulShapes(currentGrid);
 
           for (let i = 0; i < 3; i++) {
-              let shape = pickWeightedShape(weights);
+              let shape: any;
+
+              // SMART GENERATOR INJECTION
+              // If we have helpful shapes identified, and this is the FIRST shape in the batch,
+              // let's try to guarantee a helpful one (50% chance if there are helpful options).
+              // This makes the game feel "smart" but not "too easy".
+              if (i === 0 && helpfulIds.length > 0 && Math.random() < 0.6) {
+                  const targetId = helpfulIds[Math.floor(Math.random() * helpfulIds.length)];
+                  const targetShape = SHAPES.find(s => s.id === targetId);
+                  shape = targetShape || pickWeightedShape(weights);
+              } else {
+                  shape = pickWeightedShape(weights);
+              }
               
               // Soft Constraint: Diversity
               // If we already picked this ID, try to pick another (50% chance reroll)
