@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Shuffle } from "lucide-react";
 
 // Import generated assets
-import player1Image from "@assets/generated_images/pixel_art_happy_meme_face_for_tic_tac_toe_player_1.png";
-import player2Image from "@assets/generated_images/pixel_art_angry_meme_face_for_tic_tac_toe_player_2.png";
+import player1Image from "@assets/grams-400_1766349849850.jpg";
+import player2Image from "@assets/vaj-400_1766349849850.jpg";
 import paperTexture from "@assets/generated_images/crumpled_lined_paper_with_tea_stains.png";
 
 export default function TicTacToe() {
