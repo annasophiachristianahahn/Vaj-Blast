@@ -134,7 +134,7 @@ export default function TicTacToe() {
                         <Button 
                             onClick={resetGame} 
                             size="lg" 
-                            className="font-display tracking-wider text-2xl px-8 py-6 bg-[#FF10F0] text-[#7FFF00] border border-[#7FFF00] hover:bg-[#D000C0] hover:scale-105 transition-all shadow-[4px_4px_0_#7FFF00]"
+                            className="font-display tracking-wider text-2xl px-8 py-6 bg-[#FF10F0] text-[#7FFF00] border border-[#7FFF00] hover:bg-[#D000C0] hover:scale-105 transition-all"
                         >
                             PLAY AGAIN
                         </Button>
