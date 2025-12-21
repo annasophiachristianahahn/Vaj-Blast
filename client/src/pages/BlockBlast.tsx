@@ -370,18 +370,19 @@ export default function BlockBlast() {
           }
       }
 
-      // 0.5. SUPER AGGRESSIVE MODE (Move 3+ Assist)
-      // If player has survived 3 moves, we start actively trying to clear the board for them.
-      if (currentMoves > 2) {
-          // Try to find a "Rescue Shape" (best clearer) and guarantee it as the first shape
-          const bestRescue = findBestRescueShape(currentGrid, weights);
-          if (bestRescue) {
-             finalBatch.push(bestRescue);
-          }
+      // 0.5. PERMANENT MIRACLE ASSIST
+      // We always try to give the user a "Miracle Shape" if one exists that clears lines.
+      // This satisfies "assistance at every move" and "spoon feed helpful shapes".
+      const miracleShape = findMiracleShape(currentGrid);
+      
+      if (miracleShape) {
+          finalBatch.push(miracleShape);
           
-          // Fill the rest with weighted picks, but prioritize safety
+          // Fill the rest with shapes that are solvable
+          // We don't filter out complex shapes here, satisfying "do not remove complex shapes"
+          // We just ensure they are placed
           while(finalBatch.length < 3) {
-             const shape = pickWeightedShape({ safety: 0.8, structural: 0.2, stressor: 0.0 });
+             const shape = pickWeightedShape({ safety: 0.4, structural: 0.4, stressor: 0.2 });
              finalBatch.push(shape);
           }
 
@@ -389,9 +390,32 @@ export default function BlockBlast() {
            if (isBatchSolvable(currentGrid, finalBatch)) {
               foundValidBatch = true;
            } else {
-               // If our aggressive rescue batch isn't solvable (rare), we fall through to the standard generator
+               // Fallback
                finalBatch = [];
            }
+      } else {
+        // No miracle clear available? Fallback to standard aggressive logic
+        if (currentMoves > 2) {
+             // ... existing aggressive logic ...
+             // Try to find a "Rescue Shape" (best clearer) and guarantee it as the first shape
+            const bestRescue = findBestRescueShape(currentGrid, weights);
+            if (bestRescue) {
+               finalBatch.push(bestRescue);
+            }
+            
+            // Fill the rest with weighted picks, but prioritize safety
+            while(finalBatch.length < 3) {
+               const shape = pickWeightedShape({ safety: 0.8, structural: 0.2, stressor: 0.0 });
+               finalBatch.push(shape);
+            }
+  
+            // Check if this constructed batch is solvable
+             if (isBatchSolvable(currentGrid, finalBatch)) {
+                foundValidBatch = true;
+             } else {
+                 finalBatch = [];
+             }
+        }
       }
 
       // Try to construct a valid batch (Constrained Sampler)
@@ -577,6 +601,32 @@ export default function BlockBlast() {
           }
       }
       return bestShape;
+  };
+  
+  // Helper: Find the ABSOLUTE best shape to clear lines from the entire pool
+  const findMiracleShape = (currentGrid: (string | null)[][]) => {
+      // Check ALL shapes
+      const candidates = [...SHAPES];
+      // Randomize slightly to avoid same shape spam
+      candidates.sort(() => Math.random() - 0.5);
+      
+      let bestShape = null;
+      let maxClears = -1;
+      
+      for (const shape of candidates) {
+          const move = findBestMove(currentGrid, shape);
+          if (move) {
+              // Priority: Max Clears
+              if (move.clears > maxClears) {
+                  maxClears = move.clears;
+                  bestShape = shape;
+              }
+          }
+      }
+      
+      // If we found a shape that clears lines, return it.
+      // If no shape clears lines, we fallback to finding one that just fits (via existing logic elsewhere)
+      return maxClears > 0 ? bestShape : null;
   };
 
   // Helper: Find best move for a shape (max clears, or just fits)
