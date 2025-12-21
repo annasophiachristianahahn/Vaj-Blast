@@ -1234,7 +1234,7 @@ export default function BlockBlast() {
         {/* Score Display */}
         <div className="w-full flex items-center justify-center py-2 relative z-10">
              <div className="bg-black/40 backdrop-blur-md px-8 py-2 rounded-full border border-white/10 shadow-xl flex flex-col items-center transform hover:scale-105 transition-transform">
-                <div className="text-xs font-mono text-[#FF10F0] tracking-widest mb-0.5 font-bold">SCORE</div>
+                <div className="text-xs font-mono text-[#FF10F0] tracking-widest mb-0.5">SCORE</div>
                 <div className="text-4xl font-['Chewy','cursive'] text-[#7FFF00] drop-shadow-[0_2px_10px_rgba(127,255,0,0.3)] tabular-nums leading-none tracking-wider">
                     {score}
                 </div>
