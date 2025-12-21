@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import bgVideo from "@assets/generated_videos/surreal_purple_and_red_distorted_abstract_background_loop.mp4";
+import bgVideo from "@assets/bg_1766350874031.mp4";
 import { Link } from "wouter";
 import { Home } from "lucide-react";
 
