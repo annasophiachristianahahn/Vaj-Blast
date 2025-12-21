@@ -893,7 +893,8 @@ export default function BlockBlast() {
 
       const gridRect = gridRef.current.getBoundingClientRect();
       const isSmallScreen = window.innerWidth < 768;
-      const yOffset = isSmallScreen ? -100 : 0; // Must match DraggableShape offset
+      // MATCHES DraggableShape OFFSET EXACTLY:
+      const yOffset = isSmallScreen ? -100 : 0; 
 
       // 1. Calculate the "Visual Center" of the shape being dragged
       // The pointer is where the finger is.
@@ -909,7 +910,7 @@ export default function BlockBlast() {
           return null;
       }
 
-      // 3. Convert to Grid Relative Coordinates
+      // 3. Convert to Grid Relative Coordinates using VISUAL POSITION
       const relativeX = visualCenterX - gridRect.left;
       const relativeY = visualCenterY - gridRect.top;
       
@@ -1256,10 +1257,9 @@ export default function BlockBlast() {
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    width: 'auto',
-                    height: 'auto',
-                    maxHeight: '100%',
-                    maxWidth: '100%'
+                    width: '100%',
+                    maxWidth: '500px',
+                    maxHeight: '100%'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
