@@ -79,10 +79,13 @@ const SHAPES = [
 ];
 
 // Component for handling the amplified drag logic
-const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: any) => {
+const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gridRef }: any) => {
     const dragX = useMotionValue(0);
     const dragY = useMotionValue(0);
     const [isDragging, setIsDragging] = useState(false);
+    
+    // Track drag constraints
+    const constraintsRef = useRef({ minX: -Infinity, maxX: Infinity, minY: -Infinity, maxY: Infinity });
     
     // Sensitivity Multiplier:
     // On mobile, moving finger 1px moves shape 2.5px.
@@ -91,15 +94,47 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
     const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
     const multiplier = isSmallScreen ? 2.5 : 1.0;
     const yOffset = isSmallScreen ? -120 : 0; // Float above finger on mobile
-
-    const visualX = useTransform(dragX, (v) => v * multiplier);
-    const visualY = useTransform(dragY, (v) => v * multiplier + (isDragging ? yOffset : 0));
     
-    // Scale spring for satisfying pickup
-    const scale = isDragging ? 1.15 : 1.0;
+    // Visual Transform with Clamping
+    // We apply the multiplier AND clamp to the grid boundaries
+    const visualX = useTransform(dragX, (v) => {
+        const calculated = v * multiplier;
+        if (!isDragging) return calculated;
+        return Math.min(Math.max(calculated, constraintsRef.current.minX), constraintsRef.current.maxX);
+    });
+    
+    const visualY = useTransform(dragY, (v) => {
+        const calculated = v * multiplier + (isDragging ? yOffset : 0);
+        if (!isDragging) return calculated;
+        return Math.min(Math.max(calculated, constraintsRef.current.minY), constraintsRef.current.maxY);
+    });
+    
+    // Helper to calculate boundaries on drag start
+    const calculateConstraints = (target: HTMLElement) => {
+        if (!gridRef.current) return;
+        
+        const shapeRect = target.getBoundingClientRect();
+        const gridRect = gridRef.current.getBoundingClientRect();
+        
+        // Calculate the vector from shape start to grid edges
+        // We add a bit of margin (half a cell) to allow snapping near edges
+        const margin = cellSize * 0.5;
+        
+        const minX = (gridRect.left - shapeRect.left) - margin;
+        const maxX = (gridRect.right - shapeRect.right) + margin;
+        
+        // Y constraints need to account for the mobile offset
+        // If yOffset is negative (floating above), we need to adjust the constraint so the *visual* shape can reach the top
+        const minY = (gridRect.top - shapeRect.top) - margin;
+        const maxY = (gridRect.bottom - shapeRect.bottom) + margin;
+
+        constraintsRef.current = { minX, maxX, minY, maxY };
+    };
+
+    const localRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div ref={localRef} className="relative w-full h-full flex items-center justify-center">
             {/* INVISIBLE DRAG PROXY */}
             <motion.div
                 drag
@@ -107,8 +142,9 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                 dragElastic={0.1}
                 dragMomentum={false}
                 style={{ x: dragX, y: dragY }}
-                onDragStart={() => {
+                onDragStart={(e) => {
                     setIsDragging(true);
+                    if (localRef.current) calculateConstraints(localRef.current);
                     playSound.pickup(); // Audio feedback
                     if (navigator.vibrate) navigator.vibrate(10); // Haptic fallback
                 }}
@@ -125,7 +161,7 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                 ref={setRef}
                 style={{ x: visualX, y: visualY }}
                 animate={{ 
-                    scale: scale,
+                    scale: isDragging ? 1.15 : 1.0,
                     zIndex: isDragging ? 100 : 10,
                     opacity: isDragging ? 0.9 : 1,
                     filter: isDragging ? 'brightness(1.2) drop-shadow(0 10px 20px rgba(0,0,0,0.3))' : 'none'
@@ -1315,6 +1351,7 @@ export default function BlockBlast() {
                         onDrag={handleDrag}
                         onDragEnd={handleDragEnd}
                         cellSize={cellSize}
+                        gridRef={gridRef}
                     />
                 ) : <div key={i} className="w-12 h-12" />
             ))}
