@@ -161,6 +161,16 @@ const getRandomFunColor = () => {
     return `hsl(${hue}, 100%, 70%)`; // Bright, vibrant colors
 };
 
+// Rainbow Sweep Overlay Component
+const RainbowSweep = () => (
+    <motion.div
+        initial={{ x: '-100%', opacity: 0 }}
+        animate={{ x: '200%', opacity: [0, 1, 0] }}
+        transition={{ duration: 1.5, ease: "easeInOut" }}
+        className="absolute inset-0 z-30 pointer-events-none rainbow-gradient mix-blend-screen opacity-50 skew-x-12"
+    />
+);
+
 export default function BlockBlast() {
   // GRID STATE NOW STORES OBJECTS { img, color }
   const [grid, setGrid] = useState<({ img: string, color: string, filter?: string } | null)[][]>(
@@ -181,6 +191,7 @@ export default function BlockBlast() {
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
   const [shakeGrid, setShakeGrid] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
+  const [rainbowSweep, setRainbowSweep] = useState(false); // New rainbow sweep state
   
   // Placement preview state
   const [hoverPlacement, setHoverPlacement] = useState<{r: number, c: number, shapeIndex: number} | null>(null);
@@ -973,9 +984,16 @@ export default function BlockBlast() {
       if (linesToClear.length > 0) {
           setClearingCells(linesToClear);
           setShakeGrid(true); // Trigger grid shake
+          setRainbowSweep(true); // Trigger rainbow sweep
+          
+          // Haptic feedback if supported
+          if (navigator.vibrate) {
+              navigator.vibrate([50, 50, 50]); // Vibrate pattern
+          }
           
           setTimeout(() => {
               setShakeGrid(false); // Stop shake
+              setRainbowSweep(false);
               const finalGrid = clearLinesFromGrid(newGrid, linesToClear);
               setGrid(finalGrid);
               setClearingCells([]);
@@ -1162,13 +1180,18 @@ export default function BlockBlast() {
         <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
             <div 
                 ref={gridRef}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl aspect-square max-w-full max-h-full relative z-0 backdrop-blur-md"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl aspect-square max-w-full max-h-full relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     width: 'min(100%, 100vh - 160px)'
                 }}
             >
+                {/* Rainbow Sweep Overlay */}
+                <AnimatePresence>
+                    {rainbowSweep && <RainbowSweep />}
+                </AnimatePresence>
+
                 {/* Score Overlay */}
                 <div className="absolute top-2 right-2 z-20 flex flex-col items-end pointer-events-none mix-blend-difference">
                     <div className="text-[10px] font-mono text-white/80 leading-none mb-1">SCORE</div>

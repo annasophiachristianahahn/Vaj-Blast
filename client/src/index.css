@@ -46,3 +46,68 @@
     @apply font-sans antialiased bg-background text-foreground overflow-hidden;
   }
 }
+
+/* Chrome Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.chrome-grid {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 8s linear infinite;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.chrome-border {
+  background: linear-gradient(
+    45deg,
+    #b0b0b0 0%,
+    #ffffff 20%,
+    #d0d0d0 40%,
+    #808080 60%,
+    #ffffff 80%,
+    #b0b0b0 100%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Rainbow Sweep */
+@keyframes rainbow-sweep {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.rainbow-gradient {
+  background: linear-gradient(
+    90deg,
+    rgba(255,0,0,0.8),
+    rgba(255,165,0,0.8),
+    rgba(255,255,0,0.8),
+    rgba(0,128,0,0.8),
+    rgba(0,0,255,0.8),
+    rgba(75,0,130,0.8),
+    rgba(238,130,238,0.8)
+  );
+  background-size: 200% 100%;
+  animation: rainbow-sweep 2s linear infinite;
+}
