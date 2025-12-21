@@ -61,20 +61,20 @@ const SHAPES = [
     { points: [[0,1], [1,1], [2,1], [2,0]], id: 'J-4', weight: 'medium', category: 'structural' },
     
     // 10. Tetris S - 2 rotations
-    { points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-h', weight: 'medium', category: 'structural' },
-    { points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-v', weight: 'medium', category: 'structural' },
+    //{ points: [[0,1], [1,1], [1,0], [2,0]], id: 'S-h', weight: 'medium', category: 'structural' },
+    //{ points: [[0,0], [0,1], [1,1], [1,2]], id: 'S-v', weight: 'medium', category: 'structural' },
     
     // 11. Tetris Z - 2 rotations
-    { points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-h', weight: 'medium', category: 'structural' },
-    { points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-v', weight: 'medium', category: 'structural' },
+    //{ points: [[0,0], [1,0], [1,1], [2,1]], id: 'Z-h', weight: 'medium', category: 'structural' },
+    //{ points: [[1,0], [1,1], [0,1], [0,2]], id: 'Z-v', weight: 'medium', category: 'structural' },
 
     // --- SPACE STRESSORS (Consume space, test discipline) ---
     // 12. Line 5 (1x5) - 2 rotations ("Big Three" threat)
-    { points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: 'line-5-h', weight: 'hard', category: 'stressor' },
-    { points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: 'line-5-v', weight: 'hard', category: 'stressor' },
+    //{ points: [[0,0], [1,0], [2,0], [3,0], [4,0]], id: 'line-5-h', weight: 'hard', category: 'stressor' },
+    //{ points: [[0,0], [0,1], [0,2], [0,3], [0,4]], id: 'line-5-v', weight: 'hard', category: 'stressor' },
     
     // 13. Square 3x3 ("Big Three" threat)
-    { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', weight: 'hard', category: 'stressor' },
+    //{ points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', weight: 'hard', category: 'stressor' },
 ];
 
 export default function BlockBlast() {
@@ -178,41 +178,39 @@ export default function BlockBlast() {
   };
 
   const getDynamicWeights = (metrics: { emptyCount: number, holes: number, almostCompleteLines: number }) => {
-      // DEFAULT WEIGHTS (Standard balanced gameplay)
+      // EASIER WEIGHTS (Shifted towards Safety)
       let weights = {
-          safety: 0.15, 
-          structural: 0.65, 
-          stressor: 0.20
+          safety: 0.45,       // Significantly boosted from 0.15
+          structural: 0.55,   // Reduced from 0.65
+          stressor: 0.00      // Disabled entirely for now as shapes are commented out
       };
 
       // 1. Board Health Adjustment (Entropy based)
       if (metrics.emptyCount > 50) {
           // OPEN BOARD: Development Phase
-          // Encourage building structure.
-          weights = { safety: 0.05, structural: 0.80, stressor: 0.15 };
+          // Still give plenty of structural pieces to fill the board, but keep safety high
+          weights = { safety: 0.30, structural: 0.70, stressor: 0.0 };
       } else if (metrics.emptyCount < 30) {
           // TIGHTENING: Mid-game tension
-          // Reduce stressors, increase safety tools.
-          weights = { safety: 0.35, structural: 0.60, stressor: 0.05 };
+          // Almost 50/50 split now
+          weights = { safety: 0.55, structural: 0.45, stressor: 0.0 };
       } else if (metrics.emptyCount < 15) {
           // CRITICAL: Survival Mode
-          // Mostly safety pieces to allow recovery.
-          weights = { safety: 0.80, structural: 0.20, stressor: 0.0 };
+          // Almost entirely safety pieces
+          weights = { safety: 0.90, structural: 0.10, stressor: 0.0 };
       }
 
       // 2. "Swiss Cheese" Factor
       // If board has many single holes, we NEED 1x1 or 1x2s to fix it.
-      if (metrics.holes > 3) {
+      if (metrics.holes > 2) { // Lower threshold for help (was > 3)
           weights.safety += 0.4;
-          weights.structural -= 0.2;
-          weights.stressor = 0;
+          weights.structural -= 0.4;
       }
 
       // 3. "Sniper" Opportunity
-      // If we have lines ready to clear (almostCompleteLines), slightly boost 1x1/1x2/1x3 availability
-      // implicitly by boosting safety/structural.
-      if (metrics.almostCompleteLines > 2) {
-          weights.safety += 0.1;
+      // If we have lines ready to clear (almostCompleteLines), boost 1x1/1x2/1x3 availability
+      if (metrics.almostCompleteLines > 1) { // Lower threshold for help (was > 2)
+          weights.safety += 0.2;
       }
       
       // Normalize
