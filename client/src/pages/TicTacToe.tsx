@@ -61,11 +61,12 @@ export default function TicTacToe() {
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 min-h-[60vh]">
       <div 
-        className="relative p-2 rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square min-h-[300px]"
+        className="relative p-8 rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square min-h-[300px] overflow-hidden"
         style={{
             backgroundImage: `url(${paperTexture})`,
-            backgroundSize: 'cover',
+            backgroundSize: '100% 100%',
             backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
             boxShadow: '10px 10px 20px rgba(0,0,0,0.5)'
         }}
       >
