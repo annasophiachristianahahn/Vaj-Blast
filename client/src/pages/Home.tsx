@@ -32,8 +32,8 @@ export default function Home() {
 
         {/* Game Selector */}
         <div className="w-full z-20 px-4 flex flex-col items-center gap-4 shrink-0">
-            {/* Main Games Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 w-full gap-2 md:gap-4 pb-0">
+            {/* Main Games Grid - Top Row */}
+            <div className="grid grid-cols-3 w-full gap-2 md:gap-4 pb-0">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
@@ -52,10 +52,14 @@ export default function Home() {
                     label="VAJ BLAST"
                     color="bg-green-500"
                 />
+            </div>
+
+            {/* Bottom Row - Full Width */}
+            <div className="w-full">
                 <GameTab 
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
-                    label="TIC TAC TOE"
+                    label="larong Tic Tac Toe sa papel"
                     color="bg-yellow-400"
                 />
             </div>
