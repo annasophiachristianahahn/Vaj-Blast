@@ -60,7 +60,7 @@ export default function Home() {
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
                     label="larong Tic Tac Toe sa papel"
-                    color="bg-yellow-400"
+                    color="bg-[#F28500]"
                 />
             </div>
         </div>
