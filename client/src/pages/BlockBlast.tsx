@@ -87,6 +87,7 @@ export default function BlockBlast() {
   // Round management
   const [round, setRound] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [moveCount, setMoveCount] = useState(0); // Track moves to trigger aggressive assist
   
   // BAG SYSTEM: Track current bag of shapes (Simplified for new logic, primarily used for ensuring variety)
   // We will shift from a "finite bag" to a "weighted generator" as per new logic
@@ -340,7 +341,7 @@ export default function BlockBlast() {
 
   // --- GENERATOR CORE ---
 
-  function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][]) {
+  function generateNewShapes(imgIndex: number, currentGrid: (string | null)[][], currentMoves: number = 0) {
       const img = getRoundImage(imgIndex);
       
       // 1. Analyze Board State
@@ -367,6 +368,30 @@ export default function BlockBlast() {
               setCurrentShapes(formattedShapes);
               return;
           }
+      }
+
+      // 0.5. SUPER AGGRESSIVE MODE (Move 5+ Assist)
+      // If player has survived 5 moves, we start actively trying to clear the board for them.
+      if (currentMoves > 5) {
+          // Try to find a "Rescue Shape" (best clearer) and guarantee it as the first shape
+          const bestRescue = findBestRescueShape(currentGrid, weights);
+          if (bestRescue) {
+             finalBatch.push(bestRescue);
+          }
+          
+          // Fill the rest with weighted picks, but prioritize safety
+          while(finalBatch.length < 3) {
+             const shape = pickWeightedShape({ safety: 0.6, structural: 0.3, stressor: 0.1 });
+             finalBatch.push(shape);
+          }
+
+          // Check if this constructed batch is solvable
+           if (isBatchSolvable(currentGrid, finalBatch)) {
+              foundValidBatch = true;
+           } else {
+               // If our aggressive rescue batch isn't solvable (rare), we fall through to the standard generator
+               finalBatch = [];
+           }
       }
 
       // Try to construct a valid batch (Constrained Sampler)
