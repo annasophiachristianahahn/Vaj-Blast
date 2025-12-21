@@ -13,11 +13,10 @@ export function Layout({ children }: { children: ReactNode }) {
           loop
           muted
           playsInline
-          className="h-full w-full object-cover opacity-80"
+          className="h-full w-full object-cover"
         >
           <source src={bgVideo} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
       </div>
 
       {/* Content */}
