@@ -19,7 +19,7 @@ export default function QuietGame() {
   // Use RMS threshold (0.0 to 1.0)
   // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
   // Lower = More Sensitive (Easier to lose)
-  const THRESHOLD_RMS = 0.002; 
+  const THRESHOLD_RMS = 0.004; 
   // Store more chunks for better context (e.g. 5 seconds buffer)
   const MAX_BUFFER_CHUNKS = 200; 
 
@@ -213,8 +213,8 @@ export default function QuietGame() {
             {/* Volume Indicator */}
             <motion.div 
                 className="absolute inset-0 bg-red-600 rounded-full opacity-50"
-                // Threshold visual ref is roughly 2 (0.002 * 1000)
-                animate={{ scale: playing ? Math.min(volume / 2, 1.5) : 0 }}
+                // Threshold visual ref is roughly 4 (0.004 * 1000)
+                animate={{ scale: playing ? Math.min(volume / 4, 1.5) : 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
             
