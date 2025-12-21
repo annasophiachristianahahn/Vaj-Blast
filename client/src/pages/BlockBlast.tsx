@@ -2,6 +2,7 @@ import { Layout } from "@/components/Layout";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { playSound } from "@/lib/audio"; // Import audio engine
 
 // Import generated assets
 import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
@@ -108,7 +109,8 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                 style={{ x: dragX, y: dragY }}
                 onDragStart={() => {
                     setIsDragging(true);
-                    if (navigator.vibrate) navigator.vibrate(10); // Subtle tick on pickup
+                    playSound.pickup(); // Audio feedback
+                    if (navigator.vibrate) navigator.vibrate(10); // Haptic fallback
                 }}
                 onDrag={(e, info) => onDrag(e, info, index)}
                 onDragEnd={(e, info) => {
@@ -980,6 +982,7 @@ export default function BlockBlast() {
     if (placement && placement.shapeIndex === shapeIndex) {
         // Trigger small nudge on placement
         setNudgeGrid(true);
+        playSound.place(); // Audio feedback
         setTimeout(() => setNudgeGrid(false), 200);
 
         placeShape(placement.r, placement.c, shape, shapeIndex);
@@ -1015,6 +1018,7 @@ export default function BlockBlast() {
           setClearingCells(linesToClear);
           setShakeGrid(true); // Trigger grid shake
           setRainbowSweep(true); // Trigger rainbow sweep
+          playSound.clear(linesToClear.length); // Audio feedback based on clear count
           
           // Haptic feedback if supported
           if (navigator.vibrate) {
@@ -1038,6 +1042,7 @@ export default function BlockBlast() {
                   
                   // Trigger explosion
                   setShowExplosion(true);
+                  playSound.explosion(); // Audio feedback
                   setTimeout(() => setShowExplosion(false), 2500);
 
                   // DISCARD OLD SHAPES & GENERATE FRESH BATCH immediately
@@ -1054,6 +1059,7 @@ export default function BlockBlast() {
               }
           }, 250); // 0.25s duration
       } else {
+          playSound.place(); // Standard place sound if no clear (redundant but safe)
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex, newGrid);
           } else {
