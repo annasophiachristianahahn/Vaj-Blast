@@ -1254,6 +1254,16 @@ export default function BlockBlast() {
             )}
         </AnimatePresence>
 
+        {/* Score Display */}
+        <div className="w-full flex items-center justify-center py-2 relative z-10">
+             <div className="bg-black/40 backdrop-blur-md px-8 py-2 rounded-full border border-white/10 shadow-xl flex flex-col items-center transform hover:scale-105 transition-transform">
+                <div className="text-xs font-mono text-white/60 tracking-widest mb-0.5">SCORE</div>
+                <div className="text-4xl font-display text-yellow-400 drop-shadow-[0_2px_10px_rgba(250,204,21,0.3)] tabular-nums leading-none">
+                    {score}
+                </div>
+            </div>
+        </div>
+
         {/* Grid Area - Maximize Size */}
         <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
             <motion.div 
@@ -1268,19 +1278,13 @@ export default function BlockBlast() {
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                    width: 'min(100%, 100vh - 160px)'
+                    width: 'min(100%, 100vh - 220px)'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
                 <AnimatePresence>
                     {rainbowSweep && <RainbowSweep />}
                 </AnimatePresence>
-
-                {/* Score Overlay */}
-                <div className="absolute top-2 right-2 z-20 flex flex-col items-end pointer-events-none mix-blend-difference">
-                    <div className="text-[10px] font-mono text-white/80 leading-none mb-1">SCORE</div>
-                    <div className="text-xl font-display text-yellow-400 tracking-wider leading-none">{score}</div>
-                </div>
 
                 {grid.map((row, r) => 
                     row.map((cell, c) => {
