@@ -61,7 +61,7 @@ export default function TicTacToe() {
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 min-h-[60vh]">
       <div 
-        className="relative p-2 rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square"
+        className="relative p-2 rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square min-h-[300px]"
         style={{
             backgroundImage: `url(${paperTexture})`,
             backgroundSize: 'cover',
@@ -71,7 +71,7 @@ export default function TicTacToe() {
       >
         {/* Paper texture overlay could go here */}
         
-        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full h-full">
+        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full h-full relative z-10">
           {board.map((cell, index) => (
             <motion.button
               key={index}
@@ -81,9 +81,9 @@ export default function TicTacToe() {
               className={`
                 w-full h-full
                 flex items-center justify-center text-4xl relative overflow-hidden
-                border-[#800020]/80
-                ${index < 6 ? 'border-b-4' : ''}
-                ${index % 3 !== 2 ? 'border-r-4' : ''}
+                border-[#800020]
+                ${index < 6 ? 'border-b-4 md:border-b-4' : 'border-b-0'}
+                ${index % 3 !== 2 ? 'border-r-4 md:border-r-4' : 'border-r-0'}
                 ${winningLine?.includes(index) ? "bg-green-500/10" : ""}
               `}
             >
@@ -95,7 +95,7 @@ export default function TicTacToe() {
                             animate={{ scale: 1, rotate: 0, opacity: 1 }}
                             transition={{ type: "spring", bounce: 0.5 }}
                             className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
-                            alt="Player 1"
+                            alt="VAJUNNIE"
                         />
                     )}
                     {cell === "O" && (
@@ -105,7 +105,7 @@ export default function TicTacToe() {
                             animate={{ scale: 1, rotate: 0, opacity: 1 }}
                             transition={{ type: "spring", bounce: 0.5 }}
                             className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
-                            alt="Player 2"
+                            alt="GRAMS"
                         />
                     )}
                 </AnimatePresence>
@@ -140,19 +140,19 @@ export default function TicTacToe() {
         </AnimatePresence>
       </div>
 
-      <div className="mt-8 flex gap-8 items-center opacity-80">
-        <div className={`flex flex-col items-center ${isXNext && !winner ? "scale-110 text-yellow-400 font-bold" : "opacity-50"}`}>
-            <div className="w-12 h-12 rounded-full border-2 border-current overflow-hidden mb-1">
+      <div className="mt-8 flex gap-8 items-center opacity-90">
+        <div className={`flex flex-col items-center transition-all duration-300 ${isXNext && !winner ? "scale-110 text-yellow-500 font-bold drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
+            <div className="w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10">
                 <img src={player1Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xs font-mono">VAJUNNIE</span>
+            <span className="text-xl font-mono tracking-widest bg-white/50 px-2 rounded-md">VAJUNNIE</span>
         </div>
-        <div className="text-xl font-display">VS</div>
-        <div className={`flex flex-col items-center ${!isXNext && !winner ? "scale-110 text-yellow-400 font-bold" : "opacity-50"}`}>
-             <div className="w-12 h-12 rounded-full border-2 border-current overflow-hidden mb-1">
+        <div className="text-3xl font-display font-black text-black/40">VS</div>
+        <div className={`flex flex-col items-center transition-all duration-300 ${!isXNext && !winner ? "scale-110 text-yellow-500 font-bold drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
+             <div className="w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10">
                 <img src={player2Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xs font-mono">GRAMS</span>
+            <span className="text-xl font-mono tracking-widest bg-white/50 px-2 rounded-md">GRAMS</span>
         </div>
       </div>
     </div>
