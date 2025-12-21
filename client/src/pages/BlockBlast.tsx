@@ -95,6 +95,7 @@ export default function BlockBlast() {
   // Animation state
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
   const [shakeGrid, setShakeGrid] = useState(false);
+  const [showExplosion, setShowExplosion] = useState(false);
   
   // Placement preview state
   const [hoverPlacement, setHoverPlacement] = useState<{r: number, c: number, shapeIndex: number} | null>(null);
@@ -859,17 +860,27 @@ export default function BlockBlast() {
               setScore(s => s + linesToClear.length * 10);
               
               const isBoardEmpty = finalGrid.every(row => row.every(cell => cell === null));
+              
               if (isBoardEmpty && score > 0) {
+                  // PERFECT CLEAR / WIN STATE
                   setRound(r => r + 1);
                   setCurrentImageIndex(i => i + 1);
-              }
-              
-              if (newShapes.every(s => !s)) {
-                  const nextImgIndex = isBoardEmpty && score > 0 ? currentImageIndex + 1 : currentImageIndex;
-                  generateNewShapes(nextImgIndex, finalGrid);
+                  
+                  // Trigger explosion
+                  setShowExplosion(true);
+                  setTimeout(() => setShowExplosion(false), 2500);
+
+                  // DISCARD OLD SHAPES & GENERATE FRESH BATCH immediately
+                  // We ignore whatever was left in 'newShapes'
+                  generateNewShapes(currentImageIndex + 1, finalGrid);
               } else {
-                  // Check game over with remaining shapes and NEW grid state
-                  checkGameOver(finalGrid, newShapes);
+                  // Standard flow
+                  if (newShapes.every(s => !s)) {
+                      generateNewShapes(currentImageIndex, finalGrid);
+                  } else {
+                      // Check game over with remaining shapes and NEW grid state
+                      checkGameOver(finalGrid, newShapes);
+                  }
               }
           }, 250); // 0.25s duration
       } else {
@@ -935,6 +946,62 @@ export default function BlockBlast() {
 
   return (
     <div className="flex flex-col items-center justify-between h-full w-full max-w-lg mx-auto select-none touch-none relative px-2 pb-2">
+        {/* Explosion Overlay */}
+        <AnimatePresence>
+            {showExplosion && (
+                <div className="absolute inset-0 z-[100] pointer-events-none flex items-center justify-center overflow-hidden">
+                    {/* Background Flash */}
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: [0, 0.8, 0] }}
+                        transition={{ duration: 0.5 }}
+                        className="absolute inset-0 bg-white mix-blend-overlay"
+                    />
+                    
+                    {/* Shockwave */}
+                     <motion.div 
+                        initial={{ scale: 0, opacity: 1, borderWidth: "50px" }} 
+                        animate={{ scale: 3, opacity: 0, borderWidth: "0px" }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="w-64 h-64 rounded-full border-white absolute"
+                    />
+
+                    {/* Text */}
+                    <motion.div
+                         initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
+                         animate={{ scale: [0.5, 1.2, 1], opacity: 1, rotate: 0 }}
+                         exit={{ scale: 1.5, opacity: 0 }}
+                         transition={{ duration: 0.5, type: "spring" }}
+                         className="relative z-10 flex flex-col items-center drop-shadow-2xl"
+                    >
+                         <h1 className="text-6xl md:text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_4px_0_rgba(0,0,0,1)] tracking-tighter"
+                             style={{ WebkitTextStroke: "3px black" }}>
+                             BLASTED!
+                         </h1>
+                    </motion.div>
+
+                    {/* Particles */}
+                    {[...Array(30)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ x: 0, y: 0, scale: 0 }}
+                            animate={{ 
+                                x: (Math.random() - 0.5) * window.innerWidth, 
+                                y: (Math.random() - 0.5) * window.innerHeight, 
+                                scale: [0, Math.random() + 0.5, 0],
+                                rotate: Math.random() * 720
+                            }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="absolute w-12 h-12 bg-contain bg-center bg-no-repeat"
+                            style={{ 
+                                backgroundImage: `url(${BLOCK_BLAST_IMAGES[Math.floor(Math.random() * BLOCK_BLAST_IMAGES.length)]})` 
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
+        </AnimatePresence>
+
         {/* Custom Game Over Overlay */}
         <AnimatePresence>
             {gameOver && (
