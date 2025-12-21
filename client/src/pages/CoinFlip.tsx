@@ -1,14 +1,25 @@
 import { Layout } from "@/components/Layout";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef, useState, useEffect } from "react";
-import { Mesh, Vector3, MathUtils } from "three";
-import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { Group, Vector3, MathUtils } from "three";
+import { Text, Center, Environment, Float, Stars, useGLTF } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
+// Use public path
+const coinModelPath = "/coin.glb";
+
+// Preload the model
+useGLTF.preload(coinModelPath);
+
 function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
-  const mesh = useRef<Mesh>(null!);
+  const mesh = useRef<Group>(null!);
+  const { scene } = useGLTF(coinModelPath);
+  
+  // Clone the scene so we can use it multiple times if needed, and to ensure fresh state
+  const clone = useMemo(() => scene.clone(), [scene]);
+
   // Randomize spin speed slightly for every flip so it doesn't look identical
   const [spinSpeed, setSpinSpeed] = useState(50);
   
@@ -31,6 +42,11 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             // Target rotations
             // HEADS: Face up (towards camera Z). X=PI/2.
             // TAILS: Face down (away from camera Z). X=3PI/2.
+            // NOTE: Adjusted for the GLB model orientation if needed. 
+            // Assuming standard cylinder orientation, but we might need to tweak based on the model.
+            // Let's assume the model is flat on XZ plane or XY plane. 
+            // If it's standing up, we might need different offsets. 
+            // For now keeping same logic, but we can tweak if "Heads" is wrong side.
             const targetRotationX = result === 'HEADS' ? Math.PI / 2 : (Math.PI * 3 / 2);
             
             // Normalize current rotation to 0..2PI
@@ -69,7 +85,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
 
   return (
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
-        <mesh 
+        <group 
             ref={mesh} 
             rotation={[Math.PI / 2, 0, 0]} // Initial: Heads facing camera
             onClick={(e) => {
@@ -79,38 +95,15 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             onPointerOver={() => document.body.style.cursor = 'pointer'}
             onPointerOut={() => document.body.style.cursor = 'default'}
         >
-        <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
-        <meshStandardMaterial color="#FFD700" metalness={0.6} roughness={0.3} />
-        
-        {/* Heads Text - Front Face */}
-        <group position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <Center>
-                <Text fontSize={1} color="#B8860B" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff">
-                    $VAJ
-                </Text>
-            </Center>
-            {/* Add a ring/marker to distinguish heads visually if text is blurry */}
-            <mesh position={[0, 0, -0.01]}>
-                <ringGeometry args={[2.3, 2.4, 32]} />
-                <meshBasicMaterial color="#B8860B" />
-            </mesh>
+            {/* 
+              Adjust scale and rotation to match previous cylinder.
+              Previous cylinder was [2.5, 2.5, 0.2].
+              GLBs are often normalized or arbitrary units. 
+              Starting with scale={3} to make it big enough. 
+              Rotation might need tweaking depending on how the model was exported.
+            */}
+            <primitive object={clone} scale={4} />
         </group>
-
-        {/* Tails Text - Back Face */}
-        <group position={[0, -0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <Center>
-                <Text fontSize={0.8} color="#FFF" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff">
-                    TAILS
-                </Text>
-            </Center>
-             <mesh position={[0, 0, -0.01]}>
-                <ringGeometry args={[2.3, 2.4, 32]} />
-                <meshBasicMaterial color="#FFF" />
-            </mesh>
-        </group>
-        
-        {/* Edge texture detail (optional, just gold for now) */}
-        </mesh>
     </Float>
   );
 }
