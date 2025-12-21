@@ -93,6 +93,9 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
 
     const visualX = useTransform(dragX, (v) => v * multiplier);
     const visualY = useTransform(dragY, (v) => v * multiplier + (isDragging ? yOffset : 0));
+    
+    // Scale spring for satisfying pickup
+    const scale = isDragging ? 1.15 : 1.0;
 
     return (
         <div className="relative w-full h-full flex items-center justify-center">
@@ -100,14 +103,19 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
             <motion.div
                 drag
                 dragSnapToOrigin
+                dragElastic={0.1}
+                dragMomentum={false}
                 style={{ x: dragX, y: dragY }}
-                onDragStart={() => setIsDragging(true)}
+                onDragStart={() => {
+                    setIsDragging(true);
+                    if (navigator.vibrate) navigator.vibrate(10); // Subtle tick on pickup
+                }}
                 onDrag={(e, info) => onDrag(e, info, index)}
                 onDragEnd={(e, info) => {
                     setIsDragging(false);
                     onDragEnd(e, info, index);
                 }}
-                className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing w-full h-full opacity-0"
+                className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing w-full h-full opacity-0 touch-none"
             />
             
             {/* VISUAL SHAPE */}
@@ -115,10 +123,12 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                 ref={setRef}
                 style={{ x: visualX, y: visualY }}
                 animate={{ 
-                    scale: isDragging ? 1.2 : 1.0, // Scale up slightly on pickup
+                    scale: scale,
                     zIndex: isDragging ? 100 : 10,
-                    opacity: isDragging ? 0.9 : 1
+                    opacity: isDragging ? 0.9 : 1,
+                    filter: isDragging ? 'brightness(1.2) drop-shadow(0 10px 20px rgba(0,0,0,0.3))' : 'none'
                 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="pointer-events-none p-1 rounded-lg transition-colors"
             >
                 <div 
@@ -143,7 +153,7 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
                             }}
                         >
                              <div 
-                                className="absolute inset-0 opacity-50 mix-blend-multiply"
+                                className="absolute inset-0 opacity-60 mix-blend-hard-light"
                                 style={{ backgroundColor: shape.color }}
                             />
                         </div>
@@ -154,21 +164,36 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: a
     );
 };
 
-// Helper for random fun colors
+// Helper for random fun colors - UPGRADED PALETTE
 const getRandomFunColor = () => {
-    const hues = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
-    const hue = hues[Math.floor(Math.random() * hues.length)];
-    return `hsl(${hue}, 100%, 70%)`; // Bright, vibrant colors
+    const colors = [
+        'hsl(330, 100%, 60%)', // Hot Pink
+        'hsl(270, 100%, 65%)', // Electric Purple
+        'hsl(210, 100%, 60%)', // Bright Blue
+        'hsl(180, 100%, 50%)', // Cyan
+        'hsl(120, 100%, 45%)', // Lime Green
+        'hsl(45, 100%, 55%)',  // Gold/Yellow
+        'hsl(15, 100%, 60%)',  // Bright Orange
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
 };
 
-// Rainbow Sweep Overlay Component
+// Rainbow Sweep Overlay Component - AMPLIFIED
 const RainbowSweep = () => (
-    <motion.div
-        initial={{ x: '-100%', opacity: 0 }}
-        animate={{ x: '200%', opacity: [0, 1, 0] }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
-        className="absolute inset-0 z-30 pointer-events-none rainbow-gradient mix-blend-screen opacity-50 skew-x-12"
-    />
+    <>
+        <motion.div
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ x: '200%', opacity: [0, 0.8, 0] }}
+            transition={{ duration: 0.8, ease: "easeOut" }} // Faster
+            className="absolute inset-0 z-40 pointer-events-none rainbow-gradient mix-blend-screen opacity-80 skew-x-12"
+        />
+        <motion.div
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ x: '200%', opacity: [0, 0.5, 0] }}
+            transition={{ duration: 1.2, delay: 0.1, ease: "easeOut" }} // Trailing echo
+            className="absolute inset-0 z-40 pointer-events-none rainbow-gradient mix-blend-overlay opacity-50 -skew-x-12"
+        />
+    </>
 );
 
 export default function BlockBlast() {
@@ -189,7 +214,8 @@ export default function BlockBlast() {
   
   // Animation state
   const [clearingCells, setClearingCells] = useState<{r: number, c: number}[]>([]);
-  const [shakeGrid, setShakeGrid] = useState(false);
+  const [shakeGrid, setShakeGrid] = useState(false); // For clears (big shake)
+  const [nudgeGrid, setNudgeGrid] = useState(false); // For placements (small shake)
   const [showExplosion, setShowExplosion] = useState(false);
   const [rainbowSweep, setRainbowSweep] = useState(false); // New rainbow sweep state
   
@@ -952,6 +978,10 @@ export default function BlockBlast() {
 
     // Verify the placement belongs to this shape (sanity check)
     if (placement && placement.shapeIndex === shapeIndex) {
+        // Trigger small nudge on placement
+        setNudgeGrid(true);
+        setTimeout(() => setNudgeGrid(false), 200);
+
         placeShape(placement.r, placement.c, shape, shapeIndex);
     }
   };
@@ -1178,8 +1208,14 @@ export default function BlockBlast() {
 
         {/* Grid Area - Maximize Size */}
         <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
-            <div 
+            <motion.div 
                 ref={gridRef}
+                animate={{ 
+                    x: shakeGrid ? [0, -4, 4, -4, 4, 0] : (nudgeGrid ? [0, -2, 2, 0] : 0),
+                    y: shakeGrid ? [0, 4, -4, 4, -4, 0] : (nudgeGrid ? [0, 2, -2, 0] : 0),
+                    scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
+                }}
+                transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
                 className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl aspect-square max-w-full max-h-full relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
@@ -1258,7 +1294,7 @@ export default function BlockBlast() {
                         );
                     })
                 )}
-            </div>
+            </motion.div>
         </div>
 
         {/* Shape Selector - Draggable */}
