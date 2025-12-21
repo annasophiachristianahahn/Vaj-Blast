@@ -370,9 +370,9 @@ export default function BlockBlast() {
           }
       }
 
-      // 0.5. SUPER AGGRESSIVE MODE (Move 5+ Assist)
-      // If player has survived 5 moves, we start actively trying to clear the board for them.
-      if (currentMoves > 5) {
+      // 0.5. SUPER AGGRESSIVE MODE (Move 3+ Assist)
+      // If player has survived 3 moves, we start actively trying to clear the board for them.
+      if (currentMoves > 2) {
           // Try to find a "Rescue Shape" (best clearer) and guarantee it as the first shape
           const bestRescue = findBestRescueShape(currentGrid, weights);
           if (bestRescue) {
@@ -381,7 +381,7 @@ export default function BlockBlast() {
           
           // Fill the rest with weighted picks, but prioritize safety
           while(finalBatch.length < 3) {
-             const shape = pickWeightedShape({ safety: 0.6, structural: 0.3, stressor: 0.1 });
+             const shape = pickWeightedShape({ safety: 0.8, structural: 0.2, stressor: 0.0 });
              finalBatch.push(shape);
           }
 
@@ -416,7 +416,7 @@ export default function BlockBlast() {
               // If we have helpful shapes identified, and this is the FIRST shape in the batch,
               // let's try to guarantee a helpful one (50% chance if there are helpful options).
               // This makes the game feel "smart" but not "too easy".
-              if (i === 0 && helpfulIds.length > 0 && Math.random() < 0.6) {
+              if (i === 0 && helpfulIds.length > 0 && Math.random() < 0.95) {
                   const targetId = helpfulIds[Math.floor(Math.random() * helpfulIds.length)];
                   const targetShape = SHAPES.find(s => s.id === targetId);
                   shape = targetShape || pickWeightedShape(weights);
