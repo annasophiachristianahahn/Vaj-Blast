@@ -204,7 +204,8 @@ export default function BlockBlast() {
 
       // 2. "Swiss Cheese" Factor & Crisis Management
       // If board has many single holes, we NEED 1x1 or 1x2s to fix it.
-      if (metrics.holes > 0) {
+      // BUT: If the board is very open, don't panic yet. Only panic if we have a lot of holes relative to space.
+      if (metrics.holes > 2 || (metrics.holes > 0 && metrics.emptyCount < 45)) {
            // We have holes! Allow safety pieces now.
           weights.safety = Math.max(weights.safety, 0.4);
           weights.structural = Math.max(weights.structural - 0.2, 0.1);
@@ -596,7 +597,15 @@ export default function BlockBlast() {
       // EXPANDED RESCUE POOL:
       // Don't just pick safety shapes. If a big Structural shape fits and clears lines, use it!
       // This makes the "rescue" feel less like "pity mode" and more like "clutch gaming".
-      const candidates = SHAPES.filter(s => s.category === 'safety' || s.category === 'structural');
+      let candidates = SHAPES.filter(s => s.category === 'safety' || s.category === 'structural');
+      
+      // EARLY GAME FILTER: If board is very open (>45 empty), BAN 1x1 dot and 1x2 domino from Rescue pool too.
+      // This prevents "pity" shapes from appearing when we don't really need them.
+      const metrics = analyzeBoard(currentGrid);
+      if (metrics.emptyCount > 45) {
+          candidates = candidates.filter(s => s.id !== 'dot' && !s.id.startsWith('domino'));
+      }
+
       // Shuffle candidates to avoid same rescue piece every time
       candidates.sort(() => Math.random() - 0.5);
       
@@ -629,7 +638,15 @@ export default function BlockBlast() {
   // Helper: Find the ABSOLUTE best shape to clear lines from the entire pool
   const findMiracleShape = (currentGrid: (string | null)[][]) => {
       // Check ALL shapes
-      const candidates = [...SHAPES];
+      let candidates = [...SHAPES];
+      
+      // EARLY GAME FILTER: If board is very open (>45 empty), BAN 1x1 dot.
+      // This prevents the AI from choosing 'dot' as a miracle shape unless absolutely necessary.
+      const metrics = analyzeBoard(currentGrid);
+      if (metrics.emptyCount > 45) {
+          candidates = candidates.filter(s => s.id !== 'dot');
+      }
+
       // Randomize slightly to avoid same shape spam
       candidates.sort(() => Math.random() - 0.5);
       
