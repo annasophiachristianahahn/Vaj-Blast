@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 // Import generated assets
@@ -76,6 +76,77 @@ const SHAPES = [
     // 13. Square 3x3 ("Big Three" threat)
     { points: [[0,0], [1,0], [2,0], [0,1], [1,1], [2,1], [0,2], [1,2], [2,2]], id: 'square-3x3', weight: 'hard', category: 'stressor' },
 ];
+
+// Component for handling the amplified drag logic
+const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize }: any) => {
+    const dragX = useMotionValue(0);
+    const dragY = useMotionValue(0);
+    const [isDragging, setIsDragging] = useState(false);
+    
+    // Sensitivity Multiplier:
+    // On mobile, moving finger 1px moves shape 2.5px.
+    // This allows reaching the top of the board with small thumb movements.
+    // Also applies a Y-offset so the finger doesn't cover the shape.
+    const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
+    const multiplier = isSmallScreen ? 2.5 : 1.0;
+    const yOffset = isSmallScreen ? -120 : 0; // Float above finger on mobile
+
+    const visualX = useTransform(dragX, (v) => v * multiplier);
+    const visualY = useTransform(dragY, (v) => v * multiplier + (isDragging ? yOffset : 0));
+
+    return (
+        <div className="relative w-full h-full flex items-center justify-center">
+            {/* INVISIBLE DRAG PROXY */}
+            <motion.div
+                drag
+                dragSnapToOrigin
+                style={{ x: dragX, y: dragY }}
+                onDragStart={() => setIsDragging(true)}
+                onDrag={(e, info) => onDrag(e, info, index)}
+                onDragEnd={(e, info) => {
+                    setIsDragging(false);
+                    onDragEnd(e, info, index);
+                }}
+                className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing w-full h-full opacity-0"
+            />
+            
+            {/* VISUAL SHAPE */}
+            <motion.div
+                ref={setRef}
+                style={{ x: visualX, y: visualY }}
+                animate={{ 
+                    scale: isDragging ? 1.2 : 1.0, // Scale up slightly on pickup
+                    zIndex: isDragging ? 100 : 10,
+                    opacity: isDragging ? 0.9 : 1
+                }}
+                className="pointer-events-none p-1 rounded-lg transition-colors"
+            >
+                <div 
+                    className="grid gap-0.5 pointer-events-none"
+                    style={{ 
+                        gridTemplateColumns: `repeat(${Math.max(...shape.points.map((p:any) => p[0])) + 1}, ${cellSize * 0.6}px)`,
+                        gridTemplateRows: `repeat(${Math.max(...shape.points.map((p:any) => p[1])) + 1}, ${cellSize * 0.6}px)`
+                    }}
+                >
+                    {shape.points.map(([x, y]: number[], idx: number) => (
+                        <div 
+                            key={idx}
+                            className="w-full h-full border border-white/10 rounded-sm shadow-sm"
+                            style={{ 
+                                gridColumn: x + 1, 
+                                gridRow: y + 1,
+                                backgroundImage: `url(${shape.img})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat'
+                            }}
+                        />
+                    ))}
+                </div>
+            </motion.div>
+        </div>
+    );
+};
 
 export default function BlockBlast() {
   const [grid, setGrid] = useState<(string | null)[][]>(
@@ -1131,40 +1202,15 @@ export default function BlockBlast() {
         <div className="flex gap-4 h-[100px] items-center justify-evenly w-full relative z-10 px-2 overflow-visible shrink-0 mb-4">
             {currentShapes.map((shape, i) => (
                 shape ? (
-                    <motion.div
+                    <DraggableShape
                         key={i}
-                        ref={el => { shapeRefs.current[i] = el; }}
-                        drag
-                        dragSnapToOrigin
-                        onDrag={(e, info) => handleDrag(e, info, i)}
-                        onDragEnd={(e, info) => handleDragEnd(e, info, i)}
-                        whileDrag={{ scale: 1.5, zIndex: 100, opacity: 0.9 }} 
-                        whileHover={{ scale: 1.05 }}
-                        className={`p-1 rounded-lg cursor-grab active:cursor-grabbing transition-colors`}
-                    >
-                        <div 
-                            className="grid gap-0.5 pointer-events-none"
-                            style={{ 
-                                gridTemplateColumns: `repeat(${Math.max(...shape.points.map(p => p[0])) + 1}, ${cellSize * 0.6}px)`,
-                                gridTemplateRows: `repeat(${Math.max(...shape.points.map(p => p[1])) + 1}, ${cellSize * 0.6}px)`
-                            }}
-                        >
-                            {shape.points.map(([x, y], idx) => (
-                                <div 
-                                    key={idx}
-                                    className="w-full h-full border border-white/10 rounded-sm shadow-sm"
-                                    style={{ 
-                                        gridColumn: x + 1, 
-                                        gridRow: y + 1,
-                                        backgroundImage: `url(${shape.img})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        backgroundRepeat: 'no-repeat'
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </motion.div>
+                        shape={shape}
+                        index={i}
+                        setRef={(el: any) => { shapeRefs.current[i] = el; }}
+                        onDrag={handleDrag}
+                        onDragEnd={handleDragEnd}
+                        cellSize={cellSize}
+                    />
                 ) : <div key={i} className="w-12 h-12" />
             ))}
         </div>
