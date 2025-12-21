@@ -2,7 +2,6 @@ import { Layout } from "@/components/Layout";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { playSound } from "@/lib/audio"; // Import audio engine
 
 // Import generated assets
 import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
@@ -145,8 +144,10 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gri
                 onDragStart={(e) => {
                     setIsDragging(true);
                     if (localRef.current) calculateConstraints(localRef.current);
-                    playSound.pickup(); // Audio feedback
-                    if (navigator.vibrate) navigator.vibrate(10); // Haptic fallback
+                    // Haptic feedback (Android only - iOS Safari does not support web vibration)
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                        try { navigator.vibrate(10); } catch(e) {} 
+                    }
                 }}
                 onDrag={(e, info) => onDrag(e, info, index)}
                 onDragEnd={(e, info) => {
@@ -1018,7 +1019,6 @@ export default function BlockBlast() {
     if (placement && placement.shapeIndex === shapeIndex) {
         // Trigger small nudge on placement
         setNudgeGrid(true);
-        playSound.place(); // Audio feedback
         setTimeout(() => setNudgeGrid(false), 200);
 
         placeShape(placement.r, placement.c, shape, shapeIndex);
@@ -1054,11 +1054,10 @@ export default function BlockBlast() {
           setClearingCells(linesToClear);
           setShakeGrid(true); // Trigger grid shake
           setRainbowSweep(true); // Trigger rainbow sweep
-          playSound.clear(linesToClear.length); // Audio feedback based on clear count
           
-          // Haptic feedback if supported
-          if (navigator.vibrate) {
-              navigator.vibrate([50, 50, 50]); // Vibrate pattern
+          // Haptic feedback (Android only)
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try { navigator.vibrate([50, 50, 50]); } catch(e) {}
           }
           
           setTimeout(() => {
@@ -1078,7 +1077,6 @@ export default function BlockBlast() {
                   
                   // Trigger explosion
                   setShowExplosion(true);
-                  playSound.explosion(); // Audio feedback
                   setTimeout(() => setShowExplosion(false), 2500);
 
                   // DISCARD OLD SHAPES & GENERATE FRESH BATCH immediately
@@ -1095,7 +1093,7 @@ export default function BlockBlast() {
               }
           }, 250); // 0.25s duration
       } else {
-          playSound.place(); // Standard place sound if no clear (redundant but safe)
+          // Standard place feedback (no sound needed per user request)
           if (newShapes.every(s => !s)) {
               generateNewShapes(currentImageIndex, newGrid);
           } else {
