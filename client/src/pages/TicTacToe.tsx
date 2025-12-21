@@ -142,17 +142,17 @@ export default function TicTacToe() {
 
       <div className="mt-8 flex gap-8 items-center opacity-90">
         <div className={`flex flex-col items-center transition-all duration-300 ${isXNext && !winner ? "scale-110 drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
-            <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${isXNext && !winner ? "text-yellow-500" : ""}`}>
+            <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${isXNext && !winner ? "text-[#7FFF00]" : ""}`}>
                 <img src={player1Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-red-500">VAJUNNIE</span>
+            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-[#FF10F0] font-bold">VAJUNNIE</span>
         </div>
         <div className="text-3xl font-display font-black text-black/40">VS</div>
         <div className={`flex flex-col items-center transition-all duration-300 ${!isXNext && !winner ? "scale-110 drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
-             <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${!isXNext && !winner ? "text-yellow-500" : ""}`}>
+             <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${!isXNext && !winner ? "text-[#7FFF00]" : ""}`}>
                 <img src={player2Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-red-500">GRAMS</span>
+            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-[#FF10F0] font-bold">GRAMS</span>
         </div>
       </div>
     </div>
