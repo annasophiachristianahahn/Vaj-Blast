@@ -97,12 +97,20 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gri
     // Visual Transform with Clamping
     // We apply the multiplier AND clamp to the grid boundaries
     const visualX = useTransform(dragX, (v) => {
+        // Desktop: Standard 1:1 drag with NO clamping
+        if (!isSmallScreen) return v;
+
+        // Mobile: Amplified drag with boundary clamping
         const calculated = v * multiplier;
         if (!isDragging) return calculated;
         return Math.min(Math.max(calculated, constraintsRef.current.minX), constraintsRef.current.maxX);
     });
     
     const visualY = useTransform(dragY, (v) => {
+        // Desktop: Standard 1:1 drag with NO clamping
+        if (!isSmallScreen) return v;
+
+        // Mobile: Amplified drag with boundary clamping + offset
         const calculated = v * multiplier + (isDragging ? yOffset : 0);
         if (!isDragging) return calculated;
         return Math.min(Math.max(calculated, constraintsRef.current.minY), constraintsRef.current.maxY);
