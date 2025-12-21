@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import bgVideo from "@assets/bg_1766350874031.mp4";
 import { Link } from "wouter";
 import { Home } from "lucide-react";
 
@@ -15,7 +14,7 @@ export function Layout({ children }: { children: ReactNode }) {
           playsInline
           className="h-full w-full object-cover"
         >
-          <source src={bgVideo} type="video/mp4" />
+          <source src="/background_video.mp4" type="video/mp4" />
         </video>
       </div>
 
