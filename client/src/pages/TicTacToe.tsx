@@ -128,10 +128,14 @@ export default function TicTacToe() {
                         {winner !== "TIE" && (
                             <img 
                                 src={winner === "X" ? player1Image : player2Image} 
-                                className="w-24 h-24 mx-auto mb-4 border-4 border-white rounded-full shadow-lg"
+                                className="w-40 h-40 mx-auto mb-6 border-8 border-[#7FFF00] rounded-full shadow-2xl object-cover"
                             />
                         )}
-                        <Button onClick={resetGame} size="lg" className="font-display tracking-wider">
+                        <Button 
+                            onClick={resetGame} 
+                            size="lg" 
+                            className="font-['Chewy','cursive'] tracking-wider text-2xl px-8 py-6 bg-[#FF10F0] text-[#7FFF00] border-4 border-[#7FFF00] hover:bg-[#D000C0] hover:scale-105 transition-all shadow-[4px_4px_0_#7FFF00]"
+                        >
                             PLAY AGAIN
                         </Button>
                     </div>
