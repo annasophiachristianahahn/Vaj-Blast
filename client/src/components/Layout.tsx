@@ -7,7 +7,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden text-white font-sans selection:bg-primary selection:text-white">
       {/* Background Video */}
-      <div className="fixed inset-0 z-0 bg-black">
+      <div className="fixed inset-0 z-0 bg-[hsl(200,100%,70%)]">
         <video
           autoPlay
           loop
