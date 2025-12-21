@@ -1232,17 +1232,17 @@ export default function BlockBlast() {
         </AnimatePresence>
 
         {/* Score Display */}
-        <div className="w-full flex items-center justify-center py-2 relative z-10">
-             <div className="bg-black/40 backdrop-blur-md px-8 py-2 rounded-full border border-white/10 shadow-xl flex flex-col items-center transform hover:scale-105 transition-transform">
-                <div className="text-xs font-mono text-[#FF10F0] tracking-widest mb-0.5">SCORE</div>
-                <div className="text-4xl font-['Chewy','cursive'] text-[#7FFF00] drop-shadow-[0_2px_10px_rgba(127,255,0,0.3)] tabular-nums leading-none tracking-wider">
+        <div className="w-full flex items-center justify-center py-1 relative z-10">
+             <div className="bg-black/40 backdrop-blur-md px-6 py-1.5 rounded-full border border-white/10 shadow-xl flex flex-col items-center transform hover:scale-105 transition-transform">
+                <div className="text-[10px] font-mono text-[#FF10F0] tracking-widest mb-0">SCORE</div>
+                <div className="text-3xl font-['Chewy','cursive'] text-[#7FFF00] drop-shadow-[0_2px_10px_rgba(127,255,0,0.3)] tabular-nums leading-none tracking-wider">
                     {score}
                 </div>
             </div>
         </div>
 
         {/* Grid Area - Maximize Size */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-2 px-4 relative">
+        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-1 px-4 relative">
             <motion.div 
                 ref={gridRef}
                 animate={{ 
@@ -1251,11 +1251,15 @@ export default function BlockBlast() {
                     scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
                 }}
                 transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl aspect-square max-w-full max-h-full relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
-                    gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                    gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                    width: 'min(100%, 100vh - 220px)'
+                    aspectRatio: '1/1',
+                    gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+                    gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
+                    width: 'auto',
+                    height: 'auto',
+                    maxHeight: '100%',
+                    maxWidth: '100%'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
