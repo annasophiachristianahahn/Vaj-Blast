@@ -148,7 +148,6 @@ export default function CoinFlip() {
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={1} />
             <spotLight position={[-10, -10, -10]} intensity={0.5} />
-            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
             <Coin flipping={flipping} result={result} onFlipStart={flipCoin} />
             <Environment preset="city" />
             </Canvas>
