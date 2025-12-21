@@ -81,7 +81,7 @@ export default function TicTacToe() {
               className={`
                 w-full h-full
                 flex items-center justify-center text-4xl relative overflow-hidden
-                border-black border-solid
+                border-[#800020] border-solid
                 ${index < 6 ? 'border-b-4' : 'border-b-0'}
                 ${index % 3 !== 2 ? 'border-r-4' : 'border-r-0'}
                 ${winningLine?.includes(index) ? "bg-green-500/10" : ""}
@@ -134,7 +134,7 @@ export default function TicTacToe() {
                         <Button 
                             onClick={resetGame} 
                             size="lg" 
-                            className="font-['Chewy','cursive'] tracking-wider text-2xl px-8 py-6 bg-[#FF10F0] text-[#7FFF00] border-4 border-[#7FFF00] hover:bg-[#D000C0] hover:scale-105 transition-all shadow-[4px_4px_0_#7FFF00]"
+                            className="font-display tracking-wider text-2xl px-8 py-6 bg-[#FF10F0] text-[#7FFF00] border border-[#7FFF00] hover:bg-[#D000C0] hover:scale-105 transition-all shadow-[4px_4px_0_#7FFF00]"
                         >
                             PLAY AGAIN
                         </Button>
