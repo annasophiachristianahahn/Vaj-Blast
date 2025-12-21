@@ -1268,7 +1268,7 @@ export default function BlockBlast() {
                             >
                                 {cell && (
                                     <div 
-                                        className="absolute inset-0 opacity-50 mix-blend-multiply"
+                                        className="absolute inset-0 opacity-60 mix-blend-hard-light"
                                         style={{ backgroundColor: cell.color }}
                                     />
                                 )}
