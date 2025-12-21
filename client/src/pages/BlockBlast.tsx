@@ -896,77 +896,55 @@ export default function BlockBlast() {
       // MATCHES DraggableShape OFFSET EXACTLY:
       const yOffset = isSmallScreen ? -100 : 0; 
 
-      // 1. Calculate the "Visual Center" of the shape being dragged
-      // The pointer is where the finger is.
-      // The shape is visually offset from the finger by yOffset.
+      // Visual position of the Top-Left of the shape's bounding box
+      // We assume the pointer is at the visual center of the shape
+      const shapeW_cells = Math.max(...shape.points.map((p: any) => p[0])) + 1;
+      const shapeH_cells = Math.max(...shape.points.map((p: any) => p[1])) + 1;
+      const shapeW_px = shapeW_cells * cellSize;
+      const shapeH_px = shapeH_cells * cellSize;
+
       const visualCenterX = pointer.x;
       const visualCenterY = pointer.y + yOffset;
+
+      const visualTopLeftX = visualCenterX - (shapeW_px / 2);
+      const visualTopLeftY = visualCenterY - (shapeH_px / 2);
+
+      // Convert to grid-relative coordinates
+      const relativeX = visualTopLeftX - gridRect.left;
+      const relativeY = visualTopLeftY - gridRect.top;
+
+      let bestPlacement = null;
+      let minDistance = Infinity;
       
-      // 2. Check if roughly inside grid bounds (padded)
-      if (visualCenterX < gridRect.left - cellSize || 
-          visualCenterX > gridRect.right + cellSize || 
-          visualCenterY < gridRect.top - cellSize || 
-          visualCenterY > gridRect.bottom + cellSize) {
-          return null;
+      // Magnetic Snap Threshold - Increased for mobile forgiveness
+      // Allow snapping if within 1.5 cells of the target
+      const SNAP_THRESHOLD = cellSize * 1.5;
+
+      // "Smart Scan": Iterate through all possible VALID placements
+      // and find the one closest to the user's finger position.
+      // This is the "Industry Standard" magnetic snap approach.
+      for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+              // Optimization: Only check distance if roughly close first
+              // (Optional, but good for performance if grid was larger)
+              
+              if (canPlaceShape(r, c, shape, grid)) {
+                  // Where would this shape start in pixels?
+                  const targetX = c * cellSize;
+                  const targetY = r * cellSize;
+                  
+                  // Distance between visual drag position and this candidate target
+                  const dist = Math.hypot(targetX - relativeX, targetY - relativeY);
+                  
+                  if (dist < minDistance && dist < SNAP_THRESHOLD) {
+                      minDistance = dist;
+                      bestPlacement = { r, c };
+                  }
+              }
+          }
       }
 
-      // 3. Convert to Grid Relative Coordinates using VISUAL POSITION
-      const relativeX = visualCenterX - gridRect.left;
-      const relativeY = visualCenterY - gridRect.top;
-      
-      // 4. Determine Shape Dimensions (in cells)
-      const shapeW = Math.max(...shape.points.map((p: any) => p[0])) + 1;
-      const shapeH = Math.max(...shape.points.map((p: any) => p[1])) + 1;
-      
-      // 5. Calculate the Target Grid Cell (Top-Left of the shape)
-      // We want the CENTER of the shape to align with the POINTER (visually).
-      // Center of shape relative to its top-left = (width_px/2, height_px/2)
-      // Grid_X_px = Cell_Col * cellSize
-      // Target: Grid_X_px + (shapeW * cellSize / 2) = relativeX
-      // => Cell_Col = (relativeX / cellSize) - (shapeW / 2)
-      
-      const rawC = (relativeX / cellSize) - (shapeW / 2);
-      const rawR = (relativeY / cellSize) - (shapeH / 2);
-      
-      // 6. Snap to nearest integer
-      let c = Math.round(rawC);
-      let r = Math.round(rawR);
-      
-      // 7. Clamp to grid bounds to prevent out-of-bounds error
-      // Note: canPlaceShape handles validity, but clamping helps "stick" to edges
-      c = Math.max(0, Math.min(c, GRID_SIZE - shapeW));
-      r = Math.max(0, Math.min(r, GRID_SIZE - shapeH));
-      
-      // 8. Verify Placement
-      if (canPlaceShape(r, c, shape, grid)) {
-          return { r, c };
-      }
-      
-      // 9. Intelligent Neighbor Snap (for fat finger forgiveness)
-      // If the direct center is invalid, check immediate valid neighbors
-      const neighbors = [
-          {r: r, c: c}, // Center
-          {r: r+1, c: c}, {r: r-1, c: c},
-          {r: r, c: c+1}, {r: r, c: c-1}
-      ];
-
-      // Sort neighbors by distance to the true float position
-      neighbors.sort((a, b) => {
-          const distA = Math.hypot(a.c - rawC, a.r - rawR);
-          const distB = Math.hypot(b.c - rawC, b.r - rawR);
-          return distA - distB;
-      });
-
-      for (const p of neighbors) {
-           // Don't snap too far (max 0.8 cell distance)
-           if (Math.hypot(p.c - rawC, p.r - rawR) > 0.8) continue;
-           
-           if (canPlaceShape(p.r, p.c, shape, grid)) {
-               return { r: p.r, c: p.c };
-           }
-      }
-
-      return null;
+      return bestPlacement;
   };
 
   const handleDrag = (event: any, info: any, shapeIndex: number) => {
