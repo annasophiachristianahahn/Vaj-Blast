@@ -190,8 +190,8 @@ export default function BlockBlast() {
       // 1. Board Health Adjustment (Entropy based)
       if (metrics.emptyCount > 50) {
           // OPEN BOARD: Development Phase
-          // Encourage building structure.
-          weights = { safety: 0.05, structural: 0.80, stressor: 0.15 };
+          // PURE STRUCTURE. No small pieces yet.
+          weights = { safety: 0.0, structural: 0.85, stressor: 0.15 };
       } else if (metrics.emptyCount < 30) {
           // TIGHTENING: Mid-game tension
           // Reduce stressors, increase safety tools.
@@ -202,19 +202,19 @@ export default function BlockBlast() {
           weights = { safety: 0.80, structural: 0.20, stressor: 0.0 };
       }
 
-      // 2. "Swiss Cheese" Factor
+      // 2. "Swiss Cheese" Factor & Crisis Management
       // If board has many single holes, we NEED 1x1 or 1x2s to fix it.
-      if (metrics.holes > 3) {
-          weights.safety += 0.4;
-          weights.structural -= 0.2;
-          weights.stressor = 0;
+      if (metrics.holes > 0) {
+           // We have holes! Allow safety pieces now.
+          weights.safety = Math.max(weights.safety, 0.4);
+          weights.structural = Math.max(weights.structural - 0.2, 0.1);
       }
-
+      
       // 3. "Sniper" Opportunity
       // If we have lines ready to clear (almostCompleteLines), slightly boost 1x1/1x2/1x3 availability
       // implicitly by boosting safety/structural.
-      if (metrics.almostCompleteLines > 2) {
-          weights.safety += 0.1;
+      if (metrics.almostCompleteLines > 0) {
+          weights.safety = Math.max(weights.safety, 0.3);
       }
       
       // Normalize
@@ -403,7 +403,9 @@ export default function BlockBlast() {
           }
 
           while(finalBatch.length < 3) {
-             const shape = pickWeightedShape({ safety: 0.5, structural: 0.4, stressor: 0.1 });
+             // For the filler shape, adhere STRICTLY to the weights.
+             // If we are in early game (high empty count), this will force Structural shapes.
+             const shape = pickWeightedShape(weights);
              finalBatch.push(shape);
           }
 
