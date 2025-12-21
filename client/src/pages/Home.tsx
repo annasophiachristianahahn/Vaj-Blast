@@ -55,7 +55,7 @@ export default function Home() {
             </div>
 
             {/* Bottom Row - Full Width */}
-            <div className="w-full">
+            <div className="w-full md:w-2/3 lg:w-1/2">
                 <GameTab 
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
