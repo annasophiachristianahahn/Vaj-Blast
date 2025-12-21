@@ -141,18 +141,18 @@ export default function TicTacToe() {
       </div>
 
       <div className="mt-8 flex gap-8 items-center opacity-90">
-        <div className={`flex flex-col items-center transition-all duration-300 ${isXNext && !winner ? "scale-110 text-yellow-500 font-bold drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
-            <div className="w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10">
+        <div className={`flex flex-col items-center transition-all duration-300 ${isXNext && !winner ? "scale-110 drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
+            <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${isXNext && !winner ? "text-yellow-500" : ""}`}>
                 <img src={player1Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-mono tracking-widest bg-white/50 px-2 rounded-md">VAJUNNIE</span>
+            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-red-500">VAJUNNIE</span>
         </div>
         <div className="text-3xl font-display font-black text-black/40">VS</div>
-        <div className={`flex flex-col items-center transition-all duration-300 ${!isXNext && !winner ? "scale-110 text-yellow-500 font-bold drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
-             <div className="w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10">
+        <div className={`flex flex-col items-center transition-all duration-300 ${!isXNext && !winner ? "scale-110 drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
+             <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${!isXNext && !winner ? "text-yellow-500" : ""}`}>
                 <img src={player2Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-mono tracking-widest bg-white/50 px-2 rounded-md">GRAMS</span>
+            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-red-500">GRAMS</span>
         </div>
       </div>
     </div>
