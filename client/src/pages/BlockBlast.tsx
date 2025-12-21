@@ -83,66 +83,25 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gri
     const dragY = useMotionValue(0);
     const [isDragging, setIsDragging] = useState(false);
     
-    // Track drag constraints
-    const constraintsRef = useRef({ minX: -Infinity, maxX: Infinity, minY: -Infinity, maxY: Infinity });
-    
-    // Sensitivity Multiplier:
-    // On mobile, moving finger 1px moves shape 2.5px.
-    // This allows reaching the top of the board with small thumb movements.
-    // Also applies a Y-offset so the finger doesn't cover the shape.
+    // Sensitivity & Offset Logic
+    // We remove the multiplier (it causes the "wild" feeling).
+    // Instead, we rely purely on a generous Y-offset for mobile visibility.
     const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
-    const multiplier = isSmallScreen ? 2.5 : 1.0;
-    const yOffset = isSmallScreen ? -120 : 0; // Float above finger on mobile
+    const yOffset = isSmallScreen ? -100 : 0; // Float 100px above finger on mobile
     
-    // Visual Transform with Clamping
-    // We apply the multiplier AND clamp to the grid boundaries
-    const visualX = useTransform(dragX, (v) => {
-        // Desktop: Standard 1:1 drag with NO clamping
-        if (!isSmallScreen) return v;
-
-        // Mobile: Amplified drag with boundary clamping
-        const calculated = v * multiplier;
-        if (!isDragging) return calculated;
-        return Math.min(Math.max(calculated, constraintsRef.current.minX), constraintsRef.current.maxX);
-    });
-    
+    // Visual Transform
+    // On mobile, we visually shift the shape UP so the user's finger doesn't cover it.
+    // The physics remain 1:1 for perfect control.
     const visualY = useTransform(dragY, (v) => {
-        // Desktop: Standard 1:1 drag with NO clamping
-        if (!isSmallScreen) return v;
-
-        // Mobile: Amplified drag with boundary clamping + offset
-        const calculated = v * multiplier + (isDragging ? yOffset : 0);
-        if (!isDragging) return calculated;
-        return Math.min(Math.max(calculated, constraintsRef.current.minY), constraintsRef.current.maxY);
+        return v + (isDragging ? yOffset : 0);
     });
     
-    // Helper to calculate boundaries on drag start
-    const calculateConstraints = (target: HTMLElement) => {
-        if (!gridRef.current) return;
-        
-        const shapeRect = target.getBoundingClientRect();
-        const gridRect = gridRef.current.getBoundingClientRect();
-        
-        // Calculate the vector from shape start to grid edges
-        // We add a bit of margin (half a cell) to allow snapping near edges
-        const margin = cellSize * 0.5;
-        
-        const minX = (gridRect.left - shapeRect.left) - margin;
-        const maxX = (gridRect.right - shapeRect.right) + margin;
-        
-        // Y constraints need to account for the mobile offset
-        // If yOffset is negative (floating above), we need to adjust the constraint so the *visual* shape can reach the top
-        const minY = (gridRect.top - shapeRect.top) - margin;
-        const maxY = (gridRect.bottom - shapeRect.bottom) + margin;
-
-        constraintsRef.current = { minX, maxX, minY, maxY };
-    };
-
-    const localRef = useRef<HTMLDivElement>(null);
+    // We still render the shape, but we wrap it in a larger invisible touch target
+    // to make it easier to grab without being precise.
 
     return (
-        <div ref={localRef} className="relative w-full h-full flex items-center justify-center">
-            {/* INVISIBLE DRAG PROXY */}
+        <div className="relative w-full h-full flex items-center justify-center touch-none select-none">
+            {/* INVISIBLE DRAG PROXY - Larger touch target */}
             <motion.div
                 drag
                 dragSnapToOrigin
@@ -151,8 +110,7 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gri
                 style={{ x: dragX, y: dragY }}
                 onDragStart={(e) => {
                     setIsDragging(true);
-                    if (localRef.current) calculateConstraints(localRef.current);
-                    // Haptic feedback (Android only - iOS Safari does not support web vibration)
+                    // Haptic feedback
                     if (typeof navigator !== 'undefined' && navigator.vibrate) {
                         try { navigator.vibrate(10); } catch(e) {} 
                     }
@@ -162,21 +120,21 @@ const DraggableShape = ({ shape, index, setRef, onDrag, onDragEnd, cellSize, gri
                     setIsDragging(false);
                     onDragEnd(e, info, index);
                 }}
-                className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing w-full h-full opacity-0 touch-none"
+                className="absolute -inset-4 z-50 cursor-grab active:cursor-grabbing opacity-0 touch-none"
             />
             
             {/* VISUAL SHAPE */}
             <motion.div
                 ref={setRef}
-                style={{ x: visualX, y: visualY }}
+                style={{ x: dragX, y: visualY }}
                 animate={{ 
-                    scale: isDragging ? 1.15 : 1.0,
+                    scale: isDragging ? 1.1 : 0.8, // Start smaller in tray, pop to normal size
                     zIndex: isDragging ? 100 : 10,
                     opacity: isDragging ? 0.9 : 1,
-                    filter: isDragging ? 'brightness(1.2) drop-shadow(0 10px 20px rgba(0,0,0,0.3))' : 'none'
+                    filter: isDragging ? 'brightness(1.2) drop-shadow(0 15px 30px rgba(0,0,0,0.4))' : 'none'
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="pointer-events-none p-1 rounded-lg transition-colors"
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="pointer-events-none rounded-lg"
             >
                 <div 
                     className="grid gap-0.5 pointer-events-none"
@@ -930,64 +888,81 @@ export default function BlockBlast() {
   };
 
   // Shared logic to determine placement position
-  const getPlacementPosition = (shapeIndex: number, shape: any) => {
-      if (!gridRef.current || !shapeRefs.current[shapeIndex]) return null;
+  const getPlacementPosition = (shapeIndex: number, shape: any, pointer: {x: number, y: number}) => {
+      if (!gridRef.current) return null;
 
       const gridRect = gridRef.current.getBoundingClientRect();
-      const shapeRect = shapeRefs.current[shapeIndex]!.getBoundingClientRect();
+      const isSmallScreen = window.innerWidth < 768;
+      const yOffset = isSmallScreen ? -100 : 0; // Must match DraggableShape offset
 
-      const cellWidth = gridRect.width / GRID_SIZE;
-      const cellHeight = gridRect.height / GRID_SIZE;
+      // 1. Calculate the "Visual Center" of the shape being dragged
+      // The pointer is where the finger is.
+      // The shape is visually offset from the finger by yOffset.
+      const visualCenterX = pointer.x;
+      const visualCenterY = pointer.y + yOffset;
       
-      // Calculate relative position of the shape's top-left corner
-      // We use the shape's actual DOM position, which is accurate regardless of where user grabbed it
-      const relativeX = shapeRect.left - gridRect.left;
-      const relativeY = shapeRect.top - gridRect.top;
-      
-      // Calculate the floating point grid coordinates of the top-left corner
-      const floatC = relativeX / cellWidth;
-      const floatR = relativeY / cellHeight;
+      // 2. Check if roughly inside grid bounds (padded)
+      if (visualCenterX < gridRect.left - cellSize || 
+          visualCenterX > gridRect.right + cellSize || 
+          visualCenterY < gridRect.top - cellSize || 
+          visualCenterY > gridRect.bottom + cellSize) {
+          return null;
+      }
 
-      // Round to nearest integer to find the "ideal" snap target
-      // This works perfectly because if visual shape aligns with grid, relativeX will be a multiple of cellWidth
-      const idealC = Math.round(floatC);
-      const idealR = Math.round(floatR);
+      // 3. Convert to Grid Relative Coordinates
+      const relativeX = visualCenterX - gridRect.left;
+      const relativeY = visualCenterY - gridRect.top;
       
-      // Check if this ideal spot is valid
-      if (canPlaceShape(idealR, idealC, shape, grid)) {
-          return { r: idealR, c: idealC };
+      // 4. Determine Shape Dimensions (in cells)
+      const shapeW = Math.max(...shape.points.map((p: any) => p[0])) + 1;
+      const shapeH = Math.max(...shape.points.map((p: any) => p[1])) + 1;
+      
+      // 5. Calculate the Target Grid Cell (Top-Left of the shape)
+      // We want the CENTER of the shape to align with the POINTER (visually).
+      // Center of shape relative to its top-left = (width_px/2, height_px/2)
+      // Grid_X_px = Cell_Col * cellSize
+      // Target: Grid_X_px + (shapeW * cellSize / 2) = relativeX
+      // => Cell_Col = (relativeX / cellSize) - (shapeW / 2)
+      
+      const rawC = (relativeX / cellSize) - (shapeW / 2);
+      const rawR = (relativeY / cellSize) - (shapeH / 2);
+      
+      // 6. Snap to nearest integer
+      let c = Math.round(rawC);
+      let r = Math.round(rawR);
+      
+      // 7. Clamp to grid bounds to prevent out-of-bounds error
+      // Note: canPlaceShape handles validity, but clamping helps "stick" to edges
+      c = Math.max(0, Math.min(c, GRID_SIZE - shapeW));
+      r = Math.max(0, Math.min(r, GRID_SIZE - shapeH));
+      
+      // 8. Verify Placement
+      if (canPlaceShape(r, c, shape, grid)) {
+          return { r, c };
       }
       
-      // If ideal spot isn't valid, check immediate neighbors sorted by distance
-      // We check the 8 surrounding cells, but prioritize those closest to the floating floatR/floatC
+      // 9. Intelligent Neighbor Snap (for fat finger forgiveness)
+      // If the direct center is invalid, check immediate valid neighbors
       const neighbors = [
-          { r: idealR, c: idealC }, // Center (already checked but included for completeness logic)
-          { r: idealR, c: idealC + 1 },
-          { r: idealR, c: idealC - 1 },
-          { r: idealR + 1, c: idealC },
-          { r: idealR - 1, c: idealC },
-          { r: idealR + 1, c: idealC + 1 },
-          { r: idealR + 1, c: idealC - 1 },
-          { r: idealR - 1, c: idealC + 1 },
-          { r: idealR - 1, c: idealC - 1 },
+          {r: r, c: c}, // Center
+          {r: r+1, c: c}, {r: r-1, c: c},
+          {r: r, c: c+1}, {r: r, c: c-1}
       ];
 
-      // Sort by distance to the "true" floating position
+      // Sort neighbors by distance to the true float position
       neighbors.sort((a, b) => {
-          const distA = Math.hypot(a.c - floatC, a.r - floatR);
-          const distB = Math.hypot(b.c - floatC, b.r - floatR);
+          const distA = Math.hypot(a.c - rawC, a.r - rawR);
+          const distB = Math.hypot(b.c - rawC, b.r - rawR);
           return distA - distB;
       });
 
-      // Find first valid placement within a reasonable "snap radius"
-      // If the user is too far off (e.g. > 0.6 cells away), don't snap to a neighbor
       for (const p of neighbors) {
-          const dist = Math.hypot(p.c - floatC, p.r - floatR);
-          if (dist > 0.6) continue; // Tighter threshold for better precision
-
-          if (canPlaceShape(p.r, p.c, shape, grid)) {
-              return { r: p.r, c: p.c };
-          }
+           // Don't snap too far (max 0.8 cell distance)
+           if (Math.hypot(p.c - rawC, p.r - rawR) > 0.8) continue;
+           
+           if (canPlaceShape(p.r, p.c, shape, grid)) {
+               return { r: p.r, c: p.c };
+           }
       }
 
       return null;
@@ -998,7 +973,9 @@ export default function BlockBlast() {
       const shape = currentShapes[shapeIndex];
       if (!shape) return;
 
-      const placement = getPlacementPosition(shapeIndex, shape);
+      // Use the global pointer position from the drag event
+      const placement = getPlacementPosition(shapeIndex, shape, info.point);
+      
       if (placement) {
           const newPlacement = { ...placement, shapeIndex };
           setHoverPlacement(newPlacement);
