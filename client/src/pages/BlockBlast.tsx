@@ -351,6 +351,24 @@ export default function BlockBlast() {
       let attempts = 0;
       let foundValidBatch = false;
 
+      // 0. Try to find a Perfect Clear (All Clear) opportunity
+      // If the board is mostly empty (e.g. < 12 blocks), try to find a sequence that clears it all.
+      // This directly addresses the user's request to "make it easier to clear the entire board".
+      const filledBlocks = GRID_SIZE * GRID_SIZE - metrics.emptyCount;
+      if (filledBlocks > 0 && filledBlocks < 12) {
+          const perfectBatch = findPerfectClearBatch(currentGrid);
+          if (perfectBatch) {
+              // Found a magic sequence! Use it.
+              const formattedShapes = perfectBatch.map((s: any, i: number) => ({ 
+                  ...s, 
+                  img, 
+                  uniqueId: `${s.id}-${Date.now()}-${i}` 
+              }));
+              setCurrentShapes(formattedShapes);
+              return;
+          }
+      }
+
       // Try to construct a valid batch (Constrained Sampler)
       // We try up to 20 times to find a batch that is "solvable" (has at least one valid permutation)
       while (!foundValidBatch && attempts < 20) {
