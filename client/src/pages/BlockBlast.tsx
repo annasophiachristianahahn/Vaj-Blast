@@ -356,7 +356,7 @@ export default function BlockBlast() {
       // If the board is mostly empty (e.g. < 12 blocks), try to find a sequence that clears it all.
       // This directly addresses the user's request to "make it easier to clear the entire board".
       const filledBlocks = GRID_SIZE * GRID_SIZE - metrics.emptyCount;
-      if (filledBlocks > 0 && filledBlocks < 12) {
+      if (filledBlocks > 0 && filledBlocks < 25) { // Increased threshold from 12 to 25
           const perfectBatch = findPerfectClearBatch(currentGrid);
           if (perfectBatch) {
               // Found a magic sequence! Use it.
@@ -381,8 +381,28 @@ export default function BlockBlast() {
           // Fill the rest with shapes that are solvable
           // We don't filter out complex shapes here, satisfying "do not remove complex shapes"
           // We just ensure they are placed
+          
+          // WIN FASTER TWEAK: 
+          // If we found a miracle shape, we want to follow it up with MORE helpful shapes
+          // to chain clears. So we will try to find a SECOND miracle shape or rescue shape.
+          
+          // Try to find a second high-value shape
+          let secondShape = null;
+          // Temporarily simulate the miracle shape placement to find the next best move
+          const miracleMove = findBestMove(currentGrid, miracleShape);
+          if (miracleMove) {
+             let tempGrid = simulatePlacement(currentGrid, miracleShape, miracleMove.r, miracleMove.c);
+             const lines = findLinesToClear(tempGrid);
+             if (lines.length > 0) tempGrid = clearLinesFromGrid(tempGrid, lines);
+             secondShape = findMiracleShape(tempGrid) || findBestRescueShape(tempGrid, weights);
+          }
+
+          if (secondShape) {
+              finalBatch.push(secondShape);
+          }
+
           while(finalBatch.length < 3) {
-             const shape = pickWeightedShape({ safety: 0.4, structural: 0.4, stressor: 0.2 });
+             const shape = pickWeightedShape({ safety: 0.5, structural: 0.4, stressor: 0.1 });
              finalBatch.push(shape);
           }
 
