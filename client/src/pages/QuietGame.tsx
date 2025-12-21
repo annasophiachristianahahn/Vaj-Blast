@@ -18,7 +18,8 @@ export default function QuietGame() {
   
   // Use RMS threshold (0.0 to 1.0)
   // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
-  const THRESHOLD_RMS = 0.15; 
+  // Lower = More Sensitive (Easier to lose)
+  const THRESHOLD_RMS = 0.05; 
   // Store more chunks for better context (e.g. 5 seconds buffer)
   const MAX_BUFFER_CHUNKS = 200; 
 
@@ -61,8 +62,8 @@ export default function QuietGame() {
             const rms = Math.sqrt(sum / inputData.length);
             
             // Map RMS (0-0.5 typical) to 0-100 for visualizer
-            // Multiplier 400 makes 0.25 RMS -> 100
-            setVolume(Math.min(rms * 400, 100));
+            // Multiplier 1000 makes 0.1 RMS -> 100 (More sensitive visuals)
+            setVolume(Math.min(rms * 1000, 100));
             
             // 2. Record Audio
             // Make a copy of the data
@@ -212,8 +213,8 @@ export default function QuietGame() {
             {/* Volume Indicator */}
             <motion.div 
                 className="absolute inset-0 bg-red-600 rounded-full opacity-50"
-                // Threshold visual ref is roughly 60 (0.15 * 400)
-                animate={{ scale: playing ? Math.min(volume / 60, 1.5) : 0 }}
+                // Threshold visual ref is roughly 50 (0.05 * 1000)
+                animate={{ scale: playing ? Math.min(volume / 50, 1.5) : 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
             
