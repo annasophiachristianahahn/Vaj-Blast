@@ -145,14 +145,14 @@ export default function TicTacToe() {
             <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${isXNext && !winner ? "text-[#7FFF00]" : ""}`}>
                 <img src={player1Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-[#FF10F0] font-bold">VAJUNNIE</span>
+            <span className="text-2xl font-['Chewy','cursive'] tracking-wider text-[#FF10F0]">VAJUNNIE</span>
         </div>
         <div className="text-3xl font-display font-black text-black/40">VS</div>
         <div className={`flex flex-col items-center transition-all duration-300 ${!isXNext && !winner ? "scale-110 drop-shadow-md" : "opacity-60 grayscale-[0.3]"}`}>
              <div className={`w-24 h-24 rounded-full border-4 border-current overflow-hidden mb-2 shadow-lg bg-black/10 ${!isXNext && !winner ? "text-[#7FFF00]" : ""}`}>
                 <img src={player2Image} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-['Comic_Sans_MS','Comic_Sans','cursive'] tracking-widest text-[#FF10F0] font-bold">GRAMS</span>
+            <span className="text-2xl font-['Chewy','cursive'] tracking-wider text-[#FF10F0]">GRAMS</span>
         </div>
       </div>
     </div>
