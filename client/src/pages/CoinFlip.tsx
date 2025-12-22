@@ -382,7 +382,7 @@ export default function CoinFlip() {
             <motion.div 
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
-                className="text-3xl md:text-5xl font-display text-[#7FFF00] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] mb-0"
+                className={`text-3xl md:text-5xl font-display ${result === 'HEADS' ? 'text-[#7FFF00]' : 'text-[#ff00ff]'} drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] mb-0`}
             >
                 {result}!
             </motion.div>
