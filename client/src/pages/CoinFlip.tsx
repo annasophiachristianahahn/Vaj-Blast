@@ -26,29 +26,34 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         if ((child as Mesh).isMesh) {
             const mesh = child as Mesh;
             const originalMaterial = mesh.material as MeshStandardMaterial;
+            const color = originalMaterial.color;
             
-            // Check color to identify sides (approximate based on user description)
-            // Or just enhance all materials since both need to be reflective
-            
-            // Create a new high-quality material based on the original color
+            // Heuristic to detect pink vs brown side based on brightness
+            // Pink is lighter, Brown is darker
+            // Adjust threshold based on the actual model colors if needed
+            const brightness = (color.r + color.g + color.b) / 3;
+            const isPinkSide = brightness > 0.3; // Threshold
+
             const newMaterial = new MeshStandardMaterial({
-                color: originalMaterial.color,
                 map: originalMaterial.map,
                 normalMap: originalMaterial.normalMap,
-                roughness: 0.15, // Low roughness for shine
-                metalness: 0.8, // High metalness for chrome look
-                envMapIntensity: 1.5, // Stronger reflections
             });
 
-            // Adjust specific colors based on user request
-            // If it's the pink side (assuming lighter/pinker color)
-            // We can check the hex or name. For now, let's boost the chrome factor.
-            
-            // If the user said "Pink side extremely reflective pink chrome"
-            // and "Brown side deep chocolate with red/orange highlights"
-            
-            // Since we can't easily see the color values, we'll apply a general enhancement
-            // that makes the metal look really good, which usually satisfies "reflective chrome"
+            if (isPinkSide) {
+                // Pink Chrome
+                newMaterial.color = new Color("#ff69b4"); // Hot pink
+                newMaterial.roughness = 0.05; // Extremely smooth
+                newMaterial.metalness = 0.9; // Very metallic
+                newMaterial.envMapIntensity = 2.0;
+            } else {
+                // Chocolate Brown with highlights
+                newMaterial.color = new Color("#3e2723"); // Deep chocolate
+                newMaterial.roughness = 0.3;
+                newMaterial.metalness = 0.4;
+                newMaterial.emissive = new Color("#ff4500"); // Orange/Red glow
+                newMaterial.emissiveIntensity = 0.1;
+                newMaterial.envMapIntensity = 1.0;
+            }
             
             mesh.material = newMaterial;
             mesh.castShadow = true;
@@ -152,7 +157,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
               - Math.PI / 2 on Y fixes the side-view issue.
               - Math.PI on Z flips the face upside down (fixing "pink is upside down").
             */}
-            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, Math.PI]} />
+            <primitive object={clone} scale={4} rotation={[Math.PI, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
