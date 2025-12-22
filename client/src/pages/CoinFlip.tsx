@@ -40,14 +40,10 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         // Landing animation
         if (result) {
             // Target rotations
-            // HEADS: Face up (towards camera Z). X=PI/2.
-            // TAILS: Face down (away from camera Z). X=3PI/2.
-            // NOTE: Adjusted for the GLB model orientation if needed. 
-            // Assuming standard cylinder orientation, but we might need to tweak based on the model.
-            // Let's assume the model is flat on XZ plane or XY plane. 
-            // If it's standing up, we might need different offsets. 
-            // For now keeping same logic, but we can tweak if "Heads" is wrong side.
-            const targetRotationX = result === 'HEADS' ? Math.PI / 2 : (Math.PI * 3 / 2);
+            // HEADS: Face camera (0).
+            // TAILS: Face away (PI).
+            // The model is natively facing the camera (Z-up), so we flip around X axis.
+            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -58,7 +54,6 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             mesh.current.rotation.z = mesh.current.rotation.z % (Math.PI * 2);
 
             // Smoothly interpolate to target
-            // We use lerp-like behavior for smoothness
             
             // X Axis Snap
             let diffX = targetRotationX - mesh.current.rotation.x;
@@ -66,7 +61,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
             
-            mesh.current.rotation.x += diffX * 25 * delta; // Much faster landing speed (was 12)
+            mesh.current.rotation.x += diffX * 25 * delta;
 
             // Y Axis dampening (return to 0)
             let diffY = 0 - mesh.current.rotation.y;
@@ -87,7 +82,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={mesh} 
-            rotation={[Math.PI / 2, 0, 0]} // Initial: Heads facing camera
+            rotation={[0, 0, 0]} // Initial: Heads facing camera (0,0,0 for Z-forward model)
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
