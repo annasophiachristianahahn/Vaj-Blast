@@ -376,12 +376,12 @@ export default function CoinFlip() {
         </ErrorBoundary>
       </div>
       
-      <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 z-10 pointer-events-none pb-safe">
+      <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
-                className="text-3xl md:text-5xl font-display text-[#ff00ff] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] mb-1"
+                className="text-3xl md:text-5xl font-display text-[#7FFF00] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] mb-0"
             >
                 {result}!
             </motion.div>
