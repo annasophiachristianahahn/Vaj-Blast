@@ -1,12 +1,14 @@
 import { Layout } from "@/components/Layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CoinFlip from "./CoinFlip";
-import QuietGame from "./QuietGame";
-import BlockBlast from "./BlockBlast";
-import TicTacToe from "./TicTacToe";
 import { Button } from "@/components/ui/button";
 import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
+
+// Lazy load game components
+const CoinFlip = lazy(() => import("./CoinFlip"));
+const QuietGame = lazy(() => import("./QuietGame"));
+const BlockBlast = lazy(() => import("./BlockBlast"));
+const TicTacToe = lazy(() => import("./TicTacToe"));
 
 // Preload images helper
 const preloadImages = (urls: string[]) => {
@@ -24,6 +26,15 @@ export default function Home() {
   useEffect(() => {
     // Preload Block Blast images immediately on mount
     preloadImages(BLOCK_BLAST_IMAGES);
+    
+    // Preload TicTacToe assets
+    const ticTacToeAssets = [
+        // We'll let the component load its own assets, or we could import them here dynamically
+        // But since they are mostly used in the game, lazy loading the game handles it.
+        // However, for smoother transition, we can preload if we know the paths.
+        // Since we can't easily get the resolved paths of assets inside lazy components without importing them,
+        // we rely on the browser cache once the component chunk is loaded.
+    ];
   }, []);
 
   return (
@@ -85,10 +96,12 @@ export default function Home() {
                     transition={{ duration: 0.2 }}
                     className="w-full h-full flex-1"
                 >
-                    {activeGame === 'coin-flip' && <CoinFlip />}
-                    {activeGame === 'quiet-game' && <QuietGame />}
-                    {activeGame === 'block-blast' && <BlockBlast />}
-                    {activeGame === 'tic-tac-toe' && <TicTacToe />}
+                    <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-white/50">Loading...</div>}>
+                        {activeGame === 'coin-flip' && <CoinFlip />}
+                        {activeGame === 'quiet-game' && <QuietGame />}
+                        {activeGame === 'block-blast' && <BlockBlast />}
+                        {activeGame === 'tic-tac-toe' && <TicTacToe />}
+                    </Suspense>
                 </motion.div>
             </AnimatePresence>
         </div>
