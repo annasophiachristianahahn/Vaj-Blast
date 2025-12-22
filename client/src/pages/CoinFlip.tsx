@@ -111,15 +111,6 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     
     // HEADS (Front/+X) -> Pink Chrome
     const headsMaterial = new MeshStandardMaterial({
-        color: new Color("#ff69b4"), // Hot pink
-        roughness: 0.05,
-        metalness: 0.9,
-        envMapIntensity: 2.0,
-        name: "PinkChrome"
-    });
-
-    // TAILS (Back/-X) -> Chocolate Brown
-    const tailsMaterial = new MeshStandardMaterial({
         color: new Color("#3e2723"), // Deep chocolate
         roughness: 0.4,
         metalness: 0.1,
@@ -127,6 +118,15 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         emissiveIntensity: 0.05,
         envMapIntensity: 0.8,
         name: "Chocolate"
+    });
+
+    // TAILS (Back/-X) -> Chocolate Brown
+    const tailsMaterial = new MeshStandardMaterial({
+        color: new Color("#ff69b4"), // Hot pink
+        roughness: 0.05,
+        metalness: 0.9,
+        envMapIntensity: 2.0,
+        name: "PinkChrome"
     });
 
     // EDGE -> Gold

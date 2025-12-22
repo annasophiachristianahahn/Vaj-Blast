@@ -19,7 +19,7 @@ export default function QuietGame() {
   // Use RMS threshold (0.0 to 1.0)
   // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
   // Lower = More Sensitive (Easier to lose)
-  const THRESHOLD_RMS = 0.012; 
+  const THRESHOLD_RMS = 0.1; 
   // Store more chunks for better context (e.g. 5 seconds buffer)
   const MAX_BUFFER_CHUNKS = 200; 
 
