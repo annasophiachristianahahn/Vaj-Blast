@@ -101,8 +101,7 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     // Back Face (Tails) will have Normal.z < 0 (approx -1)
     // Edge will have Normal.z approx 0
     
-    const normals = geometry.attributes.normal.array;
-    const position = geometry.attributes.position.array; // Keep if needed for tie-breaking
+    // We already have normals and indices from above
     
     for (let i = 0; i < indices.length; i += 3) {
         const a = indices[i];
