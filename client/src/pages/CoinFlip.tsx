@@ -380,7 +380,6 @@ export default function CoinFlip() {
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
                 className="text-3xl md:text-5xl font-display text-[#ff69b4] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)]"
-                style={{ textShadow: '0 0 10px #ff69b4, 0 0 20px #ff69b4' }}
             >
                 {result}!
             </motion.div>
