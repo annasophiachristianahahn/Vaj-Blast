@@ -22,8 +22,11 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
   // User requested "as big as possible without cropping"
   // 1.0 was slightly too big. Reducing to 0.9.
   // User reported text overlap issues. Reducing slightly to 0.85 to make room for text at bottom.
+  // User reported cropping on desktop.
+  // Logic: if aspect > 1 (landscape/desktop), reduce scale further.
   const dim = Math.min(viewport.width, viewport.height);
-  const scale = dim * 0.85;
+  const isLandscape = viewport.width > viewport.height;
+  const scale = dim * (isLandscape ? 0.75 : 0.85);
   
   // Process geometry to split into groups
   const processedNode = useMemo(() => {
