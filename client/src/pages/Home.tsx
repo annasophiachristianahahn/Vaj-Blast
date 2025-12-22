@@ -126,7 +126,8 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             `}
             style={{
                 backgroundColor: active ? hexToRgba(bgColor, 0.62) : hexToRgba(bgColor, 0.44),
-                borderColor: active ? 'transparent' : textColor,
+                borderColor: active ? '#FF10F0' : textColor,
+                boxShadow: active ? '0 0 15px #FF10F0, inset 0 0 10px #FF10F0' : 'none'
             }}
             initial={active ? {
                 backgroundColor: hexToRgba(bgColor, 0.62),
@@ -142,11 +143,18 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 y: [0, -4, 0],
                 scale: 1.02,
                 backgroundColor: hexToRgba(bgColor, 0.62),
+                borderColor: ["#FF10F0", "#7FFF00", "#FF10F0"],
+                boxShadow: [
+                    "0 0 15px #FF10F0, inset 0 0 10px #FF10F0",
+                    "0 0 20px #7FFF00, inset 0 0 15px #7FFF00",
+                    "0 0 15px #FF10F0, inset 0 0 10px #FF10F0"
+                ]
             } : {
                 y: 0,
                 boxShadow: "none",
                 scale: 1,
                 backgroundColor: hexToRgba(bgColor, 0.44),
+                borderColor: textColor
             }}
             transition={active ? {
                 y: {
@@ -154,43 +162,21 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                     duration: 2,
                     ease: "easeInOut"
                 },
+                boxShadow: {
+                    repeat: Infinity,
+                    duration: 0.5,
+                    ease: "easeInOut"
+                },
+                borderColor: {
+                    repeat: Infinity,
+                    duration: 0.5,
+                    ease: "easeInOut"
+                },
                 backgroundColor: { duration: 0.3 }
             } : { duration: 0.2 }}
             whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.67) }}
             whileTap={{ scale: 0.98 }}
         >
-            {/* SVG Electricity Effect */}
-            {active && (
-                <>
-                     {/* Filter for noise displacement */}
-                    <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-                         <defs>
-                            <filter id="lightning-noise" x="-50%" y="-50%" width="200%" height="200%">
-                                <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="4" seed="0">
-                                    <animate attributeName="seed" values="0;100;200;300;400;500;600;700;800;900;1000" dur="0.2s" repeatCount="indefinite" />
-                                </feTurbulence>
-                                <feDisplacementMap in="SourceGraphic" scale="15" />
-                            </filter>
-                         </defs>
-                    </svg>
-
-                    {/* Pink Layer */}
-                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'url(#lightning-noise) drop-shadow(0 0 4px #FF10F0)', overflow: 'visible' }}>
-                        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-pink" vectorEffect="non-scaling-stroke" strokeWidth="4" />
-                    </svg>
-                    {/* Green Layer - Slightly offset or distinct animation */}
-                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'url(#lightning-noise) blur(0.5px)', top: '-8%', left: '-3%', overflow: 'visible' }}>
-                        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-green" vectorEffect="non-scaling-stroke" strokeWidth="4" />
-                    </svg>
-                    
-                    {/* Particles */}
-                    <div className="electric-part part-1" />
-                    <div className="electric-part part-2" />
-                    <div className="electric-part part-3" />
-                    <div className="electric-part part-4" />
-                </>
-            )}
-
             <motion.span 
                 className={`w-full break-words relative z-10 block`}
                 style={{
