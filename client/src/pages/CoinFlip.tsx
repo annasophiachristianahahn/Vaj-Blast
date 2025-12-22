@@ -128,12 +128,16 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         const avgNz = (nz1 + nz2 + nz3) / 3;
 
         // Threshold: 0.5 allows for some curvature/bevel but captures the main face
-        if (avgNz > 0.5) {
-            tailIndices.push(a, b, c); // Normal points towards camera -> Tails (Chocolate)
+        
+        // We want the Edge (Normal Z ~ 0) to be Chocolate (Tails) to prevent Pink bleeding.
+        // We want the Back Face (Normal Z < -0.5) to be Pink Chrome (Heads).
+        // We want the Front Face (Normal Z > 0.5) to be Chocolate (Tails).
+        
+        if (avgNz < -0.5) {
+            headIndices.push(a, b, c); // Back Face -> Heads (Pink Chrome)
         } else {
-            // Back face (Normal < -0.5) and Edge (Normal ~ 0)
-            // All go to Heads (Pink)
-            headIndices.push(a, b, c); 
+            // Front Face (> 0.5) AND Edge (~ 0) -> Tails (Chocolate)
+            tailIndices.push(a, b, c); 
         }
     }
 
