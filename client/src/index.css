@@ -100,15 +100,15 @@
 .rainbow-gradient {
   background: linear-gradient(
     90deg,
-    hsl(0, 100%, 70%),
-    hsl(30, 100%, 70%),
-    hsl(60, 100%, 70%),
-    hsl(120, 100%, 70%),
-    hsl(180, 100%, 70%),
-    hsl(240, 100%, 70%),
-    hsl(280, 100%, 70%),
-    hsl(320, 100%, 70%),
-    hsl(0, 100%, 70%)
+    hsl(0, 100%, 85%),
+    hsl(30, 100%, 85%),
+    hsl(60, 100%, 85%),
+    hsl(120, 100%, 85%),
+    hsl(180, 100%, 85%),
+    hsl(240, 100%, 85%),
+    hsl(280, 100%, 85%),
+    hsl(320, 100%, 85%),
+    hsl(0, 100%, 85%)
   );
   background-size: 200% 100%;
   animation: rainbow-sweep 3s linear infinite;
