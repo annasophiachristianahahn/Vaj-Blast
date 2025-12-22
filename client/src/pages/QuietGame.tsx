@@ -209,7 +209,7 @@ export default function QuietGame() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 md:gap-8 w-full max-w-sm mx-auto p-4 h-full min-h-0">
         
-        <div className="relative w-full max-w-[300px] aspect-square bg-[#7FFF00]/30 rounded-full flex items-center justify-center overflow-hidden backdrop-blur-md shadow-2xl shrink-0">
+        <div className="relative w-full max-w-[300px] aspect-square bg-[#7FFF00]/30 rounded-full flex items-center justify-center overflow-hidden shadow-2xl shrink-0">
             {/* Volume Indicator */}
             <motion.div 
                 className="absolute inset-0 bg-red-600 rounded-full opacity-50"
