@@ -29,9 +29,9 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             
             // Handle array of materials (multi-material mesh)
             if (Array.isArray(originalMaterial)) {
-                 mesh.material = originalMaterial.map((mat) => {
+                 mesh.material = originalMaterial.map((mat, idx) => {
                      const standardMat = mat as MeshStandardMaterial;
-                     return createEnhancedMaterial(standardMat);
+                     return createEnhancedMaterial(standardMat, idx);
                  });
             } else {
                  mesh.material = createEnhancedMaterial(originalMaterial as MeshStandardMaterial);
@@ -45,26 +45,35 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     return clonedScene;
   }, [scene]);
 
-  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial) {
+  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial, index?: number) {
       const color = originalMaterial.color;
       // Heuristic to detect pink vs brown side based on brightness
       // Pink is lighter, Brown is darker
       const brightness = (color.r + color.g + color.b) / 3;
-      const isPinkSide = brightness > 0.3; // Threshold
       
+      let isPinkSide = brightness > 0.3; // Threshold
+
+      // If we have an index from a multi-material array, force differentiation
+      // This ensures we have 2 different shaders even if colors are similar
+      if (index !== undefined) {
+          isPinkSide = index === 0;
+      }
+      
+      // console.log(`Material assignment: Brightness=${brightness.toFixed(2)} Index=${index} IsPink=${isPinkSide}`);
+
       const newMaterial = new MeshStandardMaterial({
           map: originalMaterial.map,
           normalMap: originalMaterial.normalMap,
       });
 
       if (isPinkSide) {
-          // Pink Chrome
+          // Pink Chrome (Shader 1)
           newMaterial.color = new Color("#ff69b4"); // Hot pink
           newMaterial.roughness = 0.05; // Extremely smooth
           newMaterial.metalness = 0.9; // Very metallic
           newMaterial.envMapIntensity = 2.0;
       } else {
-          // Chocolate Brown with highlights - Realistic Chocolate Shader
+          // Chocolate Brown (Shader 2)
           newMaterial.color = new Color("#3e2723"); // Deep chocolate
           newMaterial.roughness = 0.4; // Satin finish
           newMaterial.metalness = 0.1; // Organic
@@ -200,11 +209,12 @@ export default function CoinFlip() {
     
     // Play a faster spin animation
     setTimeout(() => {
-        const outcome = Math.random() > 0.5 ? 'HEADS' : 'TAILS';
+        // Use < 0.5 to ensure fair distribution
+        const outcome = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
         console.log("Coin Flip Result:", outcome); // Debug log
         setResult(outcome);
         setFlipping(false);
-    }, 500); // Reduced to 0.5s to allow for faster perceived action including landing
+    }, 600); // Slightly longer to allow full spin visual
   };
 
   return (
@@ -218,7 +228,7 @@ export default function CoinFlip() {
                         className="w-48 h-48 rounded-full bg-yellow-400 border-8 border-yellow-600 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform shadow-xl"
                     >
                         <span className="text-4xl font-bold text-yellow-800">
-                            {result || "$VAJ"}
+                            {result || "FLIP"}
                         </span>
                     </div>
                     <p className="text-white/60 text-sm">3D View Unavailable (WebGL Error)</p>
