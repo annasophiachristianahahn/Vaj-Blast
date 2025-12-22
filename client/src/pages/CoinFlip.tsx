@@ -133,8 +133,11 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             }
         } else {
              // Idle state (before first flip)
-             mesh.current.rotation.y += Math.sin(state.clock.elapsedTime) * 0.01;
-             mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+             // Subtle wobble / undulate on all 3 axes
+             const t = state.clock.elapsedTime;
+             mesh.current.rotation.x = Math.sin(t * 0.5) * 0.1;
+             mesh.current.rotation.y = Math.sin(t * 0.3) * 0.15;
+             mesh.current.rotation.z = Math.sin(t * 0.7) * 0.05;
         }
     }
   });
