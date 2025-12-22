@@ -62,19 +62,35 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         const b = indices[i + 1];
         const c = indices[i + 2];
 
-        // Get normal of first vertex of the face (approximation)
-        // Or better, average them.
-        const nx = (normals[a * 3] + normals[b * 3] + normals[c * 3]) / 3;
-        // const ny = (normals[a * 3 + 1] + normals[b * 3 + 1] + normals[c * 3 + 1]) / 3;
-        // const nz = (normals[a * 3 + 2] + normals[b * 3 + 2] + normals[c * 3 + 2]) / 3;
+        // Get position of vertices
+        const posAttribute = geometry.attributes.position.array;
+        
+        // Calculate average X position of the face's vertices
+        // Each vertex has 3 components (x, y, z)
+        const ax = posAttribute[a * 3];
+        const bx = posAttribute[b * 3];
+        const cx = posAttribute[c * 3];
+        
+        const avgX = (ax + bx + cx) / 3;
 
-        // Determine side based on X axis (assuming model is aligned along X)
-        // Threshold: > 0.1 is Face A (Heads), < -0.1 is Face B (Tails), else Edge
-        // Lower threshold ensures relief details are included in the face material
-        if (nx > 0.2) {
-            tailIndices.push(a, b, c); // Swap: +X is now Tails
-        } else if (nx < -0.2) {
-            headIndices.push(a, b, c); // Swap: -X is now Heads
+        // Determine side based on X POSITION
+        // Assuming coin center is at 0,0,0
+        // Front face (Heads) will be at some positive X
+        // Back face (Tails) will be at some negative X
+        // Edge will be in between
+        
+        // Threshold: 0.05 seems reasonable for a typical coin thickness if scaled correctly
+        // But since we are scaling the mesh by 5 later, the raw units might be small.
+        // Let's inspect the raw GLB scale. Assuming standard units (meters/cm), a coin is thin.
+        
+        // Since the previous normal method used >0.2 and <-0.2, it implies X-axis alignment.
+        // Let's try a position threshold.
+        const POS_THRESHOLD = 0.02; // Adjust this if needed based on model thickness
+
+        if (avgX > POS_THRESHOLD) {
+            tailIndices.push(a, b, c); // +X is Tails (Chocolate)
+        } else if (avgX < -POS_THRESHOLD) {
+            headIndices.push(a, b, c); // -X is Heads (Pink)
         } else {
             edgeIndices.push(a, b, c);
         }
