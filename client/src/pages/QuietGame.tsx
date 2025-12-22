@@ -19,7 +19,7 @@ export default function QuietGame() {
   // Use RMS threshold (0.0 to 1.0)
   // 0.05 is roughly equivalent to a loud conversation/shout depending on mic gain
   // Lower = More Sensitive (Easier to lose)
-  const THRESHOLD_RMS = 0.004; 
+  const THRESHOLD_RMS = 0.012; 
   // Store more chunks for better context (e.g. 5 seconds buffer)
   const MAX_BUFFER_CHUNKS = 200; 
 
@@ -233,7 +233,7 @@ export default function QuietGame() {
         {!playing && (
             <Button 
                 onClick={startGame}
-                className="w-full text-xl h-16 bg-[#FF10F0]/60 hover:bg-[#FF10F0]/80 text-[#7FFF00] font-display tracking-wider shadow-lg border border-[#7FFF00]"
+                className="w-full text-4xl h-24 bg-[#FF10F0]/60 hover:bg-[#FF10F0]/80 text-[#7FFF00] font-display tracking-wider shadow-lg border border-[#7FFF00]"
             >
                 {gameOver ? "TRY AGAIN" : "START QUIET GAME"}
             </Button>
