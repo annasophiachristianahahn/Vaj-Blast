@@ -1204,15 +1204,30 @@ export default function BlockBlast() {
                         className="bg-black border-2 border-[#FF10F0]/50 p-6 rounded-lg shadow-2xl flex flex-col items-center gap-4 text-white w-full max-w-sm"
                     >
                         <h2 className="text-4xl font-display text-[#FF10F0] animate-pulse text-center">GAME OVER</h2>
-                        <div className="relative w-24 h-24">
+                        <div className="relative w-24 h-24 animate-bounce">
                             <img 
                                 src={gramsImage} 
                                 alt="Game Over" 
-                                className="w-full h-full object-cover rounded-full animate-bounce"
+                                className="w-full h-full object-cover rounded-full"
                             />
                             <div 
                                 className="absolute inset-0 rounded-full mix-blend-hard-light opacity-60"
                                 style={{ backgroundColor: getRandomFunColor() }}
+                            />
+                            {/* Animated Tears */}
+                            {/* Left Eye Tear */}
+                            <motion.div
+                                initial={{ y: 35, opacity: 0, scale: 0 }}
+                                animate={{ y: [35, 80], opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+                                transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+                                className="absolute left-[30%] w-2 h-3 bg-cyan-300 rounded-full drop-shadow-[0_0_2px_rgba(0,255,255,0.8)]"
+                            />
+                            {/* Right Eye Tear */}
+                            <motion.div
+                                initial={{ y: 35, opacity: 0, scale: 0 }}
+                                animate={{ y: [35, 80], opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+                                transition={{ repeat: Infinity, duration: 1.2, delay: 0.5 }}
+                                className="absolute right-[30%] w-2 h-3 bg-cyan-300 rounded-full drop-shadow-[0_0_2px_rgba(0,255,255,0.8)]"
                             />
                         </div>
                         <div className="text-center">
