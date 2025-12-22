@@ -20,11 +20,9 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
 
   // Calculate responsive scale based on viewport width
   // User requested "as big as possible without cropping"
-  // 1.35 was too big (cropped). 0.9 was too small.
-  // Estimated model diameter is ~0.9 units relative to scale.
-  // Using 1.0 multiplier should result in ~90% screen width coverage.
+  // 1.0 was slightly too big. Reducing to 0.9.
   const dim = Math.min(viewport.width, viewport.height);
-  const scale = dim * 1.0;
+  const scale = dim * 0.9;
   
   // Process geometry to split into groups
   const processedNode = useMemo(() => {
