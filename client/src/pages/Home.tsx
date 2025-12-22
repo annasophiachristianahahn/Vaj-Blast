@@ -38,19 +38,22 @@ export default function Home() {
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
                     label="COIN FLIP"
-                    baseColor="#FF0055" // Vibrant Red-Pink
+                    bgColor="#3B00FF" // Electric Blue
+                    textColor="#00FFCC" // Neon Teal
                 />
                 <GameTab 
                     active={activeGame === 'quiet-game'} 
                     onClick={() => setActiveGame('quiet-game')}
                     label="QUIET GAME"
-                    baseColor="#9D00FF" // Electric Purple
+                    bgColor="#9900FF" // Electric Violet
+                    textColor="#FFE600" // Neon Yellow
                 />
                 <GameTab 
                     active={activeGame === 'block-blast'} 
                     onClick={() => setActiveGame('block-blast')}
                     label="VAJ BLAST"
-                    baseColor="#00CC44" // Vibrant Green
+                    bgColor="#FF003C" // Neon Red
+                    textColor="#00FFEA" // Cyan
                 />
             </div>
 
@@ -60,7 +63,8 @@ export default function Home() {
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
                     label="larong Tic Tac Toe sa papel"
-                    baseColor="#FF9500" // Bright Orange
+                    bgColor="#FF9500" // Neon Orange
+                    textColor="#8A2BE2" // Blue Violet
                 />
             </div>
         </div>
@@ -88,25 +92,49 @@ export default function Home() {
   );
 }
 
-function GameTab({ active, onClick, label, baseColor }: { active: boolean, onClick: () => void, label: string, baseColor: string }) {
+function GameTab({ active, onClick, label, bgColor, textColor }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string }) {
     return (
-        <Button
+        <motion.button
             onClick={onClick}
             className={`
-                relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase transition-all whitespace-normal overflow-hidden leading-none
-                border backdrop-blur-sm
-                ${active 
-                    ? 'text-white scale-[1.02] z-10' 
-                    : 'text-white/90 hover:text-white hover:-translate-y-0.5'}
+                relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
+                border-2 backdrop-blur-md rounded-md
             `}
             style={{
-                backgroundColor: active ? `${baseColor}E6` : `${baseColor}66`, // E6 = 90%, 66 = 40%
-                borderColor: active ? '#ffffff' : baseColor,
-                boxShadow: active ? `0 0 15px ${baseColor}66` : 'none',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                backgroundColor: active ? `${bgColor}D9` : `${bgColor}99`, // D9 = 85%, 99 = 60% opacity
+                color: active ? '#FFFFFF' : textColor,
+                borderColor: active ? '#7FFF00' : textColor, // Chartreuse when active, text color when inactive
+                textShadow: active ? '0 2px 4px rgba(0,0,0,0.5)' : 'none',
             }}
+            animate={active ? {
+                y: [0, -4, 0],
+                boxShadow: [
+                    "0 0 10px #7FFF00",
+                    "0 0 20px #7FFF00",
+                    "0 0 10px #7FFF00"
+                ],
+                scale: 1.02
+            } : {
+                y: 0,
+                boxShadow: "none",
+                scale: 1
+            }}
+            transition={active ? {
+                y: {
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut"
+                },
+                boxShadow: {
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut"
+                }
+            } : { duration: 0.2 }}
+            whileHover={{ scale: 1.02, backgroundColor: `${bgColor}CC` }}
+            whileTap={{ scale: 0.98 }}
         >
-            <span className="w-full break-words">{label}</span>
-        </Button>
+            <span className="w-full break-words relative z-10">{label}</span>
+        </motion.button>
     )
 }
