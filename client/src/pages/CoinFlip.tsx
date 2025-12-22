@@ -84,17 +84,21 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         // Landing animation
         if (result) {
             // Target rotations
-            // HEADS: Face camera (0).
-            // TAILS: Face away (PI).
-            // Logic derived from user feedback:
-            // "No it is still upside down" -> My previous logic of Z=PI for Heads was wrong.
-            // So Heads Upright must be Z=0.
+            // HEADS: Should show Chocolate side (Back).
+            // TAILS: Should show Pink side (Front).
             
-            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
-            // If Tails (X=PI) makes it inverted, we need Z=PI to upright it.
-            // If Heads (X=0) is Upright at Z=0, then Tails (X=PI) is inverted.
-            // So Tails needs Z=PI.
-            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
+            // Front (Pink) is X=0. Back (Chocolate) is X=PI.
+            // HEADS -> X=PI
+            // TAILS -> X=0
+            const targetRotationX = result === 'HEADS' ? Math.PI : 0;
+            
+            // Orientation correction (Z-axis):
+            // Pink (X=0) needs Z=0 to be Upright.
+            // Chocolate (X=PI) is inverted by the X-flip. To be Upright, it needs Z=PI.
+            
+            // HEADS (X=PI) -> Needs Z=PI
+            // TAILS (X=0)  -> Needs Z=0
+            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -135,9 +139,12 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             }
         } else {
              // Idle state (before first flip)
-             // Obvious wobble / undulate on all 3 axes
-             // Base state for Idle is HEADS (Pink).
-             // If previous logic (Z=PI) was Upside Down, then Z=0 must be Upright.
+             // Should show "Tails" (Pink side) as user requested flip.
+             // Or actually, user didn't specify idle side.
+             // But if Pink is TAILS, and we want to show Pink in Idle (usually Front side),
+             // then Idle shows TAILS.
+             
+             // Base state for Idle is Pink (Front) -> X=0, Z=0.
              const t = state.clock.elapsedTime;
              mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
              mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
@@ -164,7 +171,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
               Base model [0, PI/2, 0] is "Faces Camera" but "Upside Down".
               We handle the Z-flip in the animation logic (Idle Z=PI, Heads Z=PI).
             */}
-            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, 0]} />
+            <primitive object={clone} scale={6} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
@@ -206,7 +213,7 @@ export default function CoinFlip() {
                 </div>
             }
         >
-            <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
+            <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
             {/* Enhanced lighting for metal reflections */}
             <ambientLight intensity={1.5} />
             <pointLight position={[10, 10, 10]} intensity={2} />
