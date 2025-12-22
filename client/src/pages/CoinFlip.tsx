@@ -25,37 +25,18 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     clonedScene.traverse((child) => {
         if ((child as Mesh).isMesh) {
             const mesh = child as Mesh;
-            const originalMaterial = mesh.material as MeshStandardMaterial;
-            const color = originalMaterial.color;
+            const originalMaterial = mesh.material;
             
-            // Heuristic to detect pink vs brown side based on brightness
-            // Pink is lighter, Brown is darker
-            // Adjust threshold based on the actual model colors if needed
-            const brightness = (color.r + color.g + color.b) / 3;
-            const isPinkSide = brightness > 0.3; // Threshold
-
-            const newMaterial = new MeshStandardMaterial({
-                map: originalMaterial.map,
-                normalMap: originalMaterial.normalMap,
-            });
-
-            if (isPinkSide) {
-                // Pink Chrome
-                newMaterial.color = new Color("#ff69b4"); // Hot pink
-                newMaterial.roughness = 0.05; // Extremely smooth
-                newMaterial.metalness = 0.9; // Very metallic
-                newMaterial.envMapIntensity = 2.0;
+            // Handle array of materials (multi-material mesh)
+            if (Array.isArray(originalMaterial)) {
+                 mesh.material = originalMaterial.map((mat) => {
+                     const standardMat = mat as MeshStandardMaterial;
+                     return createEnhancedMaterial(standardMat);
+                 });
             } else {
-                // Chocolate Brown with highlights - Realistic Chocolate Shader
-                newMaterial.color = new Color("#3e2723"); // Deep chocolate
-                newMaterial.roughness = 0.4; // Satin finish, not too glossy, not too matte
-                newMaterial.metalness = 0.1; // Chocolate is organic, not metallic
-                newMaterial.emissive = new Color("#5d4037"); // Subtle brown glow for subsurface feel
-                newMaterial.emissiveIntensity = 0.05;
-                newMaterial.envMapIntensity = 0.8;
+                 mesh.material = createEnhancedMaterial(originalMaterial as MeshStandardMaterial);
             }
             
-            mesh.material = newMaterial;
             mesh.castShadow = true;
             mesh.receiveShadow = true;
         }
@@ -63,6 +44,36 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     
     return clonedScene;
   }, [scene]);
+
+  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial) {
+      const color = originalMaterial.color;
+      // Heuristic to detect pink vs brown side based on brightness
+      // Pink is lighter, Brown is darker
+      const brightness = (color.r + color.g + color.b) / 3;
+      const isPinkSide = brightness > 0.3; // Threshold
+      
+      const newMaterial = new MeshStandardMaterial({
+          map: originalMaterial.map,
+          normalMap: originalMaterial.normalMap,
+      });
+
+      if (isPinkSide) {
+          // Pink Chrome
+          newMaterial.color = new Color("#ff69b4"); // Hot pink
+          newMaterial.roughness = 0.05; // Extremely smooth
+          newMaterial.metalness = 0.9; // Very metallic
+          newMaterial.envMapIntensity = 2.0;
+      } else {
+          // Chocolate Brown with highlights - Realistic Chocolate Shader
+          newMaterial.color = new Color("#3e2723"); // Deep chocolate
+          newMaterial.roughness = 0.4; // Satin finish
+          newMaterial.metalness = 0.1; // Organic
+          newMaterial.emissive = new Color("#5d4037"); // Subtle brown glow
+          newMaterial.emissiveIntensity = 0.05;
+          newMaterial.envMapIntensity = 0.8;
+      }
+      return newMaterial;
+  }
 
   // Randomize spin speed slightly for every flip so it doesn't look identical
   const [spinSpeed, setSpinSpeed] = useState(50);
@@ -84,21 +95,21 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         // Landing animation
         if (result) {
             // Target rotations
-            // HEADS: Should show Pink Chrome side (Front).
-            // TAILS: Should show Chocolate side (Back).
+            // HEADS: Should show Chocolate side (Back).
+            // TAILS: Should show Pink side (Front).
             
             // Front (Pink) is X=0. Back (Chocolate) is X=PI.
-            // HEADS -> X=0
-            // TAILS -> X=PI
-            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
+            // HEADS -> X=PI
+            // TAILS -> X=0
+            const targetRotationX = result === 'HEADS' ? Math.PI : 0;
             
             // Orientation correction (Z-axis):
             // Pink (X=0) needs Z=0 to be Upright.
             // Chocolate (X=PI) is inverted by the X-flip. To be Upright, it needs Z=PI.
             
-            // HEADS (X=0) -> Needs Z=0
-            // TAILS (X=PI) -> Needs Z=PI
-            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
+            // HEADS (X=PI) -> Needs Z=PI
+            // TAILS (X=0) -> Needs Z=0
+            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -158,7 +169,8 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={mesh} 
-            rotation={[0, 0, 0]} // Initial: Heads Upright at Z=0
+            rotation={[Math.PI, 0, Math.PI]} // Initial: Heads (Chocolate) Upright. 
+            // Chocolate is X=PI, Z=PI.
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
