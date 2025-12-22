@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Use public path
-const coinModelPath = "/coin_v2.glb";
+const coinModelPath = "/coin_v3.glb";
 
 // Preload the model
 useGLTF.preload(coinModelPath);
