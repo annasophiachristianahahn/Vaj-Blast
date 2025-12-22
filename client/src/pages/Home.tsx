@@ -40,6 +40,7 @@ export default function Home() {
                     label="COIN FLIP"
                     bgColor="#3B00FF" // Electric Blue
                     textColor="#00FFCC" // Neon Teal
+                    className="w-full"
                 />
                 <GameTab 
                     active={activeGame === 'quiet-game'} 
@@ -47,6 +48,7 @@ export default function Home() {
                     label="QUIET GAME"
                     bgColor="#9900FF" // Electric Violet
                     textColor="#FFE600" // Neon Yellow
+                    className="w-full"
                 />
                 <GameTab 
                     active={activeGame === 'block-blast'} 
@@ -54,6 +56,7 @@ export default function Home() {
                     label="VAJ BLAST"
                     bgColor="#FF003C" // Neon Red
                     textColor="#00FFEA" // Cyan
+                    className="w-full"
                 />
             </div>
 
@@ -98,11 +101,11 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
         <motion.button
             onClick={onClick}
             className={`
-                relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
+                relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
                 border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
-                backgroundColor: active ? `${bgColor}D9` : `${bgColor}99`, // D9 = 85%, 99 = 60% opacity
+                backgroundColor: active ? `${bgColor}E0` : `${bgColor}C4`, // E0 = 88%, C4 = 77% opacity
                 borderColor: active ? '#98FF98' : textColor, // Mint green when active, text color when inactive
             }}
             animate={active ? {
