@@ -54,7 +54,6 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     
     const headIndices: number[] = [];
     const tailIndices: number[] = [];
-    const edgeIndices: number[] = [];
 
     // 1. CENTER THE GEOMETRY
     geometry.center();
@@ -102,16 +101,24 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     // Edge will have Normal.z approx 0
     
     // We already have normals and indices from above
+    // Note: After rotation, normals in the buffer are NOT automatically rotated if we only rotated geometry.
+    // wait, geometry.rotateY DOES rotate normals.
     
+    // However, the `normals` array variable still holds the ORIGINAL values because it's a reference to the buffer attribute array
+    // which might or might not have been updated in place, but usually threejs updates the buffer content.
+    // Let's re-fetch the attribute array to be safe.
+    
+    const rotatedNormals = geometry.attributes.normal.array;
+
     for (let i = 0; i < indices.length; i += 3) {
         const a = indices[i];
         const b = indices[i + 1];
         const c = indices[i + 2];
 
         // Average normal Z of the triangle
-        const nz1 = normals[a * 3 + 2];
-        const nz2 = normals[b * 3 + 2];
-        const nz3 = normals[c * 3 + 2];
+        const nz1 = rotatedNormals[a * 3 + 2];
+        const nz2 = rotatedNormals[b * 3 + 2];
+        const nz3 = rotatedNormals[c * 3 + 2];
         const avgNz = (nz1 + nz2 + nz3) / 3;
 
         // Threshold: 0.5 allows for some curvature/bevel but captures the main face
@@ -168,15 +175,13 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         name: "Chocolate"
     });
 
-    // Assign new geometry and material array to the mesh
-    targetMesh.geometry = geometry;
-    targetMesh.material = [headsMaterial, tailsMaterial];
+    // Return a clean mesh with the processed geometry
+    // This avoids any parent transforms from the GLTF scene
+    const cleanMesh = new Mesh(geometry, [headsMaterial, tailsMaterial]);
+    cleanMesh.castShadow = true;
+    cleanMesh.receiveShadow = true;
     
-    // Ensure shadow casting
-    targetMesh.castShadow = true;
-    targetMesh.receiveShadow = true;
-
-    return clonedScene;
+    return cleanMesh;
   }, [scene]);
 
   // Randomize spin speed slightly for every flip so it doesn't look identical
