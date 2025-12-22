@@ -26,15 +26,18 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         if ((child as Mesh).isMesh) {
             const mesh = child as Mesh;
             const originalMaterial = mesh.material;
+
+            console.log("Mesh Name:", mesh.name);
+            console.log("Material:", originalMaterial);
             
             // Handle array of materials (multi-material mesh)
             if (Array.isArray(originalMaterial)) {
                  mesh.material = originalMaterial.map((mat, idx) => {
                      const standardMat = mat as MeshStandardMaterial;
-                     return createEnhancedMaterial(standardMat, idx);
+                     return createEnhancedMaterial(standardMat, idx, mesh.name);
                  });
             } else {
-                 mesh.material = createEnhancedMaterial(originalMaterial as MeshStandardMaterial);
+                 mesh.material = createEnhancedMaterial(originalMaterial as MeshStandardMaterial, undefined, mesh.name);
             }
             
             mesh.castShadow = true;
@@ -45,22 +48,32 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     return clonedScene;
   }, [scene]);
 
-  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial, index?: number) {
+  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial, index?: number, meshName: string = '') {
       const color = originalMaterial.color;
       // Heuristic to detect pink vs brown side based on brightness
       // Pink is lighter, Brown is darker
       const brightness = (color.r + color.g + color.b) / 3;
       
-      let isPinkSide = brightness > 0.3; // Threshold
+      // Default heuristic
+      let isPinkSide = brightness > 0.3; 
+
+      // Debug log
+      console.log(`Mesh: "${meshName}", Brightness: ${brightness.toFixed(3)}, Original Color: #${color.getHexString()}`);
 
       // If we have an index from a multi-material array, force differentiation
-      // This ensures we have 2 different shaders even if colors are similar
       if (index !== undefined) {
           isPinkSide = index === 0;
+      } 
+      // Name-based override (stronger than brightness)
+      else if (meshName) {
+          const lowerName = meshName.toLowerCase();
+          if (lowerName.includes('head') || lowerName.includes('back') || lowerName.includes('chocolate')) {
+              isPinkSide = false; // Chocolate
+          } else if (lowerName.includes('tail') || lowerName.includes('front') || lowerName.includes('pink')) {
+              isPinkSide = true; // Pink
+          }
       }
       
-      // console.log(`Material assignment: Brightness=${brightness.toFixed(2)} Index=${index} IsPink=${isPinkSide}`);
-
       const newMaterial = new MeshStandardMaterial({
           map: originalMaterial.map,
           normalMap: originalMaterial.normalMap,
