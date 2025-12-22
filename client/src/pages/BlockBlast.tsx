@@ -1147,7 +1147,7 @@ export default function BlockBlast() {
   });
 
   return (
-    <div className="flex flex-col items-center justify-between h-full w-full max-w-3xl mx-auto select-none touch-none relative px-2 pb-2">
+    <div className="flex flex-col items-center justify-between h-full w-full max-w-lg mx-auto select-none touch-none relative px-2 pb-2">
         {/* Explosion Overlay */}
         <AnimatePresence>
             {showExplosion && (
@@ -1281,13 +1281,13 @@ export default function BlockBlast() {
                     scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
                 }}
                 transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden aspect-square"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    width: 'min(100%, 100vh - 180px)', // Constrain width primarily to ensure mobile fill
-                    height: 'auto', // Let aspect ratio handle height
+                    width: 'min(100%, 100vh - 180px)', // Constrain width based on available height
+                    height: 'auto', // Let aspect ratio drive height based on width
                     maxWidth: '100%',
                     maxHeight: '100%'
                 }}
