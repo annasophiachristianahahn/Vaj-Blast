@@ -42,7 +42,7 @@ export default function Home() {
       <div className="flex flex-col items-center gap-1 md:gap-2 w-full h-full max-w-[100vw] overflow-hidden pt-2">
 
         {/* Game Selector */}
-        <div className="w-full z-20 px-4 flex flex-col items-center gap-4 shrink-0">
+        <div className="w-full z-20 px-4 flex flex-col items-center gap-4 shrink-0 mt-8">
             {/* Main Games Grid - Top Row */}
             <div className="flex flex-wrap justify-center w-full gap-2 md:gap-4 pb-0">
                 <GameTab 

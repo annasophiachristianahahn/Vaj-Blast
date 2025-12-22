@@ -21,7 +21,10 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
   // Calculate responsive scale based on viewport width
   // Minimum scale of 3.5, max of 5, scaling with viewport width
   // This ensures it fits on mobile but isn't too small on desktop
-  const scale = Math.min(Math.max(viewport.width * 0.7, 3.5), 5);
+  const isMobile = viewport.width < 5;
+  const scale = isMobile 
+    ? Math.min(viewport.width * 0.9, 4.5) // Mobile: Fill 90% of width, up to 4.5
+    : Math.min(Math.max(viewport.width * 0.7, 3.5), 5); // Desktop: Original logic
   
   // Process geometry to split into groups
   const processedNode = useMemo(() => {
