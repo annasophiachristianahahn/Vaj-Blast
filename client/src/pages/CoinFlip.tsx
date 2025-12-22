@@ -1,5 +1,5 @@
 import { Layout } from "@/components/Layout";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
 import { Group, Mesh, MeshStandardMaterial, Color, BufferGeometry, Float32BufferAttribute } from "three";
 import { Float, Environment, useGLTF } from "@react-three/drei";
@@ -16,6 +16,12 @@ useGLTF.preload(coinModelPath);
 function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
   const meshRef = useRef<Group>(null!);
   const { scene } = useGLTF(coinModelPath);
+  const { viewport } = useThree();
+
+  // Calculate responsive scale based on viewport width
+  // Minimum scale of 3.5, max of 5, scaling with viewport width
+  // This ensures it fits on mobile but isn't too small on desktop
+  const scale = Math.min(Math.max(viewport.width * 0.7, 3.5), 5);
   
   // Process geometry to split into groups
   const processedNode = useMemo(() => {
@@ -251,7 +257,7 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
                 Original Geometry: Faces along X.
                 Rotation [0, PI/2, 0]: X -> Z.
             */}
-            <primitive object={processedNode} scale={5} rotation={[0, Math.PI / 2, 0]} />
+            <primitive object={processedNode} scale={scale} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );

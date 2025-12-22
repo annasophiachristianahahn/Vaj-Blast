@@ -122,7 +122,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, activeTextColor, 
         <motion.button
             onClick={onClick}
             className={`
-                relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal leading-none
+                relative h-12 md:h-14 px-1 md:px-6 font-display text-base sm:text-lg md:text-2xl uppercase whitespace-normal leading-none
                 border-2 rounded-md flex items-center justify-center ${className}
             `}
             style={{
