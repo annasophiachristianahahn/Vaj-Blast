@@ -113,16 +113,16 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
-                backgroundColor: active ? hexToRgba(bgColor, 0.5) : hexToRgba(bgColor, 0.3),
+                backgroundColor: active ? hexToRgba(bgColor, 0.35) : hexToRgba(bgColor, 0.15),
                 borderColor: active ? '#98FF98' : textColor,
             }}
             initial={active ? {
-                backgroundColor: hexToRgba(bgColor, 0.5),
+                backgroundColor: hexToRgba(bgColor, 0.35),
                 y: 0,
                 scale: 1,
                 boxShadow: "none"
             } : {
-                backgroundColor: hexToRgba(bgColor, 0.3),
+                backgroundColor: hexToRgba(bgColor, 0.15),
                 y: 0,
                 scale: 1,
                 boxShadow: "none"
@@ -135,12 +135,12 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                     "0 0 10px #98FF98"
                 ],
                 scale: 1.02,
-                backgroundColor: hexToRgba(bgColor, 0.5),
+                backgroundColor: hexToRgba(bgColor, 0.35),
             } : {
                 y: 0,
                 boxShadow: "none",
                 scale: 1,
-                backgroundColor: hexToRgba(bgColor, 0.3),
+                backgroundColor: hexToRgba(bgColor, 0.15),
             }}
             transition={active ? {
                 y: {
@@ -155,7 +155,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 },
                 backgroundColor: { duration: 0.3 }
             } : { duration: 0.2 }}
-            whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.4) }}
+            whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.25) }}
             whileTap={{ scale: 0.98 }}
         >
             <motion.span 
