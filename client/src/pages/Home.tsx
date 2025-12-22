@@ -98,17 +98,11 @@ function GameTab({ active, onClick, label, bgColor, textColor }: { active: boole
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
-                border-2 backdrop-blur-md rounded-md
+                border-2 backdrop-blur-md rounded-md flex items-center justify-center
             `}
             style={{
                 backgroundColor: active ? `${bgColor}D9` : `${bgColor}99`, // D9 = 85%, 99 = 60% opacity
-                color: active ? 'transparent' : textColor,
-                borderColor: active ? '#98FF98' : textColor, // Mint green when active
-                textShadow: active ? '0 2px 4px rgba(0,0,0,0.5)' : 'none',
-                backgroundClip: active ? 'text' : 'border-box',
-                WebkitBackgroundClip: active ? 'text' : 'border-box',
-                backgroundImage: active ? 'linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee)' : 'none',
-                backgroundSize: active ? '200% 100%' : 'auto',
+                borderColor: active ? '#98FF98' : textColor, // Mint green when active, text color when inactive
             }}
             animate={active ? {
                 y: [0, -4, 0],
@@ -118,12 +112,10 @@ function GameTab({ active, onClick, label, bgColor, textColor }: { active: boole
                     "0 0 10px #98FF98"
                 ],
                 scale: 1.02,
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
             } : {
                 y: 0,
                 boxShadow: "none",
                 scale: 1,
-                backgroundPosition: "0% 50%"
             }}
             transition={active ? {
                 y: {
@@ -135,17 +127,35 @@ function GameTab({ active, onClick, label, bgColor, textColor }: { active: boole
                     repeat: Infinity,
                     duration: 2,
                     ease: "easeInOut"
-                },
-                backgroundPosition: {
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "linear"
                 }
             } : { duration: 0.2 }}
             whileHover={{ scale: 1.02, backgroundColor: `${bgColor}CC` }}
             whileTap={{ scale: 0.98 }}
         >
-            <span className="w-full break-words relative z-10">{label}</span>
+            <motion.span 
+                className="w-full break-words relative z-10 block"
+                style={{
+                    color: active ? 'transparent' : textColor,
+                    backgroundClip: active ? 'text' : 'border-box',
+                    WebkitBackgroundClip: active ? 'text' : 'border-box',
+                    backgroundImage: active ? 'linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee)' : 'none',
+                    backgroundSize: active ? '200% 100%' : 'auto',
+                    filter: active ? 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' : 'none',
+                    // Fallback for text shadow if filter doesn't cut it, but filter is better for clipped text
+                }}
+                animate={active ? {
+                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+                } : {
+                    backgroundPosition: "0% 50%"
+                }}
+                transition={active ? {
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear"
+                } : {}}
+            >
+                {label}
+            </motion.span>
         </motion.button>
     )
 }
