@@ -110,7 +110,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
-                border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
+                border-2 rounded-md flex items-center justify-center ${className}
             `}
             style={{
                 backgroundColor: active ? hexToRgba(bgColor, 0.35) : hexToRgba(bgColor, 0.15),
