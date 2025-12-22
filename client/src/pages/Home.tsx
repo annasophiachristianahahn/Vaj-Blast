@@ -33,14 +33,14 @@ export default function Home() {
         {/* Game Selector */}
         <div className="w-full z-20 px-4 flex flex-col items-center gap-4 shrink-0">
             {/* Main Games Grid - Top Row */}
-            <div className="grid grid-cols-3 w-full gap-2 md:gap-4 pb-0">
+            <div className="flex flex-wrap justify-center w-full gap-2 md:gap-4 pb-0">
                 <GameTab 
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
                     label="COIN FLIP"
                     bgColor="#3B00FF" // Electric Blue
                     textColor="#00FFCC" // Neon Teal
-                    className="w-full"
+                    className="w-auto px-4"
                 />
                 <GameTab 
                     active={activeGame === 'quiet-game'} 
@@ -48,7 +48,7 @@ export default function Home() {
                     label="QUIET GAME"
                     bgColor="#9900FF" // Electric Violet
                     textColor="#fff000" // Neon Yellow
-                    className="w-full"
+                    className="w-auto px-4"
                 />
                 <GameTab 
                     active={activeGame === 'block-blast'} 
@@ -56,7 +56,7 @@ export default function Home() {
                     label="VAJ BLAST"
                     bgColor="#FF003C" // Neon Red
                     textColor="#00FFEA" // Cyan
-                    className="w-full"
+                    className="w-auto px-4"
                 />
             </div>
 
