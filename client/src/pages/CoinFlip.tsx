@@ -307,6 +307,7 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={meshRef} 
+            position={[0, 0.8, 0]} 
             rotation={[0, 0, 0]} 
             onClick={(e) => {
                 e.stopPropagation();
@@ -375,18 +376,18 @@ export default function CoinFlip() {
         </ErrorBoundary>
       </div>
       
-      <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-2 z-10 pointer-events-none">
+      <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 z-10 pointer-events-none">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
-                className="text-3xl md:text-5xl font-display text-[#ff00ff] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)]"
+                className="text-3xl md:text-5xl font-display text-[#ff00ff] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] md:drop-shadow-[4px_4px_0_rgba(0,0,0,1)] mb-1"
             >
                 {result}!
             </motion.div>
         )}
         
-        <div className="text-xs md:text-sm opacity-50 font-mono animate-pulse mt-1 text-white drop-shadow-md">
+        <div className="text-xs md:text-sm opacity-50 font-mono animate-pulse mt-0 text-white drop-shadow-md mb-2">
             TAP COIN TO FLIP
         </div>
       </div>
