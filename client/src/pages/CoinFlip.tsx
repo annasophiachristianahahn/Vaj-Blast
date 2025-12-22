@@ -377,7 +377,7 @@ export default function CoinFlip() {
         </ErrorBoundary>
       </div>
       
-      <div className="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
+      <div className="absolute top-1/2 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none mt-[42vw] md:mt-[250px] landscape:top-auto landscape:bottom-2 landscape:mt-0 pb-safe">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
