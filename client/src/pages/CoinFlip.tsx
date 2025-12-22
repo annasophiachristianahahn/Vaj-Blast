@@ -128,16 +128,16 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             
             // Add subtle wobble when settled
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
-                 mesh.current.rotation.x += Math.sin(state.clock.elapsedTime * 4) * 0.005;
-                 mesh.current.rotation.y += Math.cos(state.clock.elapsedTime * 3) * 0.005;
+                 mesh.current.rotation.x += Math.sin(state.clock.elapsedTime * 5) * 0.02;
+                 mesh.current.rotation.y += Math.cos(state.clock.elapsedTime * 3) * 0.02;
             }
         } else {
              // Idle state (before first flip)
-             // Subtle wobble / undulate on all 3 axes - faster/more obvious as requested
+             // Obvious wobble / undulate on all 3 axes
              const t = state.clock.elapsedTime;
-             mesh.current.rotation.x = Math.sin(t * 2.0) * 0.15;
-             mesh.current.rotation.y = Math.sin(t * 1.5) * 0.2;
-             mesh.current.rotation.z = Math.sin(t * 2.5) * 0.08;
+             mesh.current.rotation.x = Math.sin(t * 3) * 0.3; // Much larger amplitude
+             mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
+             mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
         }
     }
   });
@@ -156,11 +156,12 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         >
             {/* 
               Rotation adjustment:
-              [0, Math.PI / 2, Math.PI] 
-              - Math.PI / 2 on Y fixes the side-view issue.
-              - Math.PI on Z flips the face upside down (fixing "pink is upside down").
+              The model needs to be rotated 180 degrees on Z to appear upright.
+              Since we also need Y rotation to face the camera, we nest rotations.
             */}
-            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, Math.PI]} />
+            <group rotation={[0, 0, Math.PI]}>
+                <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, 0]} />
+            </group>
         </group>
     </Float>
   );
