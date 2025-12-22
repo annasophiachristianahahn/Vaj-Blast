@@ -67,7 +67,8 @@ export default function Home() {
                     onClick={() => setActiveGame('tic-tac-toe')}
                     label="larong Tic Tac Toe sa papel"
                     bgColor="#FF9500" // Neon Orange
-                    textColor="#8A2BE2" // Blue Violet
+                    textColor="#6c00ff"
+                    activeTextColor="#0000ff"
                     className="w-auto"
                 />
             </div>
@@ -96,7 +97,7 @@ export default function Home() {
   );
 }
 
-function GameTab({ active, onClick, label, bgColor, textColor, className = "" }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string, className?: string }) {
+function GameTab({ active, onClick, label, bgColor, textColor, activeTextColor, className = "" }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string, activeTextColor?: string, className?: string }) {
     // Helper to convert hex to rgba
     const hexToRgba = (hex: string, alpha: number) => {
         const r = parseInt(hex.slice(1, 3), 16);
@@ -180,7 +181,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             <motion.span 
                 className={`w-full break-words relative z-10 block`}
                 style={{
-                    color: active ? getInverseColor(bgColor) : textColor,
+                    color: active ? (activeTextColor || getInverseColor(bgColor)) : textColor,
                     filter: active ? 'none' : 'none',
                     fontWeight: active ? '900' : 'normal'
                 }}
