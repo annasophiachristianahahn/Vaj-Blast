@@ -100,6 +100,13 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         geometry.rotateX(Math.PI / 2); // Y -> Z
     }
     
+    // CORRECTION FOR ARTWORK ORIENTATION
+    // The user reported the artwork is rotated 90 degrees.
+    // Heads is rotated 90 deg right, Tails 90 deg left.
+    // A single rotation around Z (the face axis) should fix both.
+    // Rotating +90 degrees (Counter-Clockwise) should bring "Right" back to "Top".
+    geometry.rotateZ(Math.PI / 2);
+
     // 4. CLASSIFY FACES BASED ON NORMALS
     // Now that geometry is aligned to Z:
     // Front Face (Heads) will have Normal.z > 0 (approx 1)
