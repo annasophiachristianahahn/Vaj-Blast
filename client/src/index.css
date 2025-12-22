@@ -134,59 +134,74 @@
   filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
 }
 
-/* Lightning Border Effect using @property for smooth rotation */
-@property --lightning-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
+/* Electric/Lightning Effect based on user request */
+@keyframes electric-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
-@keyframes lightning-spin {
-  0% { --lightning-angle: 0deg; }
-  100% { --lightning-angle: 360deg; }
+.electric-svg {
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  width: 110%;
+  height: 120%;
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;
 }
 
-.lightning-effect {
-    position: relative;
-    /* Ensure no overflow clipping so the glow can be seen */
-    overflow: visible !important;
-    /* Optional: Ensure z-index allows pseudo-element to be behind */
-    z-index: 1;
+.electric-stroke-pink {
+  stroke: #FF10F0;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 1000;
+  animation: electric-dash 1s linear infinite alternate-reverse;
+  filter: blur(1px) brightness(1.5);
 }
 
-.lightning-effect::before {
-    content: "";
-    position: absolute;
-    /* Expand slightly to create the border/glow area */
-    top: -3px; left: -3px; right: -3px; bottom: -3px;
-    z-index: -1;
-    
-    background: conic-gradient(
-        from var(--lightning-angle),
-        transparent 0%,
-        #FF10F0 20%,      /* Pink */
-        transparent 40%,
-        #7FFF00 60%,      /* Chartreuse/Green */
-        transparent 80%,
-        #FF10F0 90%,
-        transparent 100%
-    );
-    
-    border-radius: calc(0.5rem + 2px); /* Slightly larger than button radius (rounded-md = 0.375rem usually, assume 0.5rem) */
-    animation: lightning-spin 2s linear infinite;
-    filter: blur(6px) brightness(1.5);
+.electric-stroke-green {
+  stroke: #7FFF00;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 1000;
+  animation: electric-dash 1.2s linear infinite alternate-reverse;
+  filter: brightness(1.2);
 }
 
-.lightning-effect::after {
-    /* Inner dark background for the button itself if needed, 
-       but we handle background in the component style. 
-       Just ensuring we don't lose the shape. */
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 0.375rem; /* rounded-md */
-    z-index: -1;
-    /* The background color set in React style will apply to the button element, 
-       but if we need to mask the center of the conic gradient: */
-    background: inherit; 
+/* Particles */
+.electric-part {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #7FFF00;
+  position: absolute;
+  filter: blur(1px);
+  z-index: 20;
+  pointer-events: none;
+  display: block;
 }
+
+@keyframes dot1 {
+  from{ bottom: 0%; left: 10%; opacity: 1; }
+  to{ bottom: -30%; left: 0%; opacity: 0; }
+}
+@keyframes dot2 {
+  from{ top: 0%; left: 30%; opacity: 1; }
+  to{ top: -30%; left: 40%; opacity: 0; }
+}
+@keyframes dot3 {
+  from{ top: 0%; left: 80%; opacity: 1; }
+  to{ top: -30%; left: 80%; opacity: 0; }
+}
+@keyframes dot4 {
+  from{ bottom: 20%; left: 100%; opacity: 1; }
+  to{ bottom: 30%; left: 120%; opacity: 0; }
+}
+
+.part-1 { animation: dot1 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite; }
+.part-2 { animation: dot2 1.6s cubic-bezier(0.165, 0.84, 0.44, 1) infinite; }
+.part-3 { animation: dot3 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite; }
+.part-4 { animation: dot4 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite; }

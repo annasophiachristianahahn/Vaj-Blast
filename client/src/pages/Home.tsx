@@ -122,7 +122,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal leading-none
-                border-2 rounded-md flex items-center justify-center ${className} ${active ? 'lightning-effect' : ''}
+                border-2 rounded-md flex items-center justify-center ${className}
             `}
             style={{
                 backgroundColor: active ? hexToRgba(bgColor, 0.62) : hexToRgba(bgColor, 0.44),
@@ -159,6 +159,26 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.67) }}
             whileTap={{ scale: 0.98 }}
         >
+            {/* SVG Electricity Effect */}
+            {active && (
+                <>
+                    {/* Pink Layer */}
+                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-pink" vectorEffect="non-scaling-stroke" />
+                    </svg>
+                    {/* Green Layer - Slightly offset or distinct animation */}
+                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'blur(0.5px)', top: '-8%', left: '-3%' }}>
+                        <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-green" vectorEffect="non-scaling-stroke" />
+                    </svg>
+                    
+                    {/* Particles */}
+                    <div className="electric-part part-1" />
+                    <div className="electric-part part-2" />
+                    <div className="electric-part part-3" />
+                    <div className="electric-part part-4" />
+                </>
+            )}
+
             <motion.span 
                 className={`w-full break-words relative z-10 block`}
                 style={{
