@@ -61,7 +61,7 @@ export default function TicTacToe() {
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 min-h-[60vh]">
       <div 
-        className="relative p-8 rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square min-h-[300px] overflow-hidden"
+        className="relative flex items-center justify-center rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square overflow-hidden"
         style={{
             backgroundImage: `url(${paperTexture})`,
             backgroundSize: '100% 100%',
@@ -72,7 +72,7 @@ export default function TicTacToe() {
       >
         {/* Paper texture overlay could go here */}
         
-        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full h-full relative z-10">
+        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-[80%] h-[80%] relative z-10">
           {board.map((cell, index) => (
             <motion.button
               key={index}
