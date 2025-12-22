@@ -129,11 +129,11 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
 
         // Threshold: 0.5 allows for some curvature/bevel but captures the main face
         if (avgNz > 0.5) {
-            headIndices.push(a, b, c); // Normal points towards camera -> Heads (Pink)
+            tailIndices.push(a, b, c); // Normal points towards camera -> Tails (Chocolate)
         } else {
             // Back face (Normal < -0.5) and Edge (Normal ~ 0)
-            // All go to Tails (Chocolate)
-            tailIndices.push(a, b, c); 
+            // All go to Heads (Pink)
+            headIndices.push(a, b, c); 
         }
     }
 
