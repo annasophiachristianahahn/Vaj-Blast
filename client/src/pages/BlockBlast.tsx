@@ -230,7 +230,6 @@ export default function BlockBlast() {
   
   // Cell size for matching selector to grid
   const [cellSize, setCellSize] = useState(30);
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
 
   // Helper to get image for current round (Modified to random picker per shape)
   // const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
@@ -255,7 +254,6 @@ export default function BlockBlast() {
   }, []);
 
   const updateCellSize = () => {
-    setIsDesktop(window.innerWidth >= 768);
     if (gridRef.current) {
         const rect = gridRef.current.getBoundingClientRect();
         setCellSize((rect.width - 12) / GRID_SIZE);
@@ -1280,12 +1278,10 @@ export default function BlockBlast() {
                 animate={{ 
                     x: shakeGrid ? [0, -4, 4, -4, 4, 0] : (nudgeGrid ? [0, -2, 2, 0] : 0),
                     y: shakeGrid ? [0, 4, -4, 4, -4, 0] : (nudgeGrid ? [0, 2, -2, 0] : 0),
-                    scale: isDesktop 
-                        ? (shakeGrid ? [0.9, 0.918, 0.9] : (nudgeGrid ? [0.9, 0.905, 0.9] : 0.9))
-                        : (shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1)),
+                    scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
                 }}
                 transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden origin-top"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
