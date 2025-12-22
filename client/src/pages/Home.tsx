@@ -110,17 +110,16 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
-                border-2 rounded-md flex items-center justify-center ${className}
+                border-2 rounded-md flex items-center justify-center ${className} ${active ? 'lightning-effect' : ''}
             `}
             style={{
                 backgroundColor: active ? hexToRgba(bgColor, 0.62) : hexToRgba(bgColor, 0.44),
-                borderColor: active ? '#98FF98' : textColor,
+                borderColor: active ? '#FF10F0' : textColor,
             }}
             initial={active ? {
                 backgroundColor: hexToRgba(bgColor, 0.62),
                 y: 0,
-                scale: 1,
-                boxShadow: "none"
+                scale: 1
             } : {
                 backgroundColor: hexToRgba(bgColor, 0.44),
                 y: 0,
@@ -129,11 +128,6 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             }}
             animate={active ? {
                 y: [0, -4, 0],
-                boxShadow: [
-                    "0 0 10px #98FF98",
-                    "0 0 20px #98FF98",
-                    "0 0 10px #98FF98"
-                ],
                 scale: 1.02,
                 backgroundColor: hexToRgba(bgColor, 0.62),
             } : {
@@ -148,21 +142,17 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                     duration: 2,
                     ease: "easeInOut"
                 },
-                boxShadow: {
-                    repeat: Infinity,
-                    duration: 2,
-                    ease: "easeInOut"
-                },
                 backgroundColor: { duration: 0.3 }
             } : { duration: 0.2 }}
             whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.67) }}
             whileTap={{ scale: 0.98 }}
         >
             <motion.span 
-                className={`w-full break-words relative z-10 block ${active ? 'plaid-text' : ''}`}
+                className={`w-full break-words relative z-10 block`}
                 style={{
-                    color: active ? 'transparent' : textColor,
-                    filter: active ? 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' : 'none',
+                    color: active ? '#000000' : textColor,
+                    filter: active ? 'none' : 'none',
+                    fontWeight: active ? '900' : 'normal'
                 }}
             >
                 {label}

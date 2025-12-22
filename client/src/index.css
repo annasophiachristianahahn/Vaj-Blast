@@ -133,3 +133,21 @@
   color: transparent;
   filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
 }
+
+@keyframes lightning-flash {
+  0% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
+  10% { box-shadow: 0 0 12px #7FFF00, inset 0 0 6px #7FFF00; border-color: #7FFF00; }
+  20% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
+  30% { box-shadow: 0 0 8px #FF10F0, inset 0 0 4px #FF10F0; border-color: #FF10F0; }
+  40% { box-shadow: 0 0 20px #7FFF00, inset 0 0 10px #7FFF00; border-color: #7FFF00; }
+  50% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
+  60% { box-shadow: 0 0 10px #7FFF00, inset 0 0 5px #7FFF00; border-color: #7FFF00; }
+  70% { box-shadow: 0 0 5px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
+  80% { box-shadow: 0 0 15px #7FFF00, inset 0 0 8px #7FFF00; border-color: #7FFF00; }
+  90% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
+  100% { box-shadow: 0 0 12px #7FFF00, inset 0 0 6px #7FFF00; border-color: #7FFF00; }
+}
+
+.lightning-effect {
+    animation: lightning-flash 0.3s infinite steps(4);
+}
