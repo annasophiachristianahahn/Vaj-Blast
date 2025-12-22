@@ -97,6 +97,14 @@ export default function Home() {
 }
 
 function GameTab({ active, onClick, label, bgColor, textColor, className = "" }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string, className?: string }) {
+    // Helper to convert hex to rgba
+    const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
     return (
         <motion.button
             onClick={onClick}
@@ -105,7 +113,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
-                backgroundColor: active ? `${bgColor}E0` : `${bgColor}C4`, // E0 = 88%, C4 = 77% opacity
+                backgroundColor: active ? hexToRgba(bgColor, 0.88) : hexToRgba(bgColor, 0.77),
                 borderColor: active ? '#98FF98' : textColor, // Mint green when active, text color when inactive
             }}
             animate={active ? {
