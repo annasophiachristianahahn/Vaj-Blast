@@ -20,9 +20,20 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col h-full">
-        <main className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center w-full">
+      <div className="relative z-10 flex flex-col h-full pointer-events-none">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center w-full pointer-events-auto">
             {children}
+            
+            <footer className="w-full flex justify-center py-3 mt-auto shrink-0 z-50">
+              <a 
+                href="https://www.vajunnie.top" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-black px-4 py-1.5 text-[10px] md:text-xs font-bold text-white tracking-widest hover:scale-105 transition-transform rounded-sm border border-white/20 shadow-lg"
+              >
+                $VAJ VAJUNNIE.TOP
+              </a>
+            </footer>
         </main>
       </div>
     </div>
