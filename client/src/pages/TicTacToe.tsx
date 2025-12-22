@@ -133,30 +133,34 @@ export default function TicTacToe() {
                                     className="w-full h-full border-8 border-[#7FFF00] rounded-full shadow-2xl object-cover relative z-10"
                                 />
                                 {/* Sparkles Animation */}
-                                {[...Array(12)].map((_, i) => (
+                                {[...Array(20)].map((_, i) => {
+                                    const randomColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
+                                    return (
                                     <motion.div
                                         key={i}
-                                        className="absolute top-1/2 left-1/2 w-8 h-8 text-yellow-400 z-20 pointer-events-none"
+                                        className="absolute top-1/2 left-1/2 w-4 h-4 z-20 pointer-events-none mix-blend-screen"
+                                        style={{ color: randomColor }}
                                         initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
                                         animate={{ 
-                                            x: (Math.cos(i * (360/12) * (Math.PI/180)) * (60 + Math.random() * 40)), 
-                                            y: (Math.sin(i * (360/12) * (Math.PI/180)) * (60 + Math.random() * 40)), 
-                                            scale: [0, 1.2, 0], 
+                                            x: (Math.cos(i * (360/20) * (Math.PI/180)) * (60 + Math.random() * 60)), 
+                                            y: (Math.sin(i * (360/20) * (Math.PI/180)) * (60 + Math.random() * 60)), 
+                                            scale: [0, 1, 0], 
                                             opacity: [0, 1, 0],
-                                            rotate: [0, 90, 180]
+                                            rotate: [0, 180, 360]
                                         }}
                                         transition={{ 
-                                            duration: 1 + Math.random(), 
+                                            duration: 0.8 + Math.random() * 0.5, 
                                             repeat: Infinity, 
-                                            delay: Math.random() * 0.5,
-                                            ease: "easeInOut"
+                                            delay: Math.random() * 0.2,
+                                            ease: "easeOut"
                                         }}
                                     >
-                                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-[0_0_5px_rgba(255,255,0,0.8)]">
-                                            <path d="M12 0L15 9L24 12L15 15L12 24L9 15L0 12L9 9L12 0Z" />
+                                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-[0_0_8px_currentColor]">
+                                            <path d="M12 0L14 10L24 12L14 14L12 24L10 14L0 12L10 10L12 0Z" />
                                         </svg>
                                     </motion.div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                         <Button 
