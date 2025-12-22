@@ -85,22 +85,18 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         if (result) {
             // Target rotations
             // HEADS: Face camera (0).
-            // TAILS: Face away (PI).
-            // The model is natively facing the camera (Z-up), so we flip around X axis.
-            // User: "The pink side should be heads"
-            // If Pink is currently "upside down" and facing front at 0, 
-            // and the user wants it to be heads.
-            
-            // Let's stick to the X-axis logic for heads/tails faces.
-            // 0 = one side, PI = other side.
+            // TAILS: Face away (PI X-rot).
+            // Correction: If model is Medal Aligned (both up), X-flip makes Tails upside down.
+            // Fix: Rotate Z by PI if Tails.
             
             const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
+            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
             if (mesh.current.rotation.x < 0) mesh.current.rotation.x += Math.PI * 2;
             
-            // Normalize Y and Z to 0
+            // Normalize Y and Z to 0..2PI
             mesh.current.rotation.y = mesh.current.rotation.y % (Math.PI * 2);
             mesh.current.rotation.z = mesh.current.rotation.z % (Math.PI * 2);
 
@@ -108,34 +104,37 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             
             // X Axis Snap
             let diffX = targetRotationX - mesh.current.rotation.x;
-            // Shortest path logic
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
-            
-            mesh.current.rotation.x += diffX * 25 * delta;
+            mesh.current.rotation.x += diffX * 10 * delta; // Slower damping for smoothness
 
             // Y Axis dampening (return to 0)
             let diffY = 0 - mesh.current.rotation.y;
             if (diffY > Math.PI) diffY -= Math.PI * 2;
             if (diffY < -Math.PI) diffY += Math.PI * 2;
-            mesh.current.rotation.y += diffY * 25 * delta;
+            mesh.current.rotation.y += diffY * 10 * delta;
 
-            // Z Axis dampening (return to 0)
-            let diffZ = 0 - mesh.current.rotation.z;
+            // Z Axis Snap (Target varies!)
+            let diffZ = targetRotationZ - mesh.current.rotation.z;
             if (diffZ > Math.PI) diffZ -= Math.PI * 2;
             if (diffZ < -Math.PI) diffZ += Math.PI * 2;
-            mesh.current.rotation.z += diffZ * 25 * delta;
+            mesh.current.rotation.z += diffZ * 10 * delta;
             
             // Add subtle wobble when settled
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
-                 mesh.current.rotation.x += Math.sin(state.clock.elapsedTime * 5) * 0.02;
-                 mesh.current.rotation.y += Math.cos(state.clock.elapsedTime * 3) * 0.02;
+                 // WOBBLE AROUND THE TARGET ROTATION
+                 mesh.current.rotation.x = targetRotationX + Math.sin(state.clock.elapsedTime * 5) * 0.05;
+                 // TargetY is always 0 in my simplified logic, but really it should be 0.
+                 mesh.current.rotation.y = 0 + Math.cos(state.clock.elapsedTime * 3) * 0.05;
+                 // TargetZ depends on result
+                 const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
+                 mesh.current.rotation.z = targetRotationZ + Math.sin(state.clock.elapsedTime * 4) * 0.02;
             }
         } else {
              // Idle state (before first flip)
              // Obvious wobble / undulate on all 3 axes
              const t = state.clock.elapsedTime;
-             mesh.current.rotation.x = Math.sin(t * 3) * 0.3; // Much larger amplitude
+             mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
              mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
              mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
         }
@@ -156,12 +155,11 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         >
             {/* 
               Rotation adjustment:
-              The model needs to be rotated 180 degrees on Z to appear upright.
-              Since we also need Y rotation to face the camera, we nest rotations.
+              Revert to primitive with Z-flip to ensure BOTH sides are Upright (Medal Alignment simulation).
+              If Heads is Upright, and we assume Medal Alignment, Tails is Upright.
+              X-flip will be corrected by Z-rotation in logic.
             */}
-            <group rotation={[0, 0, Math.PI]}>
-                <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, 0]} />
-            </group>
+            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, Math.PI]} />
         </group>
     </Float>
   );
