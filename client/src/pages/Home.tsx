@@ -105,6 +105,18 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
+    // Helper to calculate inverse color (simple inversion)
+    const getInverseColor = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        // Simple inversion: 255 - value
+        const rInv = (255 - r).toString(16).padStart(2, '0');
+        const gInv = (255 - g).toString(16).padStart(2, '0');
+        const bInv = (255 - b).toString(16).padStart(2, '0');
+        return `#${rInv}${gInv}${bInv}`;
+    };
+
     return (
         <motion.button
             onClick={onClick}
@@ -150,7 +162,7 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             <motion.span 
                 className={`w-full break-words relative z-10 block`}
                 style={{
-                    color: active ? '#000000' : textColor,
+                    color: active ? getInverseColor(bgColor) : textColor,
                     filter: active ? 'none' : 'none',
                     fontWeight: active ? '900' : 'normal'
                 }}
