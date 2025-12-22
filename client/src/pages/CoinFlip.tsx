@@ -72,9 +72,9 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         // Threshold: > 0.1 is Face A (Heads), < -0.1 is Face B (Tails), else Edge
         // Lower threshold ensures relief details are included in the face material
         if (nx > 0.2) {
-            headIndices.push(a, b, c);
+            tailIndices.push(a, b, c); // Swap: +X is now Tails
         } else if (nx < -0.2) {
-            tailIndices.push(a, b, c);
+            headIndices.push(a, b, c); // Swap: -X is now Heads
         } else {
             edgeIndices.push(a, b, c);
         }
@@ -111,6 +111,15 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     
     // HEADS (Front/+X) -> Pink Chrome
     const headsMaterial = new MeshStandardMaterial({
+        color: new Color("#ff69b4"), // Hot pink
+        roughness: 0.05,
+        metalness: 0.9,
+        envMapIntensity: 2.0,
+        name: "PinkChrome"
+    });
+
+    // TAILS (Back/-X) -> Chocolate Brown
+    const tailsMaterial = new MeshStandardMaterial({
         color: new Color("#3e2723"), // Deep chocolate
         roughness: 0.4,
         metalness: 0.1,
@@ -118,15 +127,6 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         emissiveIntensity: 0.05,
         envMapIntensity: 0.8,
         name: "Chocolate"
-    });
-
-    // TAILS (Back/-X) -> Chocolate Brown
-    const tailsMaterial = new MeshStandardMaterial({
-        color: new Color("#ff69b4"), // Hot pink
-        roughness: 0.05,
-        metalness: 0.9,
-        envMapIntensity: 2.0,
-        name: "PinkChrome"
     });
 
     // EDGE -> Gold
@@ -255,9 +255,9 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
             {/* 
                 Rotate geometry so X-axis faces point along Z-axis (Front/Back) 
                 Original Geometry: Faces along X.
-                Rotation [0, PI/2, 0]: X -> Z.
+                Rotation [0, -Math.PI/2, 0]: -X -> Z (Default View shows -X/Heads).
             */}
-            <primitive object={processedNode} scale={scale} rotation={[0, Math.PI / 2, 0]} />
+            <primitive object={processedNode} scale={scale} rotation={[0, -Math.PI / 2, 0]} />
         </group>
     </Float>
   );
