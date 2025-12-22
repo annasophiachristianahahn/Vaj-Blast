@@ -1262,7 +1262,7 @@ export default function BlockBlast() {
         </AnimatePresence>
 
         {/* Score Display */}
-        <div className="w-full flex items-center justify-center py-0.5 relative z-10">
+        <div className="w-full flex items-center justify-center py-0.5 mt-2 relative z-10">
              <div className="bg-black/40 backdrop-blur-md px-4 py-1 rounded-full border border-white/10 shadow-xl flex flex-col items-center transform hover:scale-105 transition-transform scale-90">
                 <div className="text-[9px] font-mono text-[#FF10F0] tracking-widest mb-0">SCORE</div>
                 <div className="text-2xl font-['Chewy','cursive'] text-[#7FFF00] drop-shadow-[0_2px_10px_rgba(127,255,0,0.3)] tabular-nums leading-none tracking-wider">

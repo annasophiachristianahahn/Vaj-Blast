@@ -134,6 +134,12 @@ function GameTab({ active, onClick, label, bgColor, textColor, activeTextColor, 
     return (
         <motion.button
             onClick={onClick}
+            data-darkreader-inline-bgcolor=""
+            data-darkreader-inline-color=""
+            data-darkreader-inline-border-bottom=""
+            data-darkreader-inline-border-top=""
+            data-darkreader-inline-border-left=""
+            data-darkreader-inline-border-right=""
             className={`
                 relative h-12 md:h-14 px-1 md:px-6 font-display text-base sm:text-lg md:text-2xl uppercase whitespace-normal leading-none
                 border-2 rounded-md flex items-center justify-center ${className}
