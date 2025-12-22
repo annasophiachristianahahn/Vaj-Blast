@@ -72,7 +72,7 @@ export default function TicTacToe() {
       >
         {/* Paper texture overlay could go here */}
         
-        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-[80%] h-[80%] relative z-10">
+        <div className="grid grid-cols-3 grid-rows-3 gap-0 w-[90%] h-[90%] relative z-10">
           {board.map((cell, index) => (
             <motion.button
               key={index}
@@ -95,7 +95,7 @@ export default function TicTacToe() {
                             initial={{ scale: 0, rotate: -45, opacity: 0 }}
                             animate={{ scale: 1, rotate: 0, opacity: 1 }}
                             transition={{ type: "spring", bounce: 0.5 }}
-                            className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
+                            className="w-[90%] h-[90%] object-contain filter drop-shadow-md"
                             alt="VAJUNNIE"
                         />
                     )}
@@ -105,7 +105,7 @@ export default function TicTacToe() {
                             initial={{ scale: 0, rotate: 45, opacity: 0 }}
                             animate={{ scale: 1, rotate: 0, opacity: 1 }}
                             transition={{ type: "spring", bounce: 0.5 }}
-                            className="w-[80%] h-[80%] object-contain filter drop-shadow-md"
+                            className="w-[90%] h-[90%] object-contain filter drop-shadow-md"
                             alt="GRAMS"
                         />
                     )}
