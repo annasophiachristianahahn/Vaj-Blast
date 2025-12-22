@@ -47,7 +47,7 @@ export default function Home() {
                     onClick={() => setActiveGame('quiet-game')}
                     label="QUIET GAME"
                     bgColor="#9900FF" // Electric Violet
-                    textColor="#FFE600" // Neon Yellow
+                    textColor="#fff000" // Neon Yellow
                     className="w-full"
                 />
                 <GameTab 
