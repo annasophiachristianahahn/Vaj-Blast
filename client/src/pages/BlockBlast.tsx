@@ -230,14 +230,6 @@ export default function BlockBlast() {
   
   // Cell size for matching selector to grid
   const [cellSize, setCellSize] = useState(30);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
-    checkDesktop();
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   // Helper to get image for current round (Modified to random picker per shape)
   // const getRoundImage = (index: number) => IMAGES[index % IMAGES.length];
@@ -1294,7 +1286,7 @@ export default function BlockBlast() {
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    width: `min(100%, 100vh - ${isDesktop ? 340 : 180}px)`, // More space on desktop to prevent overlap
+                    width: 'min(100%, 100vh - 180px)', // Constrain width based on available height
                     height: 'auto', // Let aspect ratio drive height based on width
                     maxWidth: '100%',
                     maxHeight: '100%'
