@@ -43,6 +43,12 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
 
     const geometry = targetMesh.geometry.clone();
     
+    // BAKE CURRENT SCALE
+    // The original model likely uses non-uniform scale (e.g. [1, 1, 0.1]) to define the coin shape.
+    // Since we are creating a new Mesh and applying a uniform scale later, we must bake 
+    // the model's inherent scale into the geometry vertices to prevent stretching/distortion.
+    geometry.scale(targetMesh.scale.x, targetMesh.scale.y, targetMesh.scale.z);
+    
     // Check if we have normals and indices
     if (!geometry.attributes.normal || !geometry.index) {
         console.warn("Coin geometry missing normals or index");
