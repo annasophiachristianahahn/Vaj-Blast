@@ -112,4 +112,7 @@
   );
   background-size: 200% 100%;
   animation: rainbow-sweep 3s linear infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }

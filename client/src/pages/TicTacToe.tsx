@@ -123,7 +123,7 @@ export default function TicTacToe() {
                     className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 rounded-xl backdrop-blur-sm"
                 >
                     <div className="text-center p-4">
-                        <div className="text-4xl font-display text-white drop-shadow-lg mb-4 animate-bounce">
+                        <div className="text-4xl font-display rainbow-gradient drop-shadow-lg mb-4 animate-bounce">
                             {winner === "TIE" ? "TIE" : "WINNER!"}
                         </div>
                         {winner !== "TIE" && (
