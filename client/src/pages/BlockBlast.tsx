@@ -1211,13 +1211,13 @@ export default function BlockBlast() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    className="absolute inset-0 z-50 flex items-center justify-center p-4 pointer-events-auto"
                 >
                     <motion.div 
                         initial={{ scale: 0.8, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.8, y: 20 }}
-                        className="flex flex-col items-center gap-6 text-white w-full max-w-sm"
+                        className="bg-black/90 border-2 border-[#FF10F0] p-6 rounded-xl shadow-2xl flex flex-col items-center gap-6 text-white w-full max-w-sm backdrop-blur-md"
                     >
                         <h2 className="text-5xl font-display text-[#FF10F0] animate-pulse text-center drop-shadow-[0_4px_0_rgba(0,0,0,1)]"
                             style={{ WebkitTextStroke: "2px black" }}>
