@@ -109,12 +109,12 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
         <motion.button
             onClick={onClick}
             className={`
-                relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
+                relative h-12 md:h-14 px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal leading-none
                 border-2 rounded-md flex items-center justify-center ${className} ${active ? 'lightning-effect' : ''}
             `}
             style={{
                 backgroundColor: active ? hexToRgba(bgColor, 0.62) : hexToRgba(bgColor, 0.44),
-                borderColor: active ? '#FF10F0' : textColor,
+                borderColor: active ? 'transparent' : textColor,
             }}
             initial={active ? {
                 backgroundColor: hexToRgba(bgColor, 0.62),

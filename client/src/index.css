@@ -134,20 +134,59 @@
   filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
 }
 
-@keyframes lightning-flash {
-  0% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
-  10% { box-shadow: 0 0 12px #7FFF00, inset 0 0 6px #7FFF00; border-color: #7FFF00; }
-  20% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
-  30% { box-shadow: 0 0 8px #FF10F0, inset 0 0 4px #FF10F0; border-color: #FF10F0; }
-  40% { box-shadow: 0 0 20px #7FFF00, inset 0 0 10px #7FFF00; border-color: #7FFF00; }
-  50% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
-  60% { box-shadow: 0 0 10px #7FFF00, inset 0 0 5px #7FFF00; border-color: #7FFF00; }
-  70% { box-shadow: 0 0 5px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
-  80% { box-shadow: 0 0 15px #7FFF00, inset 0 0 8px #7FFF00; border-color: #7FFF00; }
-  90% { box-shadow: 0 0 4px #FF10F0, inset 0 0 2px #FF10F0; border-color: #FF10F0; }
-  100% { box-shadow: 0 0 12px #7FFF00, inset 0 0 6px #7FFF00; border-color: #7FFF00; }
+/* Lightning Border Effect using @property for smooth rotation */
+@property --lightning-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes lightning-spin {
+  0% { --lightning-angle: 0deg; }
+  100% { --lightning-angle: 360deg; }
 }
 
 .lightning-effect {
-    animation: lightning-flash 0.3s infinite steps(4);
+    position: relative;
+    /* Ensure no overflow clipping so the glow can be seen */
+    overflow: visible !important;
+    /* Optional: Ensure z-index allows pseudo-element to be behind */
+    z-index: 1;
+}
+
+.lightning-effect::before {
+    content: "";
+    position: absolute;
+    /* Expand slightly to create the border/glow area */
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    z-index: -1;
+    
+    background: conic-gradient(
+        from var(--lightning-angle),
+        transparent 0%,
+        #FF10F0 20%,      /* Pink */
+        transparent 40%,
+        #7FFF00 60%,      /* Chartreuse/Green */
+        transparent 80%,
+        #FF10F0 90%,
+        transparent 100%
+    );
+    
+    border-radius: calc(0.5rem + 2px); /* Slightly larger than button radius (rounded-md = 0.375rem usually, assume 0.5rem) */
+    animation: lightning-spin 2s linear infinite;
+    filter: blur(6px) brightness(1.5);
+}
+
+.lightning-effect::after {
+    /* Inner dark background for the button itself if needed, 
+       but we handle background in the component style. 
+       Just ensuring we don't lose the shape. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.375rem; /* rounded-md */
+    z-index: -1;
+    /* The background color set in React style will apply to the button element, 
+       but if we need to mask the center of the conic gradient: */
+    background: inherit; 
 }
