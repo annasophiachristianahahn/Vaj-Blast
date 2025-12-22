@@ -369,7 +369,7 @@ export default function CoinFlip() {
             <pointLight position={[-10, -10, 10]} intensity={1.5} color="#ffaa00" /> {/* Warm light for chocolate/orange highlights */}
             <spotLight position={[0, 5, 10]} angle={0.3} penumbra={1} intensity={2} castShadow />
             <SplitCoin flipping={flipping} result={result} onFlipStart={flipCoin} />
-            <Environment preset="city" />
+            <Environment files="/reflection_map.jpg" />
             </Canvas>
         </ErrorBoundary>
       </div>
