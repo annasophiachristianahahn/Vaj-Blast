@@ -234,7 +234,7 @@ export default function QuietGame() {
         {!playing && (
             <Button 
                 onClick={startGame}
-                className="w-full text-4xl h-24 bg-[#FF10F0]/60 hover:bg-[#FF10F0]/80 text-[#7FFF00] font-display tracking-wider shadow-lg border border-[#7FFF00]"
+                className="w-auto px-12 text-4xl h-24 bg-[#FF10F0]/60 hover:bg-[#FF10F0]/80 text-[#7FFF00] font-display tracking-wider shadow-lg border border-[#7FFF00]"
             >
                 {gameOver ? "TRY AGAIN" : "START QUIET GAME"}
             </Button>
