@@ -79,6 +79,7 @@ export default function TicTacToe() {
               onClick={() => handleClick(index)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              style={{ backgroundColor: 'transparent' }}
               className={`
                 w-full h-full
                 flex items-center justify-center text-4xl relative overflow-hidden
