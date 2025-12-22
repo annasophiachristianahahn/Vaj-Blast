@@ -63,10 +63,11 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         // const nz = (normals[a * 3 + 2] + normals[b * 3 + 2] + normals[c * 3 + 2]) / 3;
 
         // Determine side based on X axis (assuming model is aligned along X)
-        // Threshold: > 0.5 is Face A, < -0.5 is Face B, else Edge
-        if (nx > 0.5) {
+        // Threshold: > 0.1 is Face A (Heads), < -0.1 is Face B (Tails), else Edge
+        // Lower threshold ensures relief details are included in the face material
+        if (nx > 0.2) {
             headIndices.push(a, b, c);
-        } else if (nx < -0.5) {
+        } else if (nx < -0.2) {
             tailIndices.push(a, b, c);
         } else {
             edgeIndices.push(a, b, c);
