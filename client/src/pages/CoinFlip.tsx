@@ -137,6 +137,61 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         }
     }
 
+    // Combine indices
+    const newIndices = [...headIndices, ...tailIndices];
+    
+    // Update geometry index
+    geometry.setIndex(newIndices);
+
+    // Create groups
+    geometry.clearGroups();
+    let offset = 0;
+    
+    // Group 0: Heads (Pink)
+    if (headIndices.length > 0) {
+        geometry.addGroup(offset, headIndices.length, 0);
+        offset += headIndices.length;
+    }
+    
+    // Group 1: Tails (Chocolate)
+    if (tailIndices.length > 0) {
+        geometry.addGroup(offset, tailIndices.length, 1);
+        offset += tailIndices.length;
+    }
+
+    // Create Materials
+    
+    // HEADS -> Pink Chrome
+    const headsMaterial = new MeshStandardMaterial({
+        color: new Color("#ff69b4"), // Hot pink
+        roughness: 0.05,
+        metalness: 0.9,
+        envMapIntensity: 2.0,
+        name: "PinkChrome"
+    });
+
+    // TAILS -> Chocolate Brown
+    const tailsMaterial = new MeshStandardMaterial({
+        color: new Color("#3e2723"), // Deep chocolate
+        roughness: 0.4,
+        metalness: 0.1,
+        emissive: new Color("#5d4037"),
+        emissiveIntensity: 0.05,
+        envMapIntensity: 0.8,
+        name: "Chocolate"
+    });
+
+    // Assign new geometry and material array to the mesh
+    targetMesh.geometry = geometry;
+    targetMesh.material = [headsMaterial, tailsMaterial];
+    
+    // Ensure shadow casting
+    targetMesh.castShadow = true;
+    targetMesh.receiveShadow = true;
+
+    return clonedScene;
+  }, [scene]);
+
   // Randomize spin speed slightly for every flip so it doesn't look identical
   const [spinSpeed, setSpinSpeed] = useState(50);
   
