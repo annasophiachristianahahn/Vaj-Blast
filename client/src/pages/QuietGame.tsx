@@ -209,7 +209,7 @@ export default function QuietGame() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 md:gap-8 w-full max-w-sm mx-auto p-4 h-full min-h-0">
         
-        <div className="relative w-full max-w-[300px] aspect-square bg-black/40 rounded-full border-4 border-white/20 flex items-center justify-center overflow-hidden backdrop-blur-md shadow-2xl shrink-0">
+        <div className="relative w-full max-w-[300px] aspect-square bg-[#7FFF00]/30 rounded-full flex items-center justify-center overflow-hidden backdrop-blur-md shadow-2xl shrink-0">
             {/* Volume Indicator */}
             <motion.div 
                 className="absolute inset-0 bg-red-600 rounded-full opacity-50"
@@ -218,11 +218,11 @@ export default function QuietGame() {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
             
-            <div className="z-10 text-6xl font-mono font-bold drop-shadow-lg">
+            <div className="z-10 text-6xl font-mono font-bold drop-shadow-lg text-[#FF10F0]">
                 {gameOver ? (
                     <div className="flex flex-col items-center">
-                        <span className="text-red-500 animate-pulse">FAIL</span>
-                        <span className="text-xs text-white/50 mt-2 font-sans animate-none tracking-widest text-center">PLAYING BACK<br/>SOUND LOOP...</span>
+                        <span className="text-[#FF10F0] animate-pulse">FAIL</span>
+                        <span className="text-xs text-[#FF10F0]/80 mt-2 font-sans animate-none tracking-widest text-center">PLAYING BACK<br/>SOUND LOOP...</span>
                     </div>
                 ) : (
                     (score / 10).toFixed(1) + "s"
@@ -233,7 +233,7 @@ export default function QuietGame() {
         {!playing && (
             <Button 
                 onClick={startGame}
-                className="w-full text-xl h-16 bg-green-600 hover:bg-green-500 text-white font-display tracking-wider shadow-lg border-2 border-green-400/50"
+                className="w-full text-xl h-16 bg-[#FF10F0]/60 hover:bg-[#FF10F0]/80 text-[#7FFF00] font-display tracking-wider shadow-lg border border-[#7FFF00]"
             >
                 {gameOver ? "TRY AGAIN" : "START QUIET GAME"}
             </Button>
