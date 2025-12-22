@@ -319,6 +319,7 @@ export default function CoinFlip() {
             <Canvas camera={{ position: [0, 0, 7.5], fov: 45 }}>
             {/* Enhanced lighting for metal reflections */}
             <ambientLight intensity={1.5} />
+            <directionalLight position={[5, 5, 5]} intensity={3} />
             <pointLight position={[10, 10, 10]} intensity={2} />
             <pointLight position={[-10, -10, 10]} intensity={1.5} color="#ffaa00" /> {/* Warm light for chocolate/orange highlights */}
             <spotLight position={[0, 5, 10]} angle={0.3} penumbra={1} intensity={2} castShadow />
