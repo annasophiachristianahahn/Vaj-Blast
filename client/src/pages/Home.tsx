@@ -113,7 +113,6 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
-                backgroundColor: active ? hexToRgba(bgColor, 0.88) : hexToRgba(bgColor, 0.77),
                 borderColor: active ? '#98FF98' : textColor, // Mint green when active, text color when inactive
             }}
             animate={active ? {
@@ -124,10 +123,12 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                     "0 0 10px #98FF98"
                 ],
                 scale: 1.02,
+                backgroundColor: hexToRgba(bgColor, 0.88),
             } : {
                 y: 0,
                 boxShadow: "none",
                 scale: 1,
+                backgroundColor: hexToRgba(bgColor, 0.77),
             }}
             transition={active ? {
                 y: {
@@ -139,9 +140,10 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                     repeat: Infinity,
                     duration: 2,
                     ease: "easeInOut"
-                }
+                },
+                backgroundColor: { duration: 0.3 }
             } : { duration: 0.2 }}
-            whileHover={{ scale: 1.02, backgroundColor: `${bgColor}CC` }}
+            whileHover={{ scale: 1.02, backgroundColor: hexToRgba(bgColor, 0.8) }}
             whileTap={{ scale: 0.98 }}
         >
             <motion.span 
