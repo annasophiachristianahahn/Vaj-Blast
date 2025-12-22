@@ -46,13 +46,13 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
                 newMaterial.metalness = 0.9; // Very metallic
                 newMaterial.envMapIntensity = 2.0;
             } else {
-                // Chocolate Brown with highlights
+                // Chocolate Brown with highlights - Realistic Chocolate Shader
                 newMaterial.color = new Color("#3e2723"); // Deep chocolate
-                newMaterial.roughness = 0.3;
-                newMaterial.metalness = 0.4;
-                newMaterial.emissive = new Color("#ff4500"); // Orange/Red glow
-                newMaterial.emissiveIntensity = 0.1;
-                newMaterial.envMapIntensity = 1.0;
+                newMaterial.roughness = 0.4; // Satin finish, not too glossy, not too matte
+                newMaterial.metalness = 0.1; // Chocolate is organic, not metallic
+                newMaterial.emissive = new Color("#5d4037"); // Subtle brown glow for subsurface feel
+                newMaterial.emissiveIntensity = 0.05;
+                newMaterial.envMapIntensity = 0.8;
             }
             
             mesh.material = newMaterial;
@@ -84,21 +84,21 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         // Landing animation
         if (result) {
             // Target rotations
-            // HEADS: Should show Chocolate side (Back).
-            // TAILS: Should show Pink side (Front).
+            // HEADS: Should show Pink Chrome side (Front).
+            // TAILS: Should show Chocolate side (Back).
             
             // Front (Pink) is X=0. Back (Chocolate) is X=PI.
-            // HEADS -> X=PI
-            // TAILS -> X=0
-            const targetRotationX = result === 'HEADS' ? Math.PI : 0;
+            // HEADS -> X=0
+            // TAILS -> X=PI
+            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
             
             // Orientation correction (Z-axis):
             // Pink (X=0) needs Z=0 to be Upright.
             // Chocolate (X=PI) is inverted by the X-flip. To be Upright, it needs Z=PI.
             
-            // HEADS (X=PI) -> Needs Z=PI
-            // TAILS (X=0)  -> Needs Z=0
-            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
+            // HEADS (X=0) -> Needs Z=0
+            // TAILS (X=PI) -> Needs Z=PI
+            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
