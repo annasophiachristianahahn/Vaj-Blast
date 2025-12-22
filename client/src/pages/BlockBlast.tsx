@@ -1217,13 +1217,13 @@ export default function BlockBlast() {
                         initial={{ scale: 0.8, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.8, y: 20 }}
-                        className="bg-black/90 border-2 border-[#FF10F0] p-6 rounded-xl shadow-2xl flex flex-col items-center gap-6 text-white w-full max-w-sm backdrop-blur-md"
+                        className="bg-black/80 border-2 border-[#FF10F0] p-4 rounded-xl shadow-2xl flex flex-col items-center gap-2 text-white w-full max-w-xs backdrop-blur-md"
                     >
-                        <h2 className="text-5xl font-display text-[#FF10F0] animate-pulse text-center drop-shadow-[0_4px_0_rgba(0,0,0,1)]"
+                        <h2 className="text-5xl font-display text-[#FF10F0] animate-pulse text-center drop-shadow-[0_4px_0_rgba(0,0,0,1)] leading-none mt-2"
                             style={{ WebkitTextStroke: "2px black" }}>
                             GAME OVER
                         </h2>
-                        <div className="relative w-32 h-32 animate-bounce overflow-hidden rounded-full border-4 border-white/20 shadow-2xl">
+                        <div className="relative w-32 h-32 animate-bounce overflow-hidden rounded-full border-4 border-white/20 shadow-2xl my-2">
                             <img 
                                 src={gramsImage} 
                                 alt="Game Over" 
