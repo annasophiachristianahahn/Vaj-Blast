@@ -86,13 +86,15 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             // Target rotations
             // HEADS: Face camera (0).
             // TAILS: Face away (PI).
-            // Logic derived from debugging:
-            // Base model [0, PI/2, 0] is Upside Down.
-            // HEADS (X=0): Needs Z=PI to be Upright.
-            // TAILS (X=PI): X-Flip inverts it. UpsideDown * Invert = Upright. So Z=0.
+            // Logic derived from user feedback:
+            // "No it is still upside down" -> My previous logic of Z=PI for Heads was wrong.
+            // So Heads Upright must be Z=0.
             
             const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
-            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
+            // If Tails (X=PI) makes it inverted, we need Z=PI to upright it.
+            // If Heads (X=0) is Upright at Z=0, then Tails (X=PI) is inverted.
+            // So Tails needs Z=PI.
+            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -134,12 +136,13 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         } else {
              // Idle state (before first flip)
              // Obvious wobble / undulate on all 3 axes
-             // Base state for Idle is HEADS (Pink) Upright -> Z = PI.
+             // Base state for Idle is HEADS (Pink).
+             // If previous logic (Z=PI) was Upside Down, then Z=0 must be Upright.
              const t = state.clock.elapsedTime;
              mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
              mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
-             // Wobble around PI (Upright)
-             mesh.current.rotation.z = Math.PI + Math.sin(t * 4) * 0.2;
+             // Wobble around 0 (Upright)
+             mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
         }
     }
   });
@@ -148,7 +151,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={mesh} 
-            rotation={[0, 0, Math.PI]} // Initial: Heads Upright (Z=PI compensates for UpsideDown model)
+            rotation={[0, 0, 0]} // Initial: Heads Upright at Z=0
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
