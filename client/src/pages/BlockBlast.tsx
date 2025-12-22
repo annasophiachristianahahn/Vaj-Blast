@@ -891,33 +891,49 @@ export default function BlockBlast() {
   // Shared logic to determine placement position
   const getPlacementPosition = (shapeIndex: number, shape: any, pointer: {x: number, y: number}) => {
       if (!gridRef.current) return null;
-
+      
       const gridRect = gridRef.current.getBoundingClientRect();
       const isSmallScreen = window.innerWidth < 768;
       
       // OFFSET CONSTANTS
-      // 1. Drag Offset: How far above the finger the shape floats (already handled in render)
-      const DRAG_Y_OFFSET = isSmallScreen ? -100 : 0;
-      
-      // 2. Snap Preview Offset: How far BELOW the shape the snap highlight should appear
-      // User request: "shape aligned with center... but placed slightly above the green highlight"
-      // This means the highlight is below the shape.
       const SNAP_PREVIEW_OFFSET_Y = isSmallScreen ? 50 : 0; 
-      
       // 3. Grid Padding: The grid has p-1.5 (6px) padding that we must account for
       const GRID_PADDING = 6; 
 
-      // Visual position of the shape's center
-      const visualCenterX = pointer.x;
-      const visualCenterY = pointer.y + DRAG_Y_OFFSET;
+      // CRITICAL FIX: Use the ACTUAL bounding box of the dragged element
+      // This solves the issue where grabbing a shape by its corner/edge causes misalignment
+      // because the pointer is not at the visual center.
+      let visualCenterX, visualCenterY;
       
-      // Search Position: This is where we look for a grid slot
-      // We look slightly BELOW the visual center of the shape
+      const shapeElement = shapeRefs.current[shapeIndex];
+      
+      if (shapeElement) {
+          // If we have the ref, use the robust method: getBoundingClientRect()
+          // This gives the exact visual center on screen, regardless of where the user grabbed it.
+          const rect = shapeElement.getBoundingClientRect();
+          visualCenterX = rect.left + rect.width / 2;
+          // Note: rect.top already includes the drag visual offset (-100px lift)
+          visualCenterY = rect.top + rect.height / 2;
+      } else {
+           // Fallback (should rarely happen if refs are working)
+           // If we don't have the ref, assume pointer is center (less accurate)
+           const DRAG_Y_OFFSET = isSmallScreen ? -100 : 0;
+           visualCenterX = pointer.x;
+           visualCenterY = pointer.y + DRAG_Y_OFFSET;
+      }
+      
+      // Search Position: Look slightly BELOW the shape for the target slot
+      // This puts the highlight underneath the floating shape so user can see it
+      // The shape is floating high, the target slot is low.
       const searchCenterX = visualCenterX;
+      // Since visualCenterY is the high floating position, we look 50px below it
+      // (which is still 50px above the finger position roughly)
       const searchCenterY = visualCenterY + SNAP_PREVIEW_OFFSET_Y;
 
       // Calculate Visual Top-Left based on the search center
-      // Note: We use the full cellSize for calculation to match grid alignment logic
+      // We normalize the size to the GRID CELL SIZE.
+      // Even if the shape is visually scaled smaller/larger, we map its center
+      // to a theoretical grid-sized shape to find the alignment.
       const shapeW_cells = Math.max(...shape.points.map((p: any) => p[0])) + 1;
       const shapeH_cells = Math.max(...shape.points.map((p: any) => p[1])) + 1;
       const shapeW_px = shapeW_cells * cellSize;
