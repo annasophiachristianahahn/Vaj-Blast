@@ -90,10 +90,10 @@
 /* Rainbow Sweep */
 @keyframes rainbow-sweep {
   0% {
-    background-position: 100% 50%;
+    background-position: 0% 50%;
   }
   100% {
-    background-position: 0% 50%;
+    background-position: 100% 50%;
   }
 }
 
@@ -108,10 +108,18 @@
     hsl(240, 100%, 85%),
     hsl(280, 100%, 85%),
     hsl(320, 100%, 85%),
+    hsl(0, 100%, 85%),
+    hsl(30, 100%, 85%),
+    hsl(60, 100%, 85%),
+    hsl(120, 100%, 85%),
+    hsl(180, 100%, 85%),
+    hsl(240, 100%, 85%),
+    hsl(280, 100%, 85%),
+    hsl(320, 100%, 85%),
     hsl(0, 100%, 85%)
   );
   background-size: 200% 100%;
-  animation: rainbow-sweep 3s linear infinite;
+  animation: rainbow-sweep 4s linear infinite;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
