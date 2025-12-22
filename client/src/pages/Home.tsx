@@ -105,29 +105,16 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-    // Helper to calculate neon inverse color (complementary hue, high saturation/lightness)
-    const getNeonInverse = (hex: string) => {
-        // Convert hex to RGB
-        let r = parseInt(hex.slice(1, 3), 16) / 255;
-        let g = parseInt(hex.slice(3, 5), 16) / 255;
-        let b = parseInt(hex.slice(5, 7), 16) / 255;
-
-        // Find max/min for Hue calculation
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h = 0;
-        
-        // Calculate Hue
-        if (max === min) h = 0;
-        else if (max === r) h = (60 * (g - b) / (max - min) + 360) % 360;
-        else if (max === g) h = (60 * (b - r) / (max - min) + 120) % 360;
-        else h = (60 * (r - g) / (max - min) + 240) % 360;
-
-        // Invert Hue (Complementary)
-        const inverseH = (h + 180) % 360;
-
-        // Return HSL with max saturation and high lightness for neon effect
-        return `hsl(${inverseH}, 100%, 60%)`;
+    // Helper to calculate inverse color (simple inversion)
+    const getInverseColor = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        // Simple inversion: 255 - value
+        const rInv = (255 - r).toString(16).padStart(2, '0');
+        const gInv = (255 - g).toString(16).padStart(2, '0');
+        const bInv = (255 - b).toString(16).padStart(2, '0');
+        return `#${rInv}${gInv}${bInv}`;
     };
 
     return (
@@ -175,10 +162,9 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             <motion.span 
                 className={`w-full break-words relative z-10 block`}
                 style={{
-                    color: active ? getNeonInverse(bgColor) : textColor,
+                    color: active ? getInverseColor(bgColor) : textColor,
                     filter: active ? 'none' : 'none',
-                    fontWeight: active ? '900' : 'normal',
-                    textShadow: active ? `0 0 10px ${getNeonInverse(bgColor)}` : 'none'
+                    fontWeight: active ? '900' : 'normal'
                 }}
             >
                 {label}
