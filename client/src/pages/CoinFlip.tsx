@@ -128,16 +128,16 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             
             // Add subtle wobble when settled
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
-                 mesh.current.rotation.x += Math.sin(state.clock.elapsedTime * 2) * 0.005;
-                 mesh.current.rotation.y += Math.cos(state.clock.elapsedTime * 1.5) * 0.005;
+                 mesh.current.rotation.x += Math.sin(state.clock.elapsedTime * 4) * 0.005;
+                 mesh.current.rotation.y += Math.cos(state.clock.elapsedTime * 3) * 0.005;
             }
         } else {
              // Idle state (before first flip)
-             // Subtle wobble / undulate on all 3 axes
+             // Subtle wobble / undulate on all 3 axes - faster/more obvious as requested
              const t = state.clock.elapsedTime;
-             mesh.current.rotation.x = Math.sin(t * 0.5) * 0.1;
-             mesh.current.rotation.y = Math.sin(t * 0.3) * 0.15;
-             mesh.current.rotation.z = Math.sin(t * 0.7) * 0.05;
+             mesh.current.rotation.x = Math.sin(t * 2.0) * 0.15;
+             mesh.current.rotation.y = Math.sin(t * 1.5) * 0.2;
+             mesh.current.rotation.z = Math.sin(t * 2.5) * 0.08;
         }
     }
   });
@@ -160,7 +160,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
               - Math.PI / 2 on Y fixes the side-view issue.
               - Math.PI on Z flips the face upside down (fixing "pink is upside down").
             */}
-            <primitive object={clone} scale={4} rotation={[Math.PI, Math.PI / 2, 0]} />
+            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, Math.PI]} />
         </group>
     </Float>
   );
