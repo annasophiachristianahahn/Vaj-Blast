@@ -1,53 +1,145 @@
 import { Layout } from "@/components/Layout";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
-import { Group, Vector3, MathUtils, Mesh, MeshStandardMaterial, Color, TextureLoader } from "three";
-import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
+import { Group, Mesh, MeshStandardMaterial, Color, BufferGeometry, Float32BufferAttribute } from "three";
+import { Float, Environment, useGLTF } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Import images directly
-import player1Image from "@assets/vaj-400_1766349849850.jpg";
-import player2Image from "@assets/grams-400_1766349849850.jpg";
+// Use public path
+const coinModelPath = "/coin_v3.glb";
 
-function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
-  const mesh = useRef<Group>(null!);
+// Preload the model
+useGLTF.preload(coinModelPath);
+
+function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
+  const meshRef = useRef<Group>(null!);
+  const { scene } = useGLTF(coinModelPath);
   
-  // Load textures
-  const [vajTexture, gramsTexture] = useLoader(TextureLoader, [player1Image, player2Image]);
-
-  // Create materials
-  const materials = useMemo(() => {
-    // HEADS (Front/Top) -> Pink Chrome -> Vajunnie
-    const headsMaterial = new MeshStandardMaterial({
-        map: vajTexture,
-        color: new Color("#ff69b4"), // Hot pink
-        roughness: 0.05, // Extremely smooth
-        metalness: 0.9, // Very metallic
-        envMapIntensity: 2.0,
+  // Process geometry to split into groups
+  const processedNode = useMemo(() => {
+    // Clone scene to avoid mutating original cache
+    const clonedScene = scene.clone();
+    
+    // Find the mesh
+    let foundMesh: Mesh | null = null;
+    clonedScene.traverse((child) => {
+        if ((child as Mesh).isMesh && !foundMesh) {
+            foundMesh = child as Mesh;
+        }
     });
 
-    // TAILS (Back/Bottom) -> Chocolate -> Grams
+    if (!foundMesh) return clonedScene;
+    
+    // Explicitly cast to Mesh to satisfy TypeScript flow analysis
+    const targetMesh = foundMesh as Mesh;
+
+    const geometry = targetMesh.geometry.clone();
+    
+    // Check if we have normals and indices
+    if (!geometry.attributes.normal || !geometry.index) {
+        console.warn("Coin geometry missing normals or index");
+        return clonedScene;
+    }
+
+    const normals = geometry.attributes.normal.array;
+    const indices = geometry.index.array;
+    
+    const headIndices: number[] = [];
+    const tailIndices: number[] = [];
+    const edgeIndices: number[] = [];
+
+    // Iterate over faces (triangles)
+    for (let i = 0; i < indices.length; i += 3) {
+        const a = indices[i];
+        const b = indices[i + 1];
+        const c = indices[i + 2];
+
+        // Get normal of first vertex of the face (approximation)
+        // Or better, average them.
+        const nx = (normals[a * 3] + normals[b * 3] + normals[c * 3]) / 3;
+        // const ny = (normals[a * 3 + 1] + normals[b * 3 + 1] + normals[c * 3 + 1]) / 3;
+        // const nz = (normals[a * 3 + 2] + normals[b * 3 + 2] + normals[c * 3 + 2]) / 3;
+
+        // Determine side based on X axis (assuming model is aligned along X)
+        // Threshold: > 0.5 is Face A, < -0.5 is Face B, else Edge
+        if (nx > 0.5) {
+            headIndices.push(a, b, c);
+        } else if (nx < -0.5) {
+            tailIndices.push(a, b, c);
+        } else {
+            edgeIndices.push(a, b, c);
+        }
+    }
+
+    // Combine indices
+    const newIndices = [...headIndices, ...tailIndices, ...edgeIndices];
+    
+    // Update geometry index
+    geometry.setIndex(newIndices);
+
+    // Create groups
+    geometry.clearGroups();
+    let offset = 0;
+    
+    // Group 0: Heads (Pink)
+    if (headIndices.length > 0) {
+        geometry.addGroup(offset, headIndices.length, 0);
+        offset += headIndices.length;
+    }
+    
+    // Group 1: Tails (Chocolate)
+    if (tailIndices.length > 0) {
+        geometry.addGroup(offset, tailIndices.length, 1);
+        offset += tailIndices.length;
+    }
+    
+    // Group 2: Edge (Gold)
+    if (edgeIndices.length > 0) {
+        geometry.addGroup(offset, edgeIndices.length, 2);
+    }
+
+    // Create Materials
+    
+    // HEADS (Front/+X) -> Pink Chrome
+    const headsMaterial = new MeshStandardMaterial({
+        color: new Color("#ff69b4"), // Hot pink
+        roughness: 0.05,
+        metalness: 0.9,
+        envMapIntensity: 2.0,
+        name: "PinkChrome"
+    });
+
+    // TAILS (Back/-X) -> Chocolate Brown
     const tailsMaterial = new MeshStandardMaterial({
-        map: gramsTexture,
         color: new Color("#3e2723"), // Deep chocolate
-        roughness: 0.4, // Satin finish
-        metalness: 0.1, // Organic
-        emissive: new Color("#5d4037"), // Subtle brown glow
+        roughness: 0.4,
+        metalness: 0.1,
+        emissive: new Color("#5d4037"),
         emissiveIntensity: 0.05,
         envMapIntensity: 0.8,
+        name: "Chocolate"
     });
 
-    // Edge -> Gold
+    // EDGE -> Gold
     const edgeMaterial = new MeshStandardMaterial({
-        color: "#ffd700",
+        color: new Color("#ffd700"),
         roughness: 0.3,
         metalness: 1.0,
+        name: "GoldEdge"
     });
 
-    return { heads: headsMaterial, tails: tailsMaterial, edge: edgeMaterial };
-  }, [vajTexture, gramsTexture]);
+    // Assign new geometry and material array to the mesh
+    targetMesh.geometry = geometry;
+    targetMesh.material = [headsMaterial, tailsMaterial, edgeMaterial];
+    
+    // Ensure shadow casting
+    targetMesh.castShadow = true;
+    targetMesh.receiveShadow = true;
+
+    return clonedScene;
+  }, [scene]);
 
   // Randomize spin speed slightly for every flip so it doesn't look identical
   const [spinSpeed, setSpinSpeed] = useState(50);
@@ -59,67 +151,84 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
   }, [flipping]);
 
   useFrame((state, delta) => {
-    if (!mesh.current) return;
+    if (!meshRef.current) return;
 
     if (flipping) {
-        mesh.current.rotation.x += spinSpeed * delta;
-        mesh.current.rotation.y += 10 * delta;
-        mesh.current.rotation.z += 5 * delta; // Add Z rotation for chaotic tumble
+        meshRef.current.rotation.x += spinSpeed * delta;
+        meshRef.current.rotation.y += 10 * delta;
+        meshRef.current.rotation.z += 5 * delta; // Add Z rotation for chaotic tumble
     } else {
         // Landing animation
         if (result) {
-            // Target rotations
+            // Logic must match the geometry alignment
+            // Group 0 (Heads) is +X
+            // Group 1 (Tails) is -X
             
-            // HEADS -> Show Pink (Top/Front) -> X=0
-            // TAILS -> Show Chocolate (Bottom/Back) -> X=PI (Upside down)
-
+            // Note: The Primitive is rotated by [0, Math.PI/2, 0] inside the group.
+            // This rotates Local X -> World Z.
+            // So Heads (+X) points to +Z (Front).
+            // Tails (-X) points to -Z (Back).
+            
+            // To show Heads (Front), we want +Z facing camera (which is +Z). So Rotation Y = 0.
+            // To show Tails (Back), we want -Z facing camera. So Rotation Y = PI.
+            
+            // Wait, standard Coin Flip logic (X axis flip):
+            // Let's use X-axis flipping for the main motion.
+            
+            // If Heads (+Z world face): X Rot = 0.
+            // If Tails (-Z world face): X Rot = PI (Upside down? No, flips Z to -Z).
+            // Actually, X-rotation of PI flips Y to -Y and Z to -Z.
+            // So X=PI shows the Back.
+            
+            // HEADS -> X=0
+            // TAILS -> X=PI
             const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
             
-            // HEADS (X=0) -> Z=0 to be upright
-            // TAILS (X=PI) -> Needs Z=PI to be upright (since X flip inverts it)
+            // Corrections for upright orientation
+            // HEADS (X=0): Top is Top. Z=0.
+            // TAILS (X=PI): Top becomes Bottom. Need Z=PI to fix it.
             const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
-            
+
             // Normalize current rotation to 0..2PI
-            mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
-            if (mesh.current.rotation.x < 0) mesh.current.rotation.x += Math.PI * 2;
+            meshRef.current.rotation.x = meshRef.current.rotation.x % (Math.PI * 2);
+            if (meshRef.current.rotation.x < 0) meshRef.current.rotation.x += Math.PI * 2;
             
             // Normalize Y and Z to 0..2PI
-            mesh.current.rotation.y = mesh.current.rotation.y % (Math.PI * 2);
-            mesh.current.rotation.z = mesh.current.rotation.z % (Math.PI * 2);
+            meshRef.current.rotation.y = meshRef.current.rotation.y % (Math.PI * 2);
+            meshRef.current.rotation.z = meshRef.current.rotation.z % (Math.PI * 2);
 
             // Smoothly interpolate to target
             
             // X Axis Snap
-            let diffX = targetRotationX - mesh.current.rotation.x;
+            let diffX = targetRotationX - meshRef.current.rotation.x;
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
-            mesh.current.rotation.x += diffX * 10 * delta;
+            meshRef.current.rotation.x += diffX * 10 * delta;
 
             // Y Axis dampening (return to 0)
-            let diffY = 0 - mesh.current.rotation.y;
+            let diffY = 0 - meshRef.current.rotation.y;
             if (diffY > Math.PI) diffY -= Math.PI * 2;
             if (diffY < -Math.PI) diffY += Math.PI * 2;
-            mesh.current.rotation.y += diffY * 10 * delta;
+            meshRef.current.rotation.y += diffY * 10 * delta;
 
             // Z Axis Snap
-            let diffZ = targetRotationZ - mesh.current.rotation.z;
+            let diffZ = targetRotationZ - meshRef.current.rotation.z;
             if (diffZ > Math.PI) diffZ -= Math.PI * 2;
             if (diffZ < -Math.PI) diffZ += Math.PI * 2;
-            mesh.current.rotation.z += diffZ * 10 * delta;
+            meshRef.current.rotation.z += diffZ * 10 * delta;
             
             // Add subtle wobble when settled
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
-                 // WOBBLE AROUND THE TARGET ROTATION
-                 mesh.current.rotation.x = targetRotationX + Math.sin(state.clock.elapsedTime * 5) * 0.05;
-                 mesh.current.rotation.y = 0 + Math.cos(state.clock.elapsedTime * 3) * 0.05;
-                 mesh.current.rotation.z = targetRotationZ + Math.sin(state.clock.elapsedTime * 4) * 0.02;
+                 meshRef.current.rotation.x = targetRotationX + Math.sin(state.clock.elapsedTime * 5) * 0.05;
+                 meshRef.current.rotation.y = 0 + Math.cos(state.clock.elapsedTime * 3) * 0.05;
+                 meshRef.current.rotation.z = targetRotationZ + Math.sin(state.clock.elapsedTime * 4) * 0.02;
             }
         } else {
              // Idle state
              const t = state.clock.elapsedTime;
-             mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
-             mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
-             mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
+             meshRef.current.rotation.x = Math.sin(t * 3) * 0.3; 
+             meshRef.current.rotation.y = Math.cos(t * 2.5) * 0.4;
+             meshRef.current.rotation.z = Math.sin(t * 4) * 0.2;
         }
     }
   });
@@ -127,7 +236,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
   return (
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
-            ref={mesh} 
+            ref={meshRef} 
             rotation={[0, 0, 0]} 
             onClick={(e) => {
                 e.stopPropagation();
@@ -136,25 +245,12 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             onPointerOver={() => document.body.style.cursor = 'pointer'}
             onPointerOut={() => document.body.style.cursor = 'default'}
         >
-            {/* The Coin Geometry */}
-            {/* Main Cylinder (Edge) */}
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[4, 4, 0.5, 64]} />
-                <primitive object={materials.edge} attach="material" />
-            </mesh>
-
-            {/* HEADS Face (Top) - Pink Chrome */}
-            <mesh position={[0, 0, 0.26]} rotation={[0, 0, 0]}>
-                <circleGeometry args={[4, 64]} />
-                <primitive object={materials.heads} attach="material" />
-            </mesh>
-
-            {/* TAILS Face (Bottom) - Chocolate */}
-            <mesh position={[0, 0, -0.26]} rotation={[0, Math.PI, 0]}>
-                {/* Rotated Y by PI so texture is correct when flipped */}
-                <circleGeometry args={[4, 64]} />
-                <primitive object={materials.tails} attach="material" />
-            </mesh>
+            {/* 
+                Rotate geometry so X-axis faces point along Z-axis (Front/Back) 
+                Original Geometry: Faces along X.
+                Rotation [0, PI/2, 0]: X -> Z.
+            */}
+            <primitive object={processedNode} scale={5} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
@@ -197,13 +293,13 @@ export default function CoinFlip() {
                 </div>
             }
         >
-            <Canvas camera={{ position: [0, 0, 14], fov: 45 }}>
+            <Canvas camera={{ position: [0, 0, 7.5], fov: 45 }}>
             {/* Enhanced lighting for metal reflections */}
             <ambientLight intensity={1.5} />
             <pointLight position={[10, 10, 10]} intensity={2} />
             <pointLight position={[-10, -10, 10]} intensity={1.5} color="#ffaa00" /> {/* Warm light for chocolate/orange highlights */}
             <spotLight position={[0, 5, 10]} angle={0.3} penumbra={1} intensity={2} castShadow />
-            <Coin flipping={flipping} result={result} onFlipStart={flipCoin} />
+            <SplitCoin flipping={flipping} result={result} onFlipStart={flipCoin} />
             <Environment preset="city" />
             </Canvas>
         </ErrorBoundary>
