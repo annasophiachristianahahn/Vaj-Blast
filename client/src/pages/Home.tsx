@@ -57,14 +57,15 @@ export default function Home() {
                 />
             </div>
 
-            {/* Bottom Row - Full Width */}
-            <div className="w-full md:w-2/3 lg:w-1/2">
+            {/* Bottom Row - Centered */}
+            <div className="w-full flex justify-center">
                 <GameTab 
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
                     label="larong Tic Tac Toe sa papel"
                     bgColor="#FF9500" // Neon Orange
                     textColor="#8A2BE2" // Blue Violet
+                    className="w-auto"
                 />
             </div>
         </div>
@@ -92,13 +93,13 @@ export default function Home() {
   );
 }
 
-function GameTab({ active, onClick, label, bgColor, textColor }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string }) {
+function GameTab({ active, onClick, label, bgColor, textColor, className = "" }: { active: boolean, onClick: () => void, label: string, bgColor: string, textColor: string, className?: string }) {
     return (
         <motion.button
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase whitespace-normal overflow-hidden leading-none
-                border-2 backdrop-blur-md rounded-md flex items-center justify-center
+                border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
                 backgroundColor: active ? `${bgColor}D9` : `${bgColor}99`, // D9 = 85%, 99 = 60% opacity
