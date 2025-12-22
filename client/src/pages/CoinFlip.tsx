@@ -85,12 +85,14 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         if (result) {
             // Target rotations
             // HEADS: Face camera (0).
-            // TAILS: Face away (PI X-rot).
-            // Correction: If model is Medal Aligned (both up), X-flip makes Tails upside down.
-            // Fix: Rotate Z by PI if Tails.
+            // TAILS: Face away (PI).
+            // Logic derived from debugging:
+            // Base model [0, PI/2, 0] is Upside Down.
+            // HEADS (X=0): Needs Z=PI to be Upright.
+            // TAILS (X=PI): X-Flip inverts it. UpsideDown * Invert = Upright. So Z=0.
             
             const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
-            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
+            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -114,7 +116,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (diffY < -Math.PI) diffY += Math.PI * 2;
             mesh.current.rotation.y += diffY * 10 * delta;
 
-            // Z Axis Snap (Target varies!)
+            // Z Axis Snap
             let diffZ = targetRotationZ - mesh.current.rotation.z;
             if (diffZ > Math.PI) diffZ -= Math.PI * 2;
             if (diffZ < -Math.PI) diffZ += Math.PI * 2;
@@ -124,19 +126,20 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
                  // WOBBLE AROUND THE TARGET ROTATION
                  mesh.current.rotation.x = targetRotationX + Math.sin(state.clock.elapsedTime * 5) * 0.05;
-                 // TargetY is always 0 in my simplified logic, but really it should be 0.
+                 // TargetY is always 0
                  mesh.current.rotation.y = 0 + Math.cos(state.clock.elapsedTime * 3) * 0.05;
-                 // TargetZ depends on result
-                 const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
+                 // TargetZ
                  mesh.current.rotation.z = targetRotationZ + Math.sin(state.clock.elapsedTime * 4) * 0.02;
             }
         } else {
              // Idle state (before first flip)
              // Obvious wobble / undulate on all 3 axes
+             // Base state for Idle is HEADS (Pink) Upright -> Z = PI.
              const t = state.clock.elapsedTime;
              mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
              mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
-             mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
+             // Wobble around PI (Upright)
+             mesh.current.rotation.z = Math.PI + Math.sin(t * 4) * 0.2;
         }
     }
   });
@@ -145,7 +148,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={mesh} 
-            rotation={[0, 0, 0]} // Initial: Heads facing camera (0,0,0 for Z-forward model)
+            rotation={[0, 0, Math.PI]} // Initial: Heads Upright (Z=PI compensates for UpsideDown model)
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
@@ -155,11 +158,10 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         >
             {/* 
               Rotation adjustment:
-              Revert to primitive with Z-flip to ensure BOTH sides are Upright (Medal Alignment simulation).
-              If Heads is Upright, and we assume Medal Alignment, Tails is Upright.
-              X-flip will be corrected by Z-rotation in logic.
+              Base model [0, PI/2, 0] is "Faces Camera" but "Upside Down".
+              We handle the Z-flip in the animation logic (Idle Z=PI, Heads Z=PI).
             */}
-            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, Math.PI]} />
+            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
