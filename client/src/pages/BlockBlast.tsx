@@ -1281,16 +1281,15 @@ export default function BlockBlast() {
                     scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
                 }}
                 transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden mx-auto"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    // Use viewport-based constraints for both dimensions to guarantee a perfect square
-                    // We calculate the maximum possible square size that fits in width (95vw) 
-                    // AND height (viewport minus header/footer space ~340px)
-                    width: 'min(95vw, calc(100vh - 340px))',
-                    height: 'min(95vw, calc(100vh - 340px))'
+                    width: 'min(100%, 100vh - 180px)', // Constrain width based on available height
+                    height: 'auto', // Let aspect ratio drive height based on width
+                    maxWidth: '100%',
+                    maxHeight: '100%'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
