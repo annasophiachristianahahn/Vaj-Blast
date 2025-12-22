@@ -162,12 +162,24 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
             {/* SVG Electricity Effect */}
             {active && (
                 <>
+                     {/* Filter for noise displacement */}
+                    <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+                         <defs>
+                            <filter id="lightning-noise" x="-20%" y="-20%" width="140%" height="140%">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="0">
+                                    <animate attributeName="seed" values="0;10;20;30;40;50;60;70;80;90;100" dur="0.5s" repeatCount="indefinite" />
+                                </feTurbulence>
+                                <feDisplacementMap in="SourceGraphic" scale="5" />
+                            </filter>
+                         </defs>
+                    </svg>
+
                     {/* Pink Layer */}
-                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'url(#lightning-noise) drop-shadow(0 0 2px #FF10F0)' }}>
                         <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-pink" vectorEffect="non-scaling-stroke" />
                     </svg>
                     {/* Green Layer - Slightly offset or distinct animation */}
-                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'blur(0.5px)', top: '-8%', left: '-3%' }}>
+                    <svg className="electric-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'url(#lightning-noise) blur(0.5px)', top: '-8%', left: '-3%' }}>
                         <rect x="2" y="2" width="96" height="96" rx="10" ry="10" className="electric-stroke-green" vectorEffect="non-scaling-stroke" />
                     </svg>
                     
