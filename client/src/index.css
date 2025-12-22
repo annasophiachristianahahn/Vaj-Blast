@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+:root {
+  color-scheme: light;
+}
 
 @theme inline {
   --color-background: hsl(0 0% 10%);
@@ -32,7 +34,7 @@
   --color-input: hsl(260 30% 30%);
   --color-ring: hsl(0 80% 60%);
   
-  --font-display: "Climate Crisis", sans-serif;
+  --font-display: "Chewy", cursive;
   --font-sans: "Inter", sans-serif;
   
   --radius: 0.5rem;
