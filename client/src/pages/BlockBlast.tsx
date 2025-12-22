@@ -893,47 +893,58 @@ export default function BlockBlast() {
 
       const gridRect = gridRef.current.getBoundingClientRect();
       const isSmallScreen = window.innerWidth < 768;
-      // MATCHES DraggableShape OFFSET EXACTLY:
-      const yOffset = isSmallScreen ? -100 : 0; 
+      
+      // OFFSET CONSTANTS
+      // 1. Drag Offset: How far above the finger the shape floats (already handled in render)
+      const DRAG_Y_OFFSET = isSmallScreen ? -100 : 0;
+      
+      // 2. Snap Preview Offset: How far BELOW the shape the snap highlight should appear
+      // User request: "shape aligned with center... but placed slightly above the green highlight"
+      // This means the highlight is below the shape.
+      const SNAP_PREVIEW_OFFSET_Y = isSmallScreen ? 50 : 0; 
+      
+      // 3. Grid Padding: The grid has p-1.5 (6px) padding that we must account for
+      const GRID_PADDING = 6; 
 
-      // Visual position of the Top-Left of the shape's bounding box
-      // We assume the pointer is at the visual center of the shape
+      // Visual position of the shape's center
+      const visualCenterX = pointer.x;
+      const visualCenterY = pointer.y + DRAG_Y_OFFSET;
+      
+      // Search Position: This is where we look for a grid slot
+      // We look slightly BELOW the visual center of the shape
+      const searchCenterX = visualCenterX;
+      const searchCenterY = visualCenterY + SNAP_PREVIEW_OFFSET_Y;
+
+      // Calculate Visual Top-Left based on the search center
+      // Note: We use the full cellSize for calculation to match grid alignment logic
       const shapeW_cells = Math.max(...shape.points.map((p: any) => p[0])) + 1;
       const shapeH_cells = Math.max(...shape.points.map((p: any) => p[1])) + 1;
       const shapeW_px = shapeW_cells * cellSize;
       const shapeH_px = shapeH_cells * cellSize;
 
-      const visualCenterX = pointer.x;
-      const visualCenterY = pointer.y + yOffset;
-
-      const visualTopLeftX = visualCenterX - (shapeW_px / 2);
-      const visualTopLeftY = visualCenterY - (shapeH_px / 2);
+      const visualTopLeftX = searchCenterX - (shapeW_px / 2);
+      const visualTopLeftY = searchCenterY - (shapeH_px / 2);
 
       // Convert to grid-relative coordinates
-      const relativeX = visualTopLeftX - gridRect.left;
-      const relativeY = visualTopLeftY - gridRect.top;
+      // We subtract GRID_PADDING to align 0,0 with the top-left of the first cell (inside padding)
+      const relativeX = visualTopLeftX - gridRect.left - GRID_PADDING;
+      const relativeY = visualTopLeftY - gridRect.top - GRID_PADDING;
 
       let bestPlacement = null;
       let minDistance = Infinity;
       
       // Magnetic Snap Threshold - Increased for mobile forgiveness
-      // Allow snapping if within 1.5 cells of the target
       const SNAP_THRESHOLD = cellSize * 1.5;
 
-      // "Smart Scan": Iterate through all possible VALID placements
-      // and find the one closest to the user's finger position.
-      // This is the "Industry Standard" magnetic snap approach.
       for (let r = 0; r < GRID_SIZE; r++) {
           for (let c = 0; c < GRID_SIZE; c++) {
-              // Optimization: Only check distance if roughly close first
-              // (Optional, but good for performance if grid was larger)
-              
               if (canPlaceShape(r, c, shape, grid)) {
-                  // Where would this shape start in pixels?
+                  // Where would this shape start in pixels (relative to inner grid content)?
+                  // We approximate grid positions using cellSize which includes gap share
                   const targetX = c * cellSize;
                   const targetY = r * cellSize;
                   
-                  // Distance between visual drag position and this candidate target
+                  // Distance between search position and this candidate target
                   const dist = Math.hypot(targetX - relativeX, targetY - relativeY);
                   
                   if (dist < minDistance && dist < SNAP_THRESHOLD) {
