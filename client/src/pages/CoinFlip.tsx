@@ -171,7 +171,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
               Base model [0, PI/2, 0] is "Faces Camera" but "Upside Down".
               We handle the Z-flip in the animation logic (Idle Z=PI, Heads Z=PI).
             */}
-            <primitive object={clone} scale={6} rotation={[0, Math.PI / 2, 0]} />
+            <primitive object={clone} scale={5} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
@@ -213,7 +213,7 @@ export default function CoinFlip() {
                 </div>
             }
         >
-            <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
+            <Canvas camera={{ position: [0, 0, 7.5], fov: 45 }}>
             {/* Enhanced lighting for metal reflections */}
             <ambientLight intensity={1.5} />
             <pointLight position={[10, 10, 10]} intensity={2} />
