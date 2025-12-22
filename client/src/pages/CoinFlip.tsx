@@ -21,8 +21,9 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
   // Calculate responsive scale based on viewport width
   // User requested "as big as possible without cropping"
   // 1.0 was slightly too big. Reducing to 0.9.
+  // User reported text overlap issues. Reducing slightly to 0.85 to make room for text at bottom.
   const dim = Math.min(viewport.width, viewport.height);
-  const scale = dim * 0.9;
+  const scale = dim * 0.85;
   
   // Process geometry to split into groups
   const processedNode = useMemo(() => {
@@ -376,7 +377,7 @@ export default function CoinFlip() {
         </ErrorBoundary>
       </div>
       
-      <div className="absolute -bottom-5 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
+      <div className="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
