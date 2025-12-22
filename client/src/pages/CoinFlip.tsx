@@ -307,7 +307,7 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={meshRef} 
-            position={[0, 0, 0]} 
+            position={[0, 0.3, 0]} 
             rotation={[0, 0, 0]} 
             onClick={(e) => {
                 e.stopPropagation();
@@ -346,7 +346,7 @@ export default function CoinFlip() {
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden -mt-16 md:-mt-0">
+    <div className="w-full h-full relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <ErrorBoundary
             fallback={
