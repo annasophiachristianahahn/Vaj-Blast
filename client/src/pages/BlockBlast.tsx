@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 
 // Import generated assets
 import { BLOCK_BLAST_IMAGES } from "@/lib/gameAssets";
+import gramsImage from "@assets/grams-400_1766349849850.jpg";
 
 const IMAGES = BLOCK_BLAST_IMAGES;
 const GRID_SIZE = 8;
@@ -1200,19 +1201,28 @@ export default function BlockBlast() {
                         initial={{ scale: 0.8, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.8, y: 20 }}
-                        className="bg-black border-2 border-red-500/50 p-6 rounded-lg shadow-2xl flex flex-col items-center gap-4 text-white w-full max-w-sm"
+                        className="bg-black border-2 border-[#FF10F0]/50 p-6 rounded-lg shadow-2xl flex flex-col items-center gap-4 text-white w-full max-w-sm"
                     >
-                        <h2 className="text-4xl font-display text-red-500 animate-pulse text-center">GAME OVER</h2>
-                        <img src={BLOCK_BLAST_IMAGES[3]} alt="Game Over" className="w-24 h-24 animate-bounce" />
+                        <h2 className="text-4xl font-display text-[#FF10F0] animate-pulse text-center">GAME OVER</h2>
+                        <div className="relative w-24 h-24">
+                            <img 
+                                src={gramsImage} 
+                                alt="Game Over" 
+                                className="w-full h-full object-cover rounded-full animate-bounce"
+                            />
+                            <div 
+                                className="absolute inset-0 rounded-full mix-blend-hard-light opacity-60"
+                                style={{ backgroundColor: getRandomFunColor() }}
+                            />
+                        </div>
                         <div className="text-center">
                             <p className="text-2xl font-mono">FINAL SCORE</p>
-                            <p className="text-4xl font-bold text-yellow-400">{score}</p>
+                            <p className="text-4xl font-bold text-[#7FFF00]">{score}</p>
                         </div>
-                        <p className="text-sm opacity-60 text-center font-mono">The blockchain has crashed!</p>
                         
                         <Button 
                             onClick={resetGame} 
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg h-12 mt-2"
+                            className="w-full bg-[#FF10F0] hover:bg-[#D000C0] text-[#7FFF00] border border-[#7FFF00] font-bold text-lg h-12 mt-4"
                         >
                             RESTART MINTING
                         </Button>
