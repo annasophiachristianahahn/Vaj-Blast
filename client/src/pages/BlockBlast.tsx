@@ -1148,22 +1148,6 @@ export default function BlockBlast() {
 
   return (
     <div className="flex flex-col items-center justify-between h-full w-full max-w-lg mx-auto select-none touch-none relative px-2 pb-2">
-        <style>{`
-            /* DESKTOP ONLY OVERRIDES */
-            @media (min-width: 768px) {
-                .desktop-grid-wrapper {
-                    align-items: flex-start !important; /* Anchor to top instead of center */
-                    padding-top: 20px;
-                }
-                .desktop-grid {
-                    /* Reduce grid to 90% of its calculated size */
-                    width: calc(min(100%, 100vh - 180px) * 0.9) !important;
-                    /* Ensure it stays square */
-                    aspect-ratio: 1/1 !important;
-                }
-            }
-        `}</style>
-
         {/* Explosion Overlay */}
         <AnimatePresence>
             {showExplosion && (
@@ -1288,7 +1272,7 @@ export default function BlockBlast() {
         </div>
 
         {/* Grid Area - Maximize Size */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-0.5 px-4 relative desktop-grid-wrapper">
+        <div className="flex-1 flex items-center justify-center w-full min-h-0 my-0.5 px-4 relative">
             <motion.div 
                 ref={gridRef}
                 animate={{ 
@@ -1297,7 +1281,7 @@ export default function BlockBlast() {
                     scale: shakeGrid ? [1, 1.02, 1] : (nudgeGrid ? [1, 1.005, 1] : 1),
                 }}
                 transition={{ duration: shakeGrid ? 0.3 : 0.15, ease: "easeInOut" }}
-                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden desktop-grid"
+                className="grid gap-0.5 bg-black/80 p-1.5 rounded-xl border-4 border-white/20 shadow-2xl relative z-0 backdrop-blur-md chrome-grid overflow-hidden"
                 style={{ 
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
