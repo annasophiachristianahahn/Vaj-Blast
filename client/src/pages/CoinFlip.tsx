@@ -56,6 +56,50 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     const tailIndices: number[] = [];
     const edgeIndices: number[] = [];
 
+    // Calculate Bounding Box to determine the "Thin" axis (Thickness)
+    // and the "Face" range.
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+
+    const positions = geometry.attributes.position.array;
+    for(let i = 0; i < positions.length; i+=3) {
+        const x = positions[i];
+        const y = positions[i+1];
+        const z = positions[i+2];
+        
+        if(x < minX) minX = x;
+        if(x > maxX) maxX = x;
+        if(y < minY) minY = y;
+        if(y > maxY) maxY = y;
+        if(z < minZ) minZ = z;
+        if(z > maxZ) maxZ = z;
+    }
+
+    const rangeX = maxX - minX;
+    const rangeY = maxY - minY;
+    const rangeZ = maxZ - minZ;
+    
+    // Identify Thickness Axis (Smallest dimension)
+    let thicknessAxis = 'x';
+    let minRange = rangeX;
+    
+    if (rangeY < minRange) {
+        thicknessAxis = 'y';
+        minRange = rangeY;
+    }
+    if (rangeZ < minRange) {
+        thicknessAxis = 'z';
+        minRange = rangeZ;
+    }
+    
+    console.log(`Detected coin thickness axis: ${thicknessAxis} (Ranges: X=${rangeX.toFixed(3)}, Y=${rangeY.toFixed(3)}, Z=${rangeZ.toFixed(3)})`);
+
+    // Determine thresholds based on the thickness range
+    // We want to capture the faces, which are at the extremes of the thickness axis.
+    // Center is approx 0.
+    const thicknessThreshold = minRange * 0.25; // 25% from center to start capturing face
+
     // Iterate over faces (triangles)
     for (let i = 0; i < indices.length; i += 3) {
         const a = indices[i];
@@ -65,39 +109,31 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         // Get position of vertices
         const posAttribute = geometry.attributes.position.array;
         
-        // Calculate average X position of the face's vertices
-        // Each vertex has 3 components (x, y, z)
-        const ax = posAttribute[a * 3];
-        const bx = posAttribute[b * 3];
-        const cx = posAttribute[c * 3];
+        const ax = posAttribute[a * 3];     const ay = posAttribute[a * 3 + 1];     const az = posAttribute[a * 3 + 2];
+        const bx = posAttribute[b * 3];     const by = posAttribute[b * 3 + 1];     const bz = posAttribute[b * 3 + 2];
+        const cx = posAttribute[c * 3];     const cy = posAttribute[c * 3 + 1];     const cz = posAttribute[c * 3 + 2];
         
-        const avgX = (ax + bx + cx) / 3;
+        let avgPos = 0;
+        if (thicknessAxis === 'x') avgPos = (ax + bx + cx) / 3;
+        if (thicknessAxis === 'y') avgPos = (ay + by + cy) / 3;
+        if (thicknessAxis === 'z') avgPos = (az + bz + cz) / 3;
 
-        // Determine side based on X POSITION
-        // Assuming coin center is at 0,0,0
-        // Front face (Heads) will be at some positive X
-        // Back face (Tails) will be at some negative X
-        // Edge will be in between
+        // Classify
+        // Positive side -> Tails (Chocolate)
+        // Negative side -> Heads (Pink)
+        // Middle -> Edge -> Assign to Tails (Chocolate) to stick to 2 shaders as requested
         
-        // Threshold: 0.05 seems reasonable for a typical coin thickness if scaled correctly
-        // But since we are scaling the mesh by 5 later, the raw units might be small.
-        // Let's inspect the raw GLB scale. Assuming standard units (meters/cm), a coin is thin.
-        
-        // Since the previous normal method used >0.2 and <-0.2, it implies X-axis alignment.
-        // Let's try a position threshold.
-        const POS_THRESHOLD = 0.02; // Adjust this if needed based on model thickness
-
-        if (avgX > POS_THRESHOLD) {
-            tailIndices.push(a, b, c); // +X is Tails (Chocolate)
-        } else if (avgX < -POS_THRESHOLD) {
-            headIndices.push(a, b, c); // -X is Heads (Pink)
+        if (avgPos < -thicknessThreshold) {
+            headIndices.push(a, b, c); // Side A (Heads - Pink)
         } else {
-            edgeIndices.push(a, b, c);
+            // Everything else (Positive side AND Edge) goes to Tails (Chocolate)
+            // This ensures only 2 shaders are used.
+            tailIndices.push(a, b, c); 
         }
     }
 
     // Combine indices
-    const newIndices = [...headIndices, ...tailIndices, ...edgeIndices];
+    const newIndices = [...headIndices, ...tailIndices];
     
     // Update geometry index
     geometry.setIndex(newIndices);
@@ -112,20 +148,15 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         offset += headIndices.length;
     }
     
-    // Group 1: Tails (Chocolate)
+    // Group 1: Tails (Chocolate) - Now includes Edge
     if (tailIndices.length > 0) {
         geometry.addGroup(offset, tailIndices.length, 1);
         offset += tailIndices.length;
     }
-    
-    // Group 2: Edge (Gold)
-    if (edgeIndices.length > 0) {
-        geometry.addGroup(offset, edgeIndices.length, 2);
-    }
 
     // Create Materials
     
-    // HEADS (Front/+X) -> Pink Chrome
+    // HEADS -> Pink Chrome
     const headsMaterial = new MeshStandardMaterial({
         color: new Color("#ff69b4"), // Hot pink
         roughness: 0.05,
@@ -134,7 +165,7 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         name: "PinkChrome"
     });
 
-    // TAILS (Back/-X) -> Chocolate Brown
+    // TAILS (and Edge) -> Chocolate Brown
     const tailsMaterial = new MeshStandardMaterial({
         color: new Color("#3e2723"), // Deep chocolate
         roughness: 0.4,
@@ -145,21 +176,48 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         name: "Chocolate"
     });
 
-    // EDGE -> Gold
-    const edgeMaterial = new MeshStandardMaterial({
-        color: new Color("#ffd700"),
-        roughness: 0.3,
-        metalness: 1.0,
-        name: "GoldEdge"
-    });
-
     // Assign new geometry and material array to the mesh
     targetMesh.geometry = geometry;
-    targetMesh.material = [headsMaterial, tailsMaterial, edgeMaterial];
+    // Only 2 materials now
+    targetMesh.material = [headsMaterial, tailsMaterial];
     
     // Ensure shadow casting
     targetMesh.castShadow = true;
     targetMesh.receiveShadow = true;
+    
+    // Correct rotation based on detected axis to ensure it faces Z (Camera)
+    // We want the THICKNESS axis to align with World Z.
+    // If thickness is X, rotate Y+90 or -90.
+    // If thickness is Y, rotate X+90 or -90.
+    // If thickness is Z, no rotation needed.
+    
+    // However, the <primitive> below applies a hardcoded rotation. 
+    // We should return the thickness axis so the parent component can rotate it correctly.
+    // For now, we'll just return the node and assume the hardcoded rotation needs update.
+    // But wait, useMemo can't return multiple values easily to the render loop without refactoring.
+    
+    // Let's modify the geometry itself to align with Z axis!
+    // Then we can remove the rotation on the primitive.
+    // This is the cleanest way.
+    
+    if (thicknessAxis === 'x') {
+        geometry.rotateY(-Math.PI / 2); // X -> Z
+    } else if (thicknessAxis === 'y') {
+        geometry.rotateX(Math.PI / 2); // Y -> Z
+    }
+    // If Z, it's already aligned.
+    
+    // Now Side A (Heads, Pink) is at Negative Z (Back)
+    // Side B (Tails, Choc) is at Positive Z (Front)
+    // We want Heads to be Front.
+    // So let's rotate Y 180 (Math.PI) to flip it?
+    // Or just swap the material assignment logic?
+    // Current: < -Thresh (Neg) is Heads.
+    // If Z aligned: Neg Z is Back.
+    // So Heads is Back.
+    // User wants Heads default.
+    // Let's Rotate Y by Math.PI to bring Back to Front.
+    geometry.rotateY(Math.PI);
 
     return clonedScene;
   }, [scene]);
@@ -269,11 +327,10 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
             onPointerOut={() => document.body.style.cursor = 'default'}
         >
             {/* 
-                Rotate geometry so X-axis faces point along Z-axis (Front/Back) 
-                Original Geometry: Faces along X.
-                Rotation [0, -Math.PI/2, 0]: -X -> Z (Default View shows -X/Heads).
+                Geometry is now auto-aligned to Z-axis in the processing step.
+                No extra rotation needed here.
             */}
-            <primitive object={processedNode} scale={scale} rotation={[0, -Math.PI / 2, 0]} />
+            <primitive object={processedNode} scale={scale} rotation={[0, 0, 0]} />
         </group>
     </Float>
   );
