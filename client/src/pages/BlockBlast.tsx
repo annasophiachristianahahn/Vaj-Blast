@@ -1286,11 +1286,11 @@ export default function BlockBlast() {
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    // Force a perfect square by constraining the size to the smaller of available width or height
-                    width: 'min(100% - 2rem, calc(100vh - 320px))',
-                    height: 'min(100% - 2rem, calc(100vh - 320px))',
-                    maxWidth: '500px', // Optional: prevent it from getting absurdly huge on large screens
-                    maxHeight: '500px'
+                    // Use viewport-based constraints for both dimensions to guarantee a perfect square
+                    // We calculate the maximum possible square size that fits in width (95vw) 
+                    // AND height (viewport minus header/footer space ~340px)
+                    width: 'min(95vw, calc(100vh - 340px))',
+                    height: 'min(95vw, calc(100vh - 340px))'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
