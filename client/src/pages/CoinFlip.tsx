@@ -1,101 +1,53 @@
 import { Layout } from "@/components/Layout";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
-import { Group, Vector3, MathUtils, Mesh, MeshStandardMaterial, Color } from "three";
-import { Text, Center, Environment, Float, Stars, useGLTF } from "@react-three/drei";
+import { Group, Vector3, MathUtils, Mesh, MeshStandardMaterial, Color, TextureLoader } from "three";
+import { Text, Center, Environment, Float, Stars } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Use public path
-const coinModelPath = "/coin_v3.glb";
-
-// Preload the model
-useGLTF.preload(coinModelPath);
+// Import images directly
+import player1Image from "@assets/vaj-400_1766349849850.jpg";
+import player2Image from "@assets/grams-400_1766349849850.jpg";
 
 function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'HEADS' | 'TAILS' | null, onFlipStart: () => void }) {
   const mesh = useRef<Group>(null!);
-  const { scene } = useGLTF(coinModelPath);
   
-  // Clone the scene so we can use it multiple times if needed, and to ensure fresh state
-  const clone = useMemo(() => {
-    const clonedScene = scene.clone();
-    
-    // Apply material enhancements
-    clonedScene.traverse((child) => {
-        if ((child as Mesh).isMesh) {
-            const mesh = child as Mesh;
-            const originalMaterial = mesh.material;
+  // Load textures
+  const [vajTexture, gramsTexture] = useLoader(TextureLoader, [player1Image, player2Image]);
 
-            console.log("Mesh Name:", mesh.name);
-            console.log("Material:", originalMaterial);
-            
-            // Handle array of materials (multi-material mesh)
-            if (Array.isArray(originalMaterial)) {
-                 mesh.material = originalMaterial.map((mat, idx) => {
-                     const standardMat = mat as MeshStandardMaterial;
-                     return createEnhancedMaterial(standardMat, idx, mesh.name);
-                 });
-            } else {
-                 mesh.material = createEnhancedMaterial(originalMaterial as MeshStandardMaterial, undefined, mesh.name);
-            }
-            
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-        }
+  // Create materials
+  const materials = useMemo(() => {
+    // HEADS (Front/Top) -> Pink Chrome -> Vajunnie
+    const headsMaterial = new MeshStandardMaterial({
+        map: vajTexture,
+        color: new Color("#ff69b4"), // Hot pink
+        roughness: 0.05, // Extremely smooth
+        metalness: 0.9, // Very metallic
+        envMapIntensity: 2.0,
     });
-    
-    return clonedScene;
-  }, [scene]);
 
-  function createEnhancedMaterial(originalMaterial: MeshStandardMaterial, index?: number, meshName: string = '') {
-      const color = originalMaterial.color;
-      // Heuristic to detect pink vs brown side based on brightness
-      // Pink is lighter, Brown is darker
-      const brightness = (color.r + color.g + color.b) / 3;
-      
-      // Default heuristic
-      let isPinkSide = brightness > 0.3; 
+    // TAILS (Back/Bottom) -> Chocolate -> Grams
+    const tailsMaterial = new MeshStandardMaterial({
+        map: gramsTexture,
+        color: new Color("#3e2723"), // Deep chocolate
+        roughness: 0.4, // Satin finish
+        metalness: 0.1, // Organic
+        emissive: new Color("#5d4037"), // Subtle brown glow
+        emissiveIntensity: 0.05,
+        envMapIntensity: 0.8,
+    });
 
-      // Debug log
-      console.log(`Mesh: "${meshName}", Brightness: ${brightness.toFixed(3)}, Original Color: #${color.getHexString()}`);
+    // Edge -> Gold
+    const edgeMaterial = new MeshStandardMaterial({
+        color: "#ffd700",
+        roughness: 0.3,
+        metalness: 1.0,
+    });
 
-      // If we have an index from a multi-material array, force differentiation
-      if (index !== undefined) {
-          isPinkSide = index === 0;
-      } 
-      // Name-based override (stronger than brightness)
-      else if (meshName) {
-          const lowerName = meshName.toLowerCase();
-          if (lowerName.includes('head') || lowerName.includes('back') || lowerName.includes('chocolate')) {
-              isPinkSide = false; // Chocolate
-          } else if (lowerName.includes('tail') || lowerName.includes('front') || lowerName.includes('pink')) {
-              isPinkSide = true; // Pink
-          }
-      }
-      
-      const newMaterial = new MeshStandardMaterial({
-          map: originalMaterial.map,
-          normalMap: originalMaterial.normalMap,
-      });
-
-      if (isPinkSide) {
-          // Pink Chrome (Shader 1)
-          newMaterial.color = new Color("#ff69b4"); // Hot pink
-          newMaterial.roughness = 0.05; // Extremely smooth
-          newMaterial.metalness = 0.9; // Very metallic
-          newMaterial.envMapIntensity = 2.0;
-      } else {
-          // Chocolate Brown (Shader 2)
-          newMaterial.color = new Color("#3e2723"); // Deep chocolate
-          newMaterial.roughness = 0.4; // Satin finish
-          newMaterial.metalness = 0.1; // Organic
-          newMaterial.emissive = new Color("#5d4037"); // Subtle brown glow
-          newMaterial.emissiveIntensity = 0.05;
-          newMaterial.envMapIntensity = 0.8;
-      }
-      return newMaterial;
-  }
+    return { heads: headsMaterial, tails: tailsMaterial, edge: edgeMaterial };
+  }, [vajTexture, gramsTexture]);
 
   // Randomize spin speed slightly for every flip so it doesn't look identical
   const [spinSpeed, setSpinSpeed] = useState(50);
@@ -117,21 +69,15 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
         // Landing animation
         if (result) {
             // Target rotations
-            // HEADS: Should show Chocolate side (Back).
-            // TAILS: Should show Pink side (Front).
             
-            // Front (Pink) is X=0. Back (Chocolate) is X=PI.
-            // HEADS -> X=PI
-            // TAILS -> X=0
-            const targetRotationX = result === 'HEADS' ? Math.PI : 0;
+            // HEADS -> Show Pink (Top/Front) -> X=0
+            // TAILS -> Show Chocolate (Bottom/Back) -> X=PI (Upside down)
+
+            const targetRotationX = result === 'HEADS' ? 0 : Math.PI;
             
-            // Orientation correction (Z-axis):
-            // Pink (X=0) needs Z=0 to be Upright.
-            // Chocolate (X=PI) is inverted by the X-flip. To be Upright, it needs Z=PI.
-            
-            // HEADS (X=PI) -> Needs Z=PI
-            // TAILS (X=0) -> Needs Z=0
-            const targetRotationZ = result === 'HEADS' ? Math.PI : 0;
+            // HEADS (X=0) -> Z=0 to be upright
+            // TAILS (X=PI) -> Needs Z=PI to be upright (since X flip inverts it)
+            const targetRotationZ = result === 'HEADS' ? 0 : Math.PI;
             
             // Normalize current rotation to 0..2PI
             mesh.current.rotation.x = mesh.current.rotation.x % (Math.PI * 2);
@@ -147,7 +93,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             let diffX = targetRotationX - mesh.current.rotation.x;
             if (diffX > Math.PI) diffX -= Math.PI * 2;
             if (diffX < -Math.PI) diffX += Math.PI * 2;
-            mesh.current.rotation.x += diffX * 10 * delta; // Slower damping for smoothness
+            mesh.current.rotation.x += diffX * 10 * delta;
 
             // Y Axis dampening (return to 0)
             let diffY = 0 - mesh.current.rotation.y;
@@ -165,23 +111,14 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1 && Math.abs(diffZ) < 0.1) {
                  // WOBBLE AROUND THE TARGET ROTATION
                  mesh.current.rotation.x = targetRotationX + Math.sin(state.clock.elapsedTime * 5) * 0.05;
-                 // TargetY is always 0
                  mesh.current.rotation.y = 0 + Math.cos(state.clock.elapsedTime * 3) * 0.05;
-                 // TargetZ
                  mesh.current.rotation.z = targetRotationZ + Math.sin(state.clock.elapsedTime * 4) * 0.02;
             }
         } else {
-             // Idle state (before first flip)
-             // Should show "Tails" (Pink side) as user requested flip.
-             // Or actually, user didn't specify idle side.
-             // But if Pink is TAILS, and we want to show Pink in Idle (usually Front side),
-             // then Idle shows TAILS.
-             
-             // Base state for Idle is Pink (Front) -> X=0, Z=0.
+             // Idle state
              const t = state.clock.elapsedTime;
              mesh.current.rotation.x = Math.sin(t * 3) * 0.3; 
              mesh.current.rotation.y = Math.cos(t * 2.5) * 0.4;
-             // Wobble around 0 (Upright)
              mesh.current.rotation.z = Math.sin(t * 4) * 0.2;
         }
     }
@@ -191,8 +128,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
     <Float speed={flipping ? 20 : 2} rotationIntensity={flipping ? 5 : 0.5} floatIntensity={flipping ? 5 : 1}>
         <group 
             ref={mesh} 
-            rotation={[Math.PI, 0, Math.PI]} // Initial: Heads (Chocolate) Upright. 
-            // Chocolate is X=PI, Z=PI.
+            rotation={[0, 0, 0]} 
             onClick={(e) => {
                 e.stopPropagation();
                 onFlipStart();
@@ -200,12 +136,25 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
             onPointerOver={() => document.body.style.cursor = 'pointer'}
             onPointerOut={() => document.body.style.cursor = 'default'}
         >
-            {/* 
-              Rotation adjustment:
-              Base model [0, PI/2, 0] is "Faces Camera" but "Upside Down".
-              We handle the Z-flip in the animation logic (Idle Z=PI, Heads Z=PI).
-            */}
-            <primitive object={clone} scale={5} rotation={[0, Math.PI / 2, 0]} />
+            {/* The Coin Geometry */}
+            {/* Main Cylinder (Edge) */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[4, 4, 0.5, 64]} />
+                <primitive object={materials.edge} attach="material" />
+            </mesh>
+
+            {/* HEADS Face (Top) - Pink Chrome */}
+            <mesh position={[0, 0, 0.26]} rotation={[0, 0, 0]}>
+                <circleGeometry args={[4, 64]} />
+                <primitive object={materials.heads} attach="material" />
+            </mesh>
+
+            {/* TAILS Face (Bottom) - Chocolate */}
+            <mesh position={[0, 0, -0.26]} rotation={[0, Math.PI, 0]}>
+                {/* Rotated Y by PI so texture is correct when flipped */}
+                <circleGeometry args={[4, 64]} />
+                <primitive object={materials.tails} attach="material" />
+            </mesh>
         </group>
     </Float>
   );
@@ -224,10 +173,10 @@ export default function CoinFlip() {
     setTimeout(() => {
         // Use < 0.5 to ensure fair distribution
         const outcome = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
-        console.log("Coin Flip Result:", outcome); // Debug log
+        console.log("Coin Flip Result:", outcome); 
         setResult(outcome);
         setFlipping(false);
-    }, 600); // Slightly longer to allow full spin visual
+    }, 800); 
   };
 
   return (
@@ -248,7 +197,7 @@ export default function CoinFlip() {
                 </div>
             }
         >
-            <Canvas camera={{ position: [0, 0, 7.5], fov: 45 }}>
+            <Canvas camera={{ position: [0, 0, 14], fov: 45 }}>
             {/* Enhanced lighting for metal reflections */}
             <ambientLight intensity={1.5} />
             <pointLight position={[10, 10, 10]} intensity={2} />
