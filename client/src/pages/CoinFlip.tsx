@@ -192,6 +192,15 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
         name: "Chocolate"
     });
 
+    // FINAL ORIENTATION FIX
+    // User requested "Heads side to be Tails" (implying swap) while keeping shaders.
+    // Currently Front(+Z) is Choc, Back(-Z) is Pink.
+    // Heads Result shows Front (Choc). Tails Result shows Back (Pink).
+    // We want Heads Result to show Pink.
+    // So we need Pink to be Front.
+    // Rotate 180 degrees around Y (or X) to swap Front/Back.
+    geometry.rotateY(Math.PI);
+
     // Return a clean mesh with the processed geometry
     // This avoids any parent transforms from the GLTF scene
     const cleanMesh = new Mesh(geometry, [headsMaterial, tailsMaterial]);
