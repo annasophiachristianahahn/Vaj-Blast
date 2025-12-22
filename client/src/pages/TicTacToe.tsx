@@ -82,7 +82,7 @@ export default function TicTacToe() {
               className={`
                 w-full h-full
                 flex items-center justify-center text-4xl relative overflow-hidden
-                border-[#800020] border-solid
+                border-[#800020] border-solid bg-transparent
                 ${index < 6 ? 'border-b-4' : 'border-b-0'}
                 ${index % 3 !== 2 ? 'border-r-4' : 'border-r-0'}
                 ${winningLine?.includes(index) ? "bg-green-500/10" : ""}
