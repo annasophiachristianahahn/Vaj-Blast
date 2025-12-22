@@ -97,7 +97,7 @@ function Coin({ flipping, result, onFlipStart }: { flipping: boolean, result: 'H
               Starting with scale={3} to make it big enough. 
               Rotation might need tweaking depending on how the model was exported.
             */}
-            <primitive object={clone} scale={4} />
+            <primitive object={clone} scale={4} rotation={[0, Math.PI / 2, 0]} />
         </group>
     </Float>
   );
