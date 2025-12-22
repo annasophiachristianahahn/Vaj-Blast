@@ -220,9 +220,10 @@ export default function QuietGame() {
             
             <div className="z-10 text-6xl font-mono font-bold drop-shadow-lg text-[#FF10F0]">
                 {gameOver ? (
-                    <div className="flex flex-col items-center">
-                        <span className="text-[#FF10F0] animate-pulse">FAIL</span>
-                        <span className="text-xs text-[#FF10F0]/80 mt-2 font-sans animate-none tracking-widest text-center">PLAYING BACK<br/>SOUND LOOP...</span>
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="text-[#FF10F0] animate-pulse text-5xl">FAIL</span>
+                        <span className="text-2xl text-white font-mono my-1">{(score / 10).toFixed(1)}s</span>
+                        <span className="text-[10px] text-[#FF10F0]/80 font-sans animate-none tracking-widest text-center leading-tight">PLAYING BACK<br/>SOUND...</span>
                     </div>
                 ) : (
                     (score / 10).toFixed(1) + "s"
