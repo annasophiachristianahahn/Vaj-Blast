@@ -113,7 +113,19 @@ function GameTab({ active, onClick, label, bgColor, textColor, className = "" }:
                 border-2 backdrop-blur-md rounded-md flex items-center justify-center ${className}
             `}
             style={{
+                backgroundColor: active ? hexToRgba(bgColor, 0.88) : hexToRgba(bgColor, 0.77),
                 borderColor: active ? '#98FF98' : textColor, // Mint green when active, text color when inactive
+            }}
+            initial={active ? {
+                backgroundColor: hexToRgba(bgColor, 0.88),
+                y: 0,
+                scale: 1,
+                boxShadow: "none"
+            } : {
+                backgroundColor: hexToRgba(bgColor, 0.77),
+                y: 0,
+                scale: 1,
+                boxShadow: "none"
             }}
             animate={active ? {
                 y: [0, -4, 0],
