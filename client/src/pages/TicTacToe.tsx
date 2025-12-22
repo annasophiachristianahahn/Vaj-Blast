@@ -127,10 +127,37 @@ export default function TicTacToe() {
                             {winner === "TIE" ? "TIE" : "WINNER!"}
                         </div>
                         {winner !== "TIE" && (
-                            <img 
-                                src={winner === "X" ? player1Image : player2Image} 
-                                className="w-40 h-40 mx-auto mb-6 border-8 border-[#7FFF00] rounded-full shadow-2xl object-cover"
-                            />
+                            <div className="relative w-40 h-40 mx-auto mb-6">
+                                <img 
+                                    src={winner === "X" ? player1Image : player2Image} 
+                                    className="w-full h-full border-8 border-[#7FFF00] rounded-full shadow-2xl object-cover relative z-10"
+                                />
+                                {/* Sparkles Animation */}
+                                {[...Array(12)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute top-1/2 left-1/2 w-8 h-8 text-yellow-400 z-20 pointer-events-none"
+                                        initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                                        animate={{ 
+                                            x: (Math.cos(i * (360/12) * (Math.PI/180)) * (60 + Math.random() * 40)), 
+                                            y: (Math.sin(i * (360/12) * (Math.PI/180)) * (60 + Math.random() * 40)), 
+                                            scale: [0, 1.2, 0], 
+                                            opacity: [0, 1, 0],
+                                            rotate: [0, 90, 180]
+                                        }}
+                                        transition={{ 
+                                            duration: 1 + Math.random(), 
+                                            repeat: Infinity, 
+                                            delay: Math.random() * 0.5,
+                                            ease: "easeInOut"
+                                        }}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-[0_0_5px_rgba(255,255,0,0.8)]">
+                                            <path d="M12 0L15 9L24 12L15 15L12 24L9 15L0 12L9 9L12 0Z" />
+                                        </svg>
+                                    </motion.div>
+                                ))}
+                            </div>
                         )}
                         <Button 
                             onClick={resetGame} 
