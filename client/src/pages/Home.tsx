@@ -133,26 +133,11 @@ function GameTab({ active, onClick, label, bgColor, textColor }: { active: boole
             whileTap={{ scale: 0.98 }}
         >
             <motion.span 
-                className="w-full break-words relative z-10 block"
+                className={`w-full break-words relative z-10 block ${active ? 'rainbow-gradient' : ''}`}
                 style={{
                     color: active ? 'transparent' : textColor,
-                    backgroundClip: active ? 'text' : 'border-box',
-                    WebkitBackgroundClip: active ? 'text' : 'border-box',
-                    backgroundImage: active ? 'linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee)' : 'none',
-                    backgroundSize: active ? '200% 100%' : 'auto',
                     filter: active ? 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' : 'none',
-                    // Fallback for text shadow if filter doesn't cut it, but filter is better for clipped text
                 }}
-                animate={active ? {
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                } : {
-                    backgroundPosition: "0% 50%"
-                }}
-                transition={active ? {
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear"
-                } : {}}
             >
                 {label}
             </motion.span>
