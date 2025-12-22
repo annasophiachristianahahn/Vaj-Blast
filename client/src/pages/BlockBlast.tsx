@@ -1286,8 +1286,8 @@ export default function BlockBlast() {
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    height: 'min(100%, 100vh - 180px)', // Prioritize height constraint for desktop
-                    width: 'auto', // Let aspect ratio drive width
+                    width: 'min(100%, 100vh - 180px)', // Constrain width primarily to ensure mobile fill
+                    height: 'auto', // Let aspect ratio handle height
                     maxWidth: '100%',
                     maxHeight: '100%'
                 }}
