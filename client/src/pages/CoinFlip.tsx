@@ -376,7 +376,7 @@ export default function CoinFlip() {
         </ErrorBoundary>
       </div>
       
-      <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
+      <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-0 z-10 pointer-events-none pb-safe">
         {result && !flipping && (
             <motion.div 
                 initial={{ scale: 0 }} 
@@ -387,7 +387,7 @@ export default function CoinFlip() {
             </motion.div>
         )}
         
-        <div className="text-xs md:text-sm opacity-50 font-mono animate-pulse mt-0 text-white drop-shadow-md mb-2">
+        <div className="text-xs md:text-sm opacity-50 font-mono animate-pulse mt-0 text-white drop-shadow-md mb-1">
             TAP COIN TO FLIP
         </div>
       </div>
