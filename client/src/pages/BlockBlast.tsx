@@ -1286,10 +1286,10 @@ export default function BlockBlast() {
                     aspectRatio: '1/1',
                     gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                     gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                    width: 'min(100%, 100vh - 180px)', // Constrain width based on available height
-                    height: 'auto', // Let aspect ratio drive height based on width
-                    maxWidth: '100%',
-                    maxHeight: '100%'
+                    width: 'auto',
+                    height: 'auto',
+                    maxWidth: 'min(100%, 100vh - 180px)',
+                    maxHeight: 'min(100%, 100vh - 180px)'
                 }}
             >
                 {/* Rainbow Sweep Overlay */}
