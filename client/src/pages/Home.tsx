@@ -38,19 +38,19 @@ export default function Home() {
                     active={activeGame === 'coin-flip'} 
                     onClick={() => setActiveGame('coin-flip')}
                     label="COIN FLIP"
-                    color="bg-red-500"
+                    baseColor="#FF0055" // Vibrant Red-Pink
                 />
                 <GameTab 
                     active={activeGame === 'quiet-game'} 
                     onClick={() => setActiveGame('quiet-game')}
                     label="QUIET GAME"
-                    color="bg-purple-500"
+                    baseColor="#9D00FF" // Electric Purple
                 />
                 <GameTab 
                     active={activeGame === 'block-blast'} 
                     onClick={() => setActiveGame('block-blast')}
                     label="VAJ BLAST"
-                    color="bg-green-500"
+                    baseColor="#00CC44" // Vibrant Green
                 />
             </div>
 
@@ -60,7 +60,7 @@ export default function Home() {
                     active={activeGame === 'tic-tac-toe'} 
                     onClick={() => setActiveGame('tic-tac-toe')}
                     label="larong Tic Tac Toe sa papel"
-                    color="bg-[#F28500]"
+                    baseColor="#FF9500" // Bright Orange
                 />
             </div>
         </div>
@@ -88,17 +88,23 @@ export default function Home() {
   );
 }
 
-function GameTab({ active, onClick, label, color }: { active: boolean, onClick: () => void, label: string, color: string }) {
+function GameTab({ active, onClick, label, baseColor }: { active: boolean, onClick: () => void, label: string, baseColor: string }) {
     return (
         <Button
             onClick={onClick}
             className={`
                 relative h-12 md:h-14 w-full px-1 md:px-6 font-display text-xs sm:text-sm md:text-xl uppercase transition-all whitespace-normal overflow-hidden leading-none
-                border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] md:shadow-[4px_4px_0_rgba(0,0,0,1)]
-                hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0_rgba(0,0,0,1)]
-                active:translate-y-0 active:shadow-[1px_1px_0_rgba(0,0,0,1)]
-                ${active ? `${color} text-white scale-[1.02] z-10` : 'bg-white text-black hover:bg-gray-100'}
+                border backdrop-blur-sm
+                ${active 
+                    ? 'text-white scale-[1.02] z-10' 
+                    : 'text-white/90 hover:text-white hover:-translate-y-0.5'}
             `}
+            style={{
+                backgroundColor: active ? `${baseColor}E6` : `${baseColor}66`, // E6 = 90%, 66 = 40%
+                borderColor: active ? '#ffffff' : baseColor,
+                boxShadow: active ? `0 0 15px ${baseColor}66` : 'none',
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}
         >
             <span className="w-full break-words">{label}</span>
         </Button>
