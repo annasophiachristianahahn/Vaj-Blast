@@ -57,82 +57,70 @@ function SplitCoin({ flipping, result, onFlipStart }: { flipping: boolean, resul
     const edgeIndices: number[] = [];
 
     // 1. CENTER THE GEOMETRY
-    // This is critical for position-based logic. If the model is offset, 
-    // classifying by > 0 or < 0 will cut it in arbitrary places.
     geometry.center();
-    geometry.computeBoundingBox();
     
-    const bbox = geometry.boundingBox!;
-    const rangeX = bbox.max.x - bbox.min.x;
-    const rangeY = bbox.max.y - bbox.min.y;
-    const rangeZ = bbox.max.z - bbox.min.z;
+    // 2. DETECT FACE AXIS USING NORMALS
+    // A coin has two large flat faces. The normals of these faces will point 
+    // strongly along one axis (the thickness axis).
+    // This is more robust than Bounding Box for flat objects.
     
-    // 2. Identify Thickness Axis (Smallest dimension)
-    let thicknessAxis = 'x';
-    let minRange = rangeX;
+    let sumX = 0, sumY = 0, sumZ = 0;
+    const normArray = geometry.attributes.normal.array;
     
-    if (rangeY < minRange) {
-        thicknessAxis = 'y';
-        minRange = rangeY;
-    }
-    if (rangeZ < minRange) {
-        thicknessAxis = 'z';
-        minRange = rangeZ;
+    for (let i = 0; i < normArray.length; i += 3) {
+        sumX += Math.abs(normArray[i]);
+        sumY += Math.abs(normArray[i+1]);
+        sumZ += Math.abs(normArray[i+2]);
     }
     
-    console.log(`Detected coin thickness axis: ${thicknessAxis} (Ranges: X=${rangeX.toFixed(3)}, Y=${rangeY.toFixed(3)}, Z=${rangeZ.toFixed(3)})`);
+    let faceAxis = 'z';
+    let maxSum = sumZ;
+    
+    if (sumX > maxSum) {
+        faceAxis = 'x';
+        maxSum = sumX;
+    }
+    if (sumY > maxSum) {
+        faceAxis = 'y';
+        maxSum = sumY;
+    }
+    
+    console.log(`Detected coin face axis via normals: ${faceAxis} (Sums: X=${sumX.toFixed(0)}, Y=${sumY.toFixed(0)}, Z=${sumZ.toFixed(0)})`);
 
-    // 3. Align Thickness to Z-Axis (Camera Facing)
-    // We want the face of the coin to look at the camera (Z-axis).
-    // So the thickness should run along Z.
-    
-    if (thicknessAxis === 'x') {
-        geometry.rotateY(-Math.PI / 2); // Align X thickness to Z
-    } else if (thicknessAxis === 'y') {
-        geometry.rotateX(Math.PI / 2); // Align Y thickness to Z
+    // 3. ALIGN FACE AXIS TO Z (Camera Facing)
+    // We want the faces to look along Z.
+    if (faceAxis === 'x') {
+        geometry.rotateY(-Math.PI / 2); // X -> Z
+    } else if (faceAxis === 'y') {
+        geometry.rotateX(Math.PI / 2); // Y -> Z
     }
-    // If Z, it's already aligned.
     
-    // Now that we've rotated, re-compute bounding box to be sure of new dimensions
-    geometry.computeBoundingBox();
-    const newBbox = geometry.boundingBox!;
-    const thickness = newBbox.max.z - newBbox.min.z;
+    // 4. CLASSIFY FACES BASED ON NORMALS
+    // Now that geometry is aligned to Z:
+    // Front Face (Heads) will have Normal.z > 0 (approx 1)
+    // Back Face (Tails) will have Normal.z < 0 (approx -1)
+    // Edge will have Normal.z approx 0
     
-    // 4. Classify Faces
-    // Now Thickness is along Z.
-    // Center is 0.
-    // Front Face is at +Z (approx thickness/2)
-    // Back Face is at -Z (approx -thickness/2)
+    const normals = geometry.attributes.normal.array;
+    const position = geometry.attributes.position.array; // Keep if needed for tie-breaking
     
-    // Threshold: slightly inside the outer surface to capture the relief
-    const zThreshold = thickness * 0.25; 
-
-    // Iterate over faces (triangles)
-    const positions = geometry.attributes.position.array;
     for (let i = 0; i < indices.length; i += 3) {
         const a = indices[i];
         const b = indices[i + 1];
         const c = indices[i + 2];
 
-        // We only care about Z now because we aligned it!
-        const az = positions[a * 3 + 2];
-        const bz = positions[b * 3 + 2];
-        const cz = positions[c * 3 + 2];
-        
-        const avgZ = (az + bz + cz) / 3;
+        // Average normal Z of the triangle
+        const nz1 = normals[a * 3 + 2];
+        const nz2 = normals[b * 3 + 2];
+        const nz3 = normals[c * 3 + 2];
+        const avgNz = (nz1 + nz2 + nz3) / 3;
 
-        // Classify
-        // +Z Side -> Tails (Chocolate) -> Front Face facing Camera
-        // -Z Side -> Heads (Pink) -> Back Face
-        
-        // Wait, normally we want Heads to be the "Front".
-        // If we want Heads to be the default face visible, it should be at +Z.
-        // Let's assign +Z to Heads.
-        
-        if (avgZ > zThreshold) {
-            headIndices.push(a, b, c); // +Z is Heads (Pink)
+        // Threshold: 0.5 allows for some curvature/bevel but captures the main face
+        if (avgNz > 0.5) {
+            headIndices.push(a, b, c); // Normal points towards camera -> Heads (Pink)
         } else {
-            // Everything else (Negative side AND Edge) goes to Tails (Chocolate)
+            // Back face (Normal < -0.5) and Edge (Normal ~ 0)
+            // All go to Tails (Chocolate)
             tailIndices.push(a, b, c); 
         }
     }
