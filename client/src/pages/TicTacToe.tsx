@@ -6,7 +6,6 @@ import { Shuffle } from "lucide-react";
 // Import generated assets
 import player1Image from "@assets/vaj-400_1766349849850.jpg";
 import player2Image from "@assets/grams-400_1766349849850.jpg";
-import paperTexture from "@assets/generated_images/crumpled_lined_paper_with_tea_stains_optimized.jpg";
 
 export default function TicTacToe() {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
@@ -63,10 +62,9 @@ export default function TicTacToe() {
       <div 
         className="relative flex items-center justify-center rounded-sm shadow-2xl w-full max-w-[95vw] aspect-square overflow-hidden"
         style={{
-            backgroundImage: `url(${paperTexture})`,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#f5f0e8',
+            backgroundImage: 'linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
             boxShadow: '10px 10px 20px rgba(0,0,0,0.5)'
         }}
       >
