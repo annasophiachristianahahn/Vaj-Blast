@@ -31,7 +31,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 rel="noopener noreferrer"
                 className="bg-black px-4 py-1.5 text-[10px] md:text-xs font-bold text-white tracking-widest hover:scale-105 transition-transform rounded-sm border border-white/20 shadow-lg"
               >
-                $VAJ VAJUNNIE.TOP
+                VAJUNNIE.TOP
               </a>
             </footer>
         </main>
